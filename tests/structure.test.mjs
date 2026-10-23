@@ -21,7 +21,10 @@ test('Capacitor Android identity and Angular output paths agree', () => {
   assert.equal(angular.projects.app.architect.build.options.outputPath.base, 'www');
   assert.equal(angular.projects.app.architect.build.options.outputPath.browser, '');
   assert.match(cap, /webDir:\s*["']www["']/);
-  assert.match(cap, /appId:\s*["']io\.erwin\.oilspillbuoy["']/);
+  // App identity must match the installed native Android package and Firebase client.
+  assert.match(cap, /appId:\s*["']com\.oilspillmonitoringbuoy\.app["']/);
+  const gradle = read('android/app/build.gradle');
+  assert.match(gradle, /applicationId\s+["']com\.oilspillmonitoringbuoy\.app["']/);
 });
 test('Angular and Capacitor major-version compatibility guardrails', () => {
   const pkg = JSON.parse(read('package.json'));
