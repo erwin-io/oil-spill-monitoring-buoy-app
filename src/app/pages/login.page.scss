@@ -1,229 +1,41 @@
-/* Shared auth-page styles: aligned to the Ionic form and card conventions in SEEFIX.
- * BlueWatch retains its own teal color palette and identity.
- */
-.auth-header {
-  box-shadow: none;
-
-  &::after {
-    display: none;
-  }
-
-  ion-toolbar {
-    --min-height: 56px;
-  }
-
-  ion-title {
-    font-size: 17px;
-    font-weight: 700;
-    letter-spacing: 0.01em;
-  }
-}
-
-.auth-page {
-  --background: #f3f8fa;
-}
-
-.auth-shell {
-  box-sizing: border-box;
+/* SEEFIX auth page layout: white background, centered flat card, no border/shadow. */
+.page { --background: var(--ion-color-primary-contrast); }
+.wrap {
   min-height: 100%;
-  width: 100%;
-  max-width: 470px;
-  margin: 0 auto;
-  padding: 36px 16px 28px;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 20px;
-}
-
-.brand {
-  text-align: center;
-  color: var(--ion-text-color);
-}
-
-.brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 15px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 4px;
-  margin: 0 auto 13px;
-  padding: 13px 10px;
-  background: #e0f4f5;
-  box-shadow: inset 0 0 0 1px #cae9eb;
-
-  span {
-    display: block;
-    background: var(--ion-color-primary);
-    width: 7px;
-    border-radius: 6px 6px 2px 2px;
-    height: 17px;
-  }
-
-  span:nth-child(2) {
-    height: 26px;
-  }
-
-  span:nth-child(3) {
-    height: 21px;
-  }
-}
-
-.brand-eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.09em;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--ion-color-primary);
-}
-
-.brand h1 {
-  font-size: clamp(26px, 6vw, 32px);
-  letter-spacing: -0.03em;
-  line-height: 1.2;
-  font-weight: 750;
-  margin: 0 0 8px;
-}
-
-.brand-caption {
-  color: var(--app-muted);
-  font-size: 14px;
-  line-height: 1.55;
-  margin: 0;
-}
-
-.auth-card {
-  --background: #fff;
-  width: 100%;
-  margin: 0;
-  border: 1px solid #dfebef;
-  border-radius: 20px;
-  box-shadow: 0 12px 35px rgba(17, 51, 68, 0.07);
-  overflow: hidden;
-
-  ion-card-header {
-    padding: 24px 22px 10px;
-  }
-
-  ion-card-title {
-    font-size: 22px;
-    line-height: 1.35;
-    letter-spacing: -0.02em;
-    font-weight: 700;
-    color: var(--ion-text-color);
-  }
-
-  ion-card-subtitle {
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 400;
-    color: var(--app-muted);
-    margin-top: 5px;
-  }
-
-  ion-card-content {
-    padding: 14px 22px 24px;
-  }
-}
-
-.fieldset {
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-
-  ion-input {
-    --background: #fff;
-  }
-}
-
-.field-error,
-.form-error {
-  display: block;
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.field-hint {
-  margin: 0;
-  font-size: 12px;
-  color: var(--app-muted);
-}
-
-.forgot-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -5px;
-
-  ion-button {
-    margin: 0 -10px 0 0;
-    font-size: 12px;
-    font-weight: 650;
-    text-transform: none;
-  }
-}
-
-.submit-button {
-  margin-top: 5px;
-}
-
-.switch-link {
-  margin-top: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 2px;
-  font-size: 13px;
-  color: var(--app-muted);
-
-  ion-button {
-    margin: 0;
-    font-weight: 700;
-    font-size: 13px;
-    text-transform: none;
-    --padding-start: 8px;
-    --padding-end: 8px;
-  }
 }
-
-.auth-footnote {
-  text-align: center;
+.card {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 !important;
+  padding: 0;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  --background: #fff;
+}
+ion-card-title { font-weight: 700; color: var(--ion-color-primary); }
+ion-card-subtitle { font-size: 16px !important; text-transform: none; font-weight: 400; }
+ion-button.regular { margin: 10px 0 0; }
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+.forgot-row ion-button, .switch-link ion-button, .link-row ion-button {
   margin: 0;
-  color: var(--app-muted);
-  font-size: 12px;
-  line-height: 1.5;
+  text-transform: none;
+  font-weight: 600;
 }
-
-@media (max-width: 380px) {
-  .auth-shell {
-    padding: 22px 12px;
-  }
-
-  .auth-card ion-card-header {
-    padding: 20px 18px 8px;
-  }
-
-  .auth-card ion-card-content {
-    padding: 12px 18px 20px;
-  }
+.switch-link, .link-row {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-
-@media (prefers-reduced-motion: no-preference) {
-  .auth-card {
-    animation: card-enter 180ms ease-out both;
-  }
-
-  @keyframes card-enter {
-    from { opacity: 0; transform: translateY(7px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-}
+.notice { margin-bottom: 15px; }
+.field-error { display: block; margin-top: -7px; color: var(--ion-color-danger); font-size: 13px; }
+.field-hint { display: block; font-size: 13px; color: var(--ion-color-medium-shade); margin: -8px 0 2px; }
+@media (max-width: 380px) { .switch-link { flex-wrap: wrap; } }

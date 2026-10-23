@@ -1,15 +1,18 @@
-/* BlueWatch system palette: preserve the project's teal identity. */
+/* Match the SEEFIX reference: Ionic's standard bright-blue primary, white surfaces. */
 :root {
-  --ion-color-primary: #087a92;
-  --ion-color-primary-rgb: 8, 122, 146;
-  --ion-color-primary-contrast: #fff;
+  --ion-color-primary: #0054e9;
+  --ion-color-primary-rgb: 0, 84, 233;
+  --ion-color-primary-contrast: #ffffff;
   --ion-color-primary-contrast-rgb: 255, 255, 255;
-  --ion-color-primary-shade: #076b80;
-  --ion-color-primary-tint: #21879d;
-  --ion-background-color: #f1f7fa;
-  --ion-text-color: #102e45;
-  --ion-card-background: #fff;
-  --app-muted: #607b8a;
-  --app-danger: #b6292b;
-  --app-border: #dbe8ed;
+  --ion-color-primary-shade: #004acd;
+  --ion-color-primary-tint: #1a65eb;
+  --ion-color-secondary: #0163aa;
+  --ion-background-color: #ffffff;
+  --ion-background-color-rgb: 255, 255, 255;
+  --ion-text-color: #121212;
+  --ion-text-color-rgb: 18, 18, 18;
+  --ion-card-background: #ffffff;
+  --app-muted: #666666;
+  --app-danger: #b40012;
+  --app-border: #d7d7d7;
 }

@@ -1,10 +1,11 @@
-/* BlueWatch global Ionic styles. Auth screen layout is component-scoped.
- * SEEFIX references: outlined fields, clear typography, buttons and centered forms.
+/* BlueWatch design system deliberately follows the SEEFIX Reporter Ionic conventions.
+ * SEEFIX uses bundled Poppins. BlueWatch loads the public stylesheet with system-font fallback.
  */
 @import '@ionic/angular/css/core.css';
 @import '@ionic/angular/css/normalize.css';
 @import '@ionic/angular/css/structure.css';
 @import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/display.css';
 @import '@ionic/angular/css/padding.css';
 @import '@ionic/angular/css/float-elements.css';
 @import '@ionic/angular/css/text-alignment.css';
@@ -12,56 +13,100 @@
 @import '@ionic/angular/css/flex-utils.css';
 
 :root, .md, .ios {
-  --ion-font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --ion-font-family: 'Poppins', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 html, body {
   margin: 0;
   height: 100%;
+  background: #fff;
   font-family: var(--ion-font-family);
 }
 
-ion-input[fill='outline'],
-ion-textarea[fill='outline'],
-ion-select[fill='outline'] {
-  --border-radius: 10px;
-  --border-width: 1.5px;
-  --border-color-focused: var(--ion-color-primary);
-  --highlight-color-focused: var(--ion-color-primary);
-  --highlight-color-valid: var(--ion-color-primary);
-  font-size: 15px;
+/* SEEFIX outlined form contract: 2px border, 10px rounded corners, bold entered values. */
+ion-input, ion-textarea, ion-select {
+  --color: #000;
+  --border-width: 2px !important;
+  --border-radius: 10px !important;
+  --border-color-focused: var(--ion-color-primary) !important;
+  --highlight-color-focused: var(--ion-color-primary) !important;
+  --highlight-color-valid: var(--ion-color-primary) !important;
+  font-size: 16px !important;
 }
 
+ion-input input,
+ion-textarea textarea,
+ion-select::part(text) {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #000 !important;
+}
+
+ion-input input::placeholder, ion-textarea textarea::placeholder {
+  font-weight: 400 !important;
+  color: var(--ion-color-medium-shade) !important;
+}
+ion-select::part(placeholder) { font-weight: 400; }
+
+.fieldset { display: flex; flex-direction: column; row-gap: 15px; }
+.form-error { display: block; font-size: 14px; }
+
 ion-button.regular {
-  height: 52px;
-  --border-radius: 10px;
-  font-size: 15px;
-  font-weight: 650;
+  height: 56px !important;
+  --border-radius: 10px !important;
+  font-size: 16px;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: none;
 }
 
-ion-header.ion-no-border::after {
-  display: none;
+ion-header.no-shadow, .header-md.no-shadow { box-shadow: none !important; }
+ion-header.no-shadow::after { display: none !important; }
+ion-toolbar[color='primary'] ion-title { font-weight: 600; }
+
+/* Keep SEEFIX auth surfaces completely flat with no floating rounded panel. */
+.md ion-card.no-shadow, .ios ion-card.no-shadow, ion-card.no-shadow {
+  box-shadow: none !important;
+  border: 0 !important;
 }
 
-ion-toolbar[color='primary'] ion-title {
-  font-weight: 700;
+.alert-button-cancel { color: var(--ion-color-medium-shade); }
+.alert-button-danger, .alert-button-role-destructive {
+  color: var(--ion-color-danger) !important;
+  font-weight: 600;
 }
+.alert-button-confirm { color: var(--ion-color-primary) !important; font-weight: 600; }
+ion-alert .alert-wrapper:focus-visible, ion-action-sheet .action-sheet-wrapper:focus-visible { outline: none; }
+.action-sheet-wrapper { padding-bottom: var(--safe-bottom) !important; }
 
-.page { padding: 16px; }
+.content-container { width: 100%; max-width: 720px; margin: 0 auto; }
+ion-tab-bar { height: 60px; --background: #fff; }
+ion-tab-button { font-size: 12px; }
+ion-tab-button ion-icon { font-size: 26px; }
+
+/* Existing BlueWatch dashboard/list classes: inherit SEEFIX white surfaces and spacing. */
+.page { padding: 16px; max-width: 720px; margin: 0 auto; }
 .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
-.metric { background: #fff; padding: 16px; border-radius: 14px; min-width: 0; }
+.metric {
+  background: #fff;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #eeeeee;
+  min-width: 0;
+}
 .metric strong { display: block; font-size: 1.75rem; }
-.metric span { font-size: 0.78rem; color: var(--app-muted); }
+.metric span { display: block; font-size: 0.78rem; color: var(--app-muted); }
 .hint { color: var(--app-muted); }
 .error { color: var(--app-danger); }
-.card { background: #fff; border-radius: 14px; padding: 14px; margin: 12px 0; }
+.card { background: #fff; border-radius: 10px; padding: 14px; margin: 12px 0; }
 .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-.badge { font-size: 12px; background: #e6f4f6; border-radius: 8px; padding: 4px 8px; }
+.badge { font-size: 12px; background: #eef2ff; border-radius: 8px; padding: 4px 8px; }
 .tap { cursor: pointer; }
-.top-title { font-size: 1.5rem; font-weight: 700; margin: 16px 0; }
+.top-title { font-size: 1.5rem; font-weight: 600; margin: 16px 0; }
 .empty { padding: 28px 12px; text-align: center; color: var(--app-muted); }
 
-ion-tab-bar { min-height: 58px; }
-ion-tab-button { font-size: 12px; }
+ion-list { background: #fff; }
+ion-item > ion-icon[slot='start'] { margin-inline-end: 16px; }
+ion-searchbar { --box-shadow: none; --border-radius: 10px; }

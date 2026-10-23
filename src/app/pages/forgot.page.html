@@ -1,53 +1,32 @@
-<ion-header class="auth-header ion-no-border">
+<ion-header class="no-shadow">
   <ion-toolbar color="primary">
     <ion-buttons slot="start"><ion-back-button defaultHref="/login"></ion-back-button></ion-buttons>
-    <ion-title>Reset password</ion-title>
+    <ion-title>Forgot password</ion-title>
   </ion-toolbar>
 </ion-header>
-
-<ion-content class="auth-page">
-  <main class="auth-shell">
-    <div class="brand">
-      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
-      <p class="brand-eyebrow">BlueWatch account access</p>
-      <h1>Forgot your password?</h1>
-      <p class="brand-caption">We'll send a secure reset link to your registered email address.</p>
-    </div>
-    <ion-card class="auth-card">
+<ion-content class="ion-padding page">
+  <div class="wrap">
+    <ion-card class="card no-shadow">
       <ion-card-header>
-        <ion-card-title>Reset password</ion-card-title>
-        <ion-card-subtitle>Enter the email associated with your account.</ion-card-subtitle>
+        <ion-card-title>Reset your password</ion-card-title>
+        <ion-card-subtitle>Enter your account email. We'll send a secure link to reset your password.</ion-card-subtitle>
       </ion-card-header>
       <ion-card-content>
         <form (ngSubmit)="reset()" class="fieldset" novalidate>
-          <ion-input
-            name="email"
-            [(ngModel)]="email"
-            type="email"
-            label="Email address"
-            labelPlacement="stacked"
-            fill="outline"
-            placeholder="Enter your email"
-            autocomplete="email"
-            inputmode="email"
-            autocapitalize="off"
-            [spellcheck]="false"
-          ></ion-input>
-          @if (message) {
-            <ion-note class="form-error" role="status">{{ message }}</ion-note>
-          }
-          <ion-button class="regular submit-button" type="submit" expand="block" [disabled]="busy || !email.trim()">
-            @if (busy) {
-              <ion-spinner name="dots" aria-label="Requesting reset"></ion-spinner>
-            } @else {
-              Send reset link
-            }
+          <ion-input name="email" [(ngModel)]="email" type="email" label="Email"
+            labelPlacement="stacked" fill="outline" placeholder="Enter your account email"
+            autocomplete="email" inputmode="email" autocapitalize="off" [clearInput]="true">
+          </ion-input>
+          @if (message) { <ion-note class="form-error" role="status">{{ message }}</ion-note> }
+          <ion-button class="regular" type="submit" expand="block" [disabled]="busy || !email.trim()">
+            @if (busy) { <ion-spinner name="dots" aria-label="Requesting reset"></ion-spinner> }
+            @else { Send reset link }
           </ion-button>
         </form>
-        <div class="switch-link">
+        <div class="link-row">
           <ion-button fill="clear" routerLink="/login">Back to sign in</ion-button>
         </div>
       </ion-card-content>
     </ion-card>
-  </main>
+  </div>
 </ion-content>
