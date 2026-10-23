@@ -28,7 +28,7 @@ The repository commits `package-lock.json`. Use `npm ci` to install exactly the 
 
 ## Android identity and build
 
-The intended app ID is `io.erwin.oilspillbuoy`, matching the older working Ionic project. Confirm that ID before registering the native Android app in Firebase.
+The **current, tested Android app ID** is `com.oilspillmonitoringbuoy.app` in both `capacitor.config.ts` and `android/app/build.gradle`. Register or select the Firebase Android app with this exact package name. Do **not** use the older `io.erwin.oilspillbuoy` ID; it does not match the installed APK.
 
 ```powershell
 npm run build
