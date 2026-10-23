@@ -89,3 +89,19 @@ test('native status filters use the same outlined Ionic alert-select pattern', (
     assert.ok(html.includes('interfaceOptions'));
   }
 });
+
+test('Original BlueWatch brand section restored only above sign-in form', () => {
+  const login = read('src/app/pages/login.page.html');
+  const register = read('src/app/pages/register.page.html');
+  const style = read('src/app/pages/login.page.scss');
+  assert.ok(login.includes('<div class="wrap sign-in-wrap">'));
+  assert.ok(login.includes('class="brand-mark"'));
+  assert.ok(login.includes('Oil Spill Monitoring Buoys'));
+  assert.ok(login.includes('<h1>Welcome back</h1>'));
+  assert.ok(login.includes('Secure monitoring for cleaner coastal waters.'));
+  assert.ok(login.indexOf('class="brand"') < login.indexOf('<ion-card class="card no-shadow">'));
+  assert.equal(register.includes('class="brand-mark"'), false);
+  assert.ok(style.includes('.sign-in-wrap'));
+  assert.ok(style.includes('gap: 20px'));
+  assert.ok(style.includes('box-shadow: none !important'));
+});
