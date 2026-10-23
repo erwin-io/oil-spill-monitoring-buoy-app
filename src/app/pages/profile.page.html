@@ -1,1 +1,24 @@
-<ion-header><ion-toolbar><ion-title>Profile</ion-title></ion-toolbar></ion-header><ion-content><div class="page"><div class="card" *ngIf="auth.profile() as p"><h2>{{p.displayName}}</h2><p>{{p.email}}</p><p>Role: <strong>{{p.role}}</strong></p><p>Account: {{p.status}}</p><p>Assigned buoys: {{p.role==='ADMIN'?'All':p.allowedDeviceIds.length}}</p></div><div class="card"><h3>About BlueWatch</h3><p>Version 0.1.0</p><p class="hint">Oil classifications are advisory fluorescence signatures, not certified evidence of oil contamination.</p></div><p *ngIf="error" class="error">{{error}}</p><ion-button expand="block" color="danger" fill="outline" (click)="logout()">Sign out</ion-button></div></ion-content>
+<ion-header>
+  <ion-toolbar><ion-title>Profile</ion-title></ion-toolbar>
+</ion-header>
+<ion-content>
+  <div class="page">
+    <div class="card" *ngIf="auth.profile() as p">
+      <h2>{{ p.displayName }}</h2>
+      <p>{{ p.email }}</p>
+      <p>Role: <strong>{{ p.role }}</strong></p>
+      <p>Account: {{ p.status }}</p>
+      <p>Assigned buoys: {{ p.role === 'ADMIN' ? 'All' : p.allowedDeviceIds.length }}</p>
+    </div>
+    <div class="card">
+      <h3>About BlueWatch</h3>
+      <p>Version 0.1.0</p>
+      <p class="hint">Oil classifications are advisory fluorescence signatures, not certified evidence of oil contamination.</p>
+    </div>
+    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+    <ion-button expand="block" color="danger" fill="outline"
+      [disabled]="signingOut" (click)="logout()">
+      {{ signingOut ? 'Signing out…' : 'Sign out' }}
+    </ion-button>
+  </div>
+</ion-content>
