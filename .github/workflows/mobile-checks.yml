@@ -1,0 +1,30 @@
+name: BlueWatch Mobile Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  install-test-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install dependencies and resolve lockfile
+        run: npm install --no-audit --no-fund
+      - name: Structural checks
+        run: npm test
+      - name: Angular production build
+        run: npm run build
+      - name: Keep generated lockfile for reproducibility review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: bluewatch-generated-package-lock
+          path: package-lock.json
+          if-no-files-found: ignore

@@ -1,1 +1,30 @@
-{"compileOnSave":false,"compilerOptions":{"outDir":"./dist/out-tsc","strict":true,"noImplicitOverride":true,"noPropertyAccessFromIndexSignature":true,"noImplicitReturns":true,"noFallthroughCasesInSwitch":true,"skipLibCheck":true,"sourceMap":true,"declaration":false,"experimentalDecorators":true,"moduleResolution":"bundler","target":"ES2022","module":"preserve","lib":["ES2022","dom"],"useDefineForClassFields":false},"angularCompilerOptions":{"strictInjectionParameters":true,"strictInputAccessModifiers":true,"strictTemplates":true}}
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "outDir": "./dist/out-tsc",
+    "strict": true,
+    "noImplicitOverride": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "declaration": false,
+    "experimentalDecorators": true,
+    "moduleResolution": "bundler",
+    "target": "ES2022",
+    "module": "preserve",
+    "lib": [
+      "ES2022",
+      "dom"
+    ],
+    "useDefineForClassFields": false,
+    "esModuleInterop": true,
+    "isolatedModules": true
+  },
+  "angularCompilerOptions": {
+    "strictInjectionParameters": true,
+    "strictInputAccessModifiers": true,
+    "strictTemplates": true
+  }
+}
