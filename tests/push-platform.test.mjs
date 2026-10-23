@@ -98,7 +98,9 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
   class Router {}
   const exports = {};
   const ionic = Object.fromEntries(
-    ['IonButton', 'IonContent', 'IonHeader', 'IonTitle', 'IonToolbar'].map((n) => [n, class {}]),
+    ['IonAvatar', 'IonBadge', 'IonButton', 'IonContent', 'IonHeader', 'IonIcon',
+     'IonItem', 'IonLabel', 'IonList', 'IonListHeader', 'IonNote', 'IonTitle', 'IonToolbar'
+    ].map((n) => [n, class {}]),
   );
   const modules = {
     '@angular/common': { CommonModule: class {} },
@@ -114,6 +116,16 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
     },
     '@angular/router': { Router },
     '@ionic/angular/standalone': ionic,
+    'ionicons': { addIcons: () => {} },
+    'ionicons/icons': {
+      alertCircleOutline: 'alert-circle-outline',
+      checkmarkCircleOutline: 'checkmark-circle-outline',
+      hardwareChipOutline: 'hardware-chip-outline',
+      idCardOutline: 'id-card-outline',
+      informationCircleOutline: 'information-circle-outline',
+      logOutOutline: 'log-out-outline',
+      mailOutline: 'mail-outline',
+    },
     '../core/auth.service': { AuthService },
     '../core/realtime.service': { RealtimeService },
     '../core/push.service': { PushService },
