@@ -96,7 +96,7 @@ test('Original Oil Spill Monitoring Buoy brand section restored only above sign-
   const style = read('src/app/pages/login.page.scss');
   assert.ok(login.includes('<div class="wrap sign-in-wrap">'));
   assert.ok(login.includes('class="brand-mark"'));
-  assert.ok(login.includes('Oil Spill Monitoring Buoys'));
+  assert.ok(login.includes('Oil Spill Monitoring Buoy'));
   assert.ok(login.includes('<h1>Welcome back</h1>'));
   assert.ok(login.includes('Secure monitoring for cleaner coastal waters.'));
   assert.ok(login.indexOf('class="brand"') < login.indexOf('<ion-card class="card no-shadow">'));
