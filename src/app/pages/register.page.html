@@ -1,1 +1,102 @@
-<ion-content class="ion-padding"><div class="auth"><div class="brand"><h1>BlueWatch</h1></div><div class="panel"><h2>Create account</h2><ion-input label="Email" label-placement="stacked" fill="outline" type="email" [(ngModel)]="email"></ion-input><ion-input label="Password (6+ characters)" label-placement="stacked" fill="outline" type="password" [(ngModel)]="password"></ion-input><p role="alert">{{message}}</p><ion-button expand="block" [disabled]="busy||!email||password.length<6" (click)="submit()">Register</ion-button><a routerLink="/login">Back to login</a></div></div></ion-content>
+<ion-header class="auth-header ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-buttons slot="start"><ion-back-button defaultHref="/login"></ion-back-button></ion-buttons>
+    <ion-title>Create account</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="auth-page">
+  <main class="auth-shell">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="brand-eyebrow">Oil Spill Monitoring Buoys</p>
+      <h1>Join BlueWatch</h1>
+      <p class="brand-caption">Create an account to monitor your buoy network.</p>
+    </div>
+
+    <ion-card class="auth-card">
+      <ion-card-header>
+        <ion-card-title>Create account</ion-card-title>
+        <ion-card-subtitle>Register with your email to get started.</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="fieldset">
+          <div class="field">
+            <ion-input
+              formControlName="email"
+              type="email"
+              label="Email address"
+              labelPlacement="stacked"
+              fill="outline"
+              placeholder="Enter your email"
+              autocomplete="email"
+              inputmode="email"
+              autocapitalize="off"
+              [spellcheck]="false"
+              [clearInput]="true"
+            ></ion-input>
+            @if (form.controls.email.touched && form.controls.email.invalid) {
+              <ion-note color="danger" class="field-error" role="alert">Enter a valid email address.</ion-note>
+            }
+          </div>
+
+          <div class="field">
+            <ion-input
+              formControlName="password"
+              type="password"
+              label="Password"
+              labelPlacement="stacked"
+              fill="outline"
+              placeholder="Create a password"
+              autocomplete="new-password"
+            >
+              <ion-input-password-toggle slot="end" color="medium"></ion-input-password-toggle>
+            </ion-input>
+            <p class="field-hint">At least 6 characters.</p>
+            @if (form.controls.password.touched && form.controls.password.invalid) {
+              <ion-note color="danger" class="field-error" role="alert">Use a password with at least 6 characters.</ion-note>
+            }
+          </div>
+
+          <div class="field">
+            <ion-input
+              formControlName="confirmPassword"
+              type="password"
+              label="Confirm password"
+              labelPlacement="stacked"
+              fill="outline"
+              placeholder="Re-enter your password"
+              autocomplete="new-password"
+            >
+              <ion-input-password-toggle slot="end" color="medium"></ion-input-password-toggle>
+            </ion-input>
+            @if (form.controls.confirmPassword.touched && form.controls.confirmPassword.hasError('required')) {
+              <ion-note color="danger" class="field-error" role="alert">Confirm your password.</ion-note>
+            }
+            @if (mismatch) {
+              <ion-note color="danger" class="field-error" role="alert">Passwords do not match.</ion-note>
+            }
+          </div>
+
+          @if (message) {
+            <ion-note color="danger" role="alert" class="form-error">{{ message }}</ion-note>
+          }
+
+          <ion-button class="regular submit-button" type="submit" expand="block" [disabled]="busy">
+            @if (busy) {
+              <ion-spinner name="dots" aria-label="Creating account"></ion-spinner>
+            } @else {
+              Create account
+            }
+          </ion-button>
+        </form>
+
+        <div class="switch-link">
+          <span>Already have an account?</span>
+          <ion-button fill="clear" routerLink="/login">Sign in</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+    <p class="auth-footnote">Email verification is required before accessing buoy data.</p>
+  </main>
+</ion-content>
