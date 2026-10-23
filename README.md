@@ -9,13 +9,13 @@ Use Node **20.19+**, **22.12+**, or **24+** (a version supported by Angular 20).
 ```powershell
 node --version
 npm --version
-npm install
+npm ci
 npm test
-npm run build
+npm run check
 npm start
 ```
 
-The first successful `npm install` produces `package-lock.json`; commit the generated lockfile to source control so future installations use `npm ci`. Do not use `--force` or `--legacy-peer-deps` to bypass conflicts. CI also uploads its generated lockfile as a build artifact for review.
+The repository commits `package-lock.json`. Use `npm ci` to install exactly the resolved dependency tree, and do not use `--force` or `--legacy-peer-deps` to bypass peer dependency conflicts.
 
 ## Firebase setup
 
@@ -43,4 +43,4 @@ Angular emits web assets directly into `www`; Capacitor is configured with `webD
 
 ## Validation policy
 
-`npm test` is a set of source-structure checks, not Firebase integration or Android tests. `npm run build` verifies Angular compilation. A GitHub Actions workflow runs `npm install`, `npm test`, and `npm run build`; integration tests with configured Firebase/FCM/Pusher and on-device validation remain separate gates.
+`npm test` is a set of source-structure checks, not Firebase integration or Android tests. `npm run build` verifies Angular compilation. A GitHub Actions workflow runs `npm ci`, `npm test`, and `npm run check`; integration tests with configured Firebase/FCM/Pusher and on-device validation remain separate gates.
