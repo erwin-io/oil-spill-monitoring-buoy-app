@@ -2,19 +2,40 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import {
+  IonAvatar,
+  IonBadge,
   IonButton,
   IonContent,
   IonHeader,
+  IonIcon,
+  IonItem,
+  IonLabel,
+  IonList,
+  IonListHeader,
+  IonNote,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
+import { addIcons } from 'ionicons';
+import {
+  alertCircleOutline,
+  checkmarkCircleOutline,
+  hardwareChipOutline,
+  idCardOutline,
+  informationCircleOutline,
+  logOutOutline,
+  mailOutline,
+} from 'ionicons/icons';
 import { AuthService } from '../core/auth.service';
 import { RealtimeService } from '../core/realtime.service';
 import { PushService } from '../core/push.service';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, IonContent, IonHeader, IonToolbar, IonTitle, IonButton],
+  imports: [
+    CommonModule, IonAvatar, IonBadge, IonButton, IonContent, IonHeader,
+    IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle, IonToolbar,
+  ],
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
 })
@@ -27,17 +48,27 @@ export class ProfilePage {
   error = '';
   signingOut = false;
 
+  constructor() {
+    addIcons({
+      alertCircleOutline, checkmarkCircleOutline, hardwareChipOutline,
+      idCardOutline, informationCircleOutline, logOutOutline, mailOutline,
+    });
+  }
+
+  initials(name?: string): string {
+    return (name ?? 'BW').trim().split(/\s+/).slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '').join('') || 'BW';
+  }
+
   async logout(): Promise<void> {
     if (this.signingOut) return;
     this.signingOut = true;
     this.error = '';
-
     try {
       this.realtime.disconnect();
       try {
         await this.push.stop();
       } catch (error) {
-        // Push cleanup is best-effort; Firebase logout must still complete.
         console.warn('Push cleanup failed during logout:', error);
       }
       await this.auth.logout();

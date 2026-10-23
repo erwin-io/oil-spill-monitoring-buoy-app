@@ -1,1 +1,12 @@
-ion-tab-bar{--background:#fff;border-top:1px solid #e0edf0;padding-bottom:env(safe-area-inset-bottom)}ion-tab-button{--color:#688092;--color-selected:#087a92}
+/* Match SEEFIX's standard 60px Ionic bottom navigation bar. */
+ion-tab-bar {
+  --background: #fff;
+  border-top: 0;
+  height: 60px;
+}
+ion-tab-button {
+  --color: var(--ion-color-medium-shade);
+  --color-selected: var(--ion-color-primary);
+  font-size: 12px;
+}
+ion-tab-button ion-icon { font-size: 26px; }

@@ -1,24 +1,75 @@
-<ion-header>
-  <ion-toolbar><ion-title>Profile</ion-title></ion-toolbar>
+<ion-header class="no-shadow">
+  <ion-toolbar color="primary">
+    <ion-title>Profile</ion-title>
+  </ion-toolbar>
 </ion-header>
+
 <ion-content>
-  <div class="page">
-    <div class="card" *ngIf="auth.profile() as p">
-      <h2>{{ p.displayName }}</h2>
-      <p>{{ p.email }}</p>
-      <p>Role: <strong>{{ p.role }}</strong></p>
-      <p>Account: {{ p.status }}</p>
-      <p>Assigned buoys: {{ p.role === 'ADMIN' ? 'All' : p.allowedDeviceIds.length }}</p>
-    </div>
-    <div class="card">
-      <h3>About BlueWatch</h3>
-      <p>Version 0.1.0</p>
-      <p class="hint">Oil classifications are advisory fluorescence signatures, not certified evidence of oil contamination.</p>
-    </div>
-    <p *ngIf="error" class="error" role="alert">{{ error }}</p>
-    <ion-button expand="block" color="danger" fill="outline"
-      [disabled]="signingOut" (click)="logout()">
-      {{ signingOut ? 'Signing out…' : 'Sign out' }}
-    </ion-button>
+  <div class="content-container">
+    <ng-container *ngIf="auth.profile() as p">
+      <ion-list>
+        <ion-item lines="none" class="identity">
+          <ion-avatar slot="start" aria-hidden="true">
+            <div class="initials">{{ initials(p.displayName) }}</div>
+          </ion-avatar>
+          <ion-label>
+            <h2>{{ p.displayName }}</h2>
+            <p>{{ p.role | titlecase }} account</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <ion-list inset="true">
+        <ion-list-header><ion-label>Account</ion-label></ion-list-header>
+        <ion-item>
+          <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
+          <ion-label class="ion-text-wrap">
+            <h3>Email</h3>
+            <p>{{ p.email }}</p>
+          </ion-label>
+          <ion-badge *ngIf="auth.currentUser()?.emailVerified; else unverified" slot="end" color="success" class="status-badge">
+            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon> Verified
+          </ion-badge>
+          <ng-template #unverified>
+            <ion-badge slot="end" color="medium" class="status-badge">
+              <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon> Not verified
+            </ion-badge>
+          </ng-template>
+        </ion-item>
+        <ion-item>
+          <ion-icon slot="start" name="id-card-outline" aria-hidden="true"></ion-icon>
+          <ion-label>Role</ion-label>
+          <ion-note slot="end">{{ p.role | titlecase }}</ion-note>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-icon slot="start" name="hardware-chip-outline" aria-hidden="true"></ion-icon>
+          <ion-label>Assigned buoys</ion-label>
+          <ion-note slot="end">{{ p.role === 'ADMIN' ? 'All' : p.allowedDeviceIds.length }}</ion-note>
+        </ion-item>
+      </ion-list>
+
+      <ion-list inset="true">
+        <ion-list-header><ion-label>About</ion-label></ion-list-header>
+        <ion-item>
+          <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
+          <ion-label>BlueWatch</ion-label>
+          <ion-note slot="end">Version 0.1.0</ion-note>
+        </ion-item>
+        <ion-item lines="none">
+          <ion-label class="ion-text-wrap">
+            <p>Oil classifications are advisory fluorescence signatures, not certified evidence of oil contamination.</p>
+          </ion-label>
+        </ion-item>
+      </ion-list>
+
+      <div class="ion-padding">
+        <p *ngIf="error" class="error" role="alert">{{ error }}</p>
+        <ion-button class="regular logout" expand="block" color="danger" fill="outline"
+          [disabled]="signingOut" (click)="logout()">
+          <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
+          {{ signingOut ? 'Signing out…' : 'Log Out' }}
+        </ion-button>
+      </div>
+    </ng-container>
   </div>
 </ion-content>

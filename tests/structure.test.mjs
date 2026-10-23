@@ -58,9 +58,34 @@ test('All auth flows use the common Ionic card design', () => {
   for (const name of ['login', 'register', 'forgot', 'verify']) {
     const html = read('src/app/pages/' + name + '.page.html');
     assert.ok(html.includes('ion-card'));
-    assert.ok(html.includes('auth-page'));
+    assert.ok(html.includes('no-shadow'));
   }
   const stylesheet = read('src/styles.scss');
   assert.ok(stylesheet.includes('ion-button.regular'));
   assert.ok(stylesheet.includes("ion-input[fill='outline']"));
+});
+
+test('SEEFIX-matched 2px/10px global controls, no-shadow auth, blue toolbars', () => {
+  const styles = read('src/styles.scss');
+  const theme = read('src/theme/variables.scss');
+  const auth = read('src/app/pages/login.page.scss');
+  assert.match(styles, /--border-width:\s*2px/);
+  assert.match(styles, /--border-radius:\s*10px/);
+  assert.match(theme, /--ion-color-primary:\s*#0054e9/);
+  assert.match(auth, /box-shadow:\s*none/);
+  for (const name of ['dashboard', 'devices', 'alerts', 'profile', 'config']) {
+    const html = read('src/app/pages/' + name + '.page.html');
+    assert.ok(html.includes('class="no-shadow"'), name + ' toolbar should not cast shadow');
+    assert.ok(html.includes('<ion-toolbar color="primary">'), name + ' needs primary toolbar');
+  }
+});
+
+test('native status filters use the same outlined Ionic alert-select pattern', () => {
+  for (const name of ['devices', 'alerts']) {
+    const html = read('src/app/pages/' + name + '.page.html');
+    assert.ok(html.includes('ion-select'));
+    assert.ok(html.includes('fill="outline"'));
+    assert.ok(html.includes('interface="alert"'));
+    assert.ok(html.includes('interfaceOptions'));
+  }
 });
