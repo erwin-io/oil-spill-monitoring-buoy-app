@@ -1,0 +1,78 @@
+|-- .gitignore
+|-- angular.json
+|-- capacitor.config.ts
+|-- ionic.config.json
+|-- LICENSE
+|-- local-validation.log
+|-- package.json
+|-- public
+    |-- .gitkeep
+|-- README.md
+|-- src
+    |-- app
+        |-- app.component.ts
+        |-- app.config.ts
+        |-- app.routes.ts
+        |-- core
+            |-- api.service.ts
+            |-- auth.guard.ts
+            |-- auth.interceptor.ts
+            |-- auth.service.ts
+            |-- models.ts
+            |-- push.service.ts
+            |-- realtime.service.ts
+        |-- pages
+            |-- alert-detail.page.html
+            |-- alert-detail.page.scss
+            |-- alert-detail.page.ts
+            |-- alerts.page.html
+            |-- alerts.page.scss
+            |-- alerts.page.ts
+            |-- config.page.html
+            |-- config.page.scss
+            |-- config.page.ts
+            |-- dashboard.page.html
+            |-- dashboard.page.scss
+            |-- dashboard.page.ts
+            |-- device-detail.page.html
+            |-- device-detail.page.scss
+            |-- device-detail.page.ts
+            |-- devices.page.html
+            |-- devices.page.scss
+            |-- devices.page.ts
+            |-- forgot.page.html
+            |-- forgot.page.ts
+            |-- health.page.html
+            |-- health.page.scss
+            |-- health.page.ts
+            |-- history.page.html
+            |-- history.page.scss
+            |-- history.page.ts
+            |-- login.page.html
+            |-- login.page.scss
+            |-- login.page.ts
+            |-- profile.page.html
+            |-- profile.page.scss
+            |-- profile.page.ts
+            |-- register.page.html
+            |-- register.page.ts
+            |-- tabs.page.html
+            |-- tabs.page.scss
+            |-- tabs.page.ts
+            |-- trends.page.html
+            |-- trends.page.scss
+            |-- trends.page.ts
+            |-- verify.page.html
+            |-- verify.page.ts
+    |-- environments
+        |-- environment.prod.ts
+        |-- environment.ts
+    |-- index.html
+    |-- main.ts
+    |-- styles.scss
+    |-- theme
+        |-- variables.scss
+|-- tests
+    |-- structure.test.mjs
+|-- tsconfig.app.json
+|-- tsconfig.json

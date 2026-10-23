@@ -1,0 +1,38 @@
+
+> oil-spill-monitoring-buoy-app@0.1.0 test
+> node --test tests/*.test.mjs
+
+TAP version 13
+# Subtest: Ionic CLI recognizes the Angular project
+ok 1 - Ionic CLI recognizes the Angular project
+  ---
+  duration_ms: 1.023023
+  type: 'test'
+  ...
+# Subtest: no legacy monolithic app.ts
+ok 2 - no legacy monolithic app.ts
+  ---
+  duration_ms: 0.11935
+  type: 'test'
+  ...
+# Subtest: all checklist pages have dedicated TS and HTML
+ok 3 - all checklist pages have dedicated TS and HTML
+  ---
+  duration_ms: 0.2255
+  type: 'test'
+  ...
+# Subtest: no private server credentials in mobile environment
+ok 4 - no private server credentials in mobile environment
+  ---
+  duration_ms: 0.220332
+  type: 'test'
+  ...
+1..4
+# tests 4
+# suites 0
+# pass 4
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 59.979786

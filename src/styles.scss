@@ -1,0 +1,10 @@
+@import '@ionic/angular/css/core.css';
+@import '@ionic/angular/css/normalize.css';
+@import '@ionic/angular/css/structure.css';
+@import '@ionic/angular/css/typography.css';
+@import '@ionic/angular/css/padding.css';
+@import '@ionic/angular/css/float-elements.css';
+@import '@ionic/angular/css/text-alignment.css';
+@import '@ionic/angular/css/text-transformation.css';
+@import '@ionic/angular/css/flex-utils.css';
+html,body {height:100%}body{font-family:system-ui,-apple-system,sans-serif}.page{padding:16px}.metric-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{background:white;padding:16px;border-radius:14px;min-width:0}.metric strong{display:block;font-size:1.75rem}.metric span{font-size:0.78rem;color:var(--app-muted)}.hint{color:var(--app-muted)}.error{color:var(--app-danger)}.card{background:#fff;border-radius:14px;padding:14px;margin:12px 0}.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.badge{font-size:12px;background:#e6f4f6;border-radius:8px;padding:4px 8px}.tap{cursor:pointer}.top-title{font-size:1.5rem;font-weight:700;margin:16px 0}.empty{padding:28px 12px;text-align:center;color:var(--app-muted)}

@@ -1,0 +1,1 @@
+<ion-content class="ion-padding"><div class="auth"><div class="panel"><h2>Reset password</h2><ion-input label="Email" label-placement="stacked" fill="outline" type="email" [(ngModel)]="email"></ion-input><p>{{message}}</p><ion-button expand="block" [disabled]="!email" (click)="reset()">Send reset link</ion-button><a routerLink="/login">Back to login</a></div></div></ion-content>

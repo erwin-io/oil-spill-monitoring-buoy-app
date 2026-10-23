@@ -1,0 +1,5 @@
+{
+  "name": "oil-spill-monitoring-buoy-app",
+  "type": "angular",
+  "integrations": { "capacitor": {} }
+}

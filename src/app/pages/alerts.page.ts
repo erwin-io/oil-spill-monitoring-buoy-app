@@ -1,0 +1,5 @@
+import {Component,inject} from '@angular/core';import {CommonModule} from '@angular/common';import {FormsModule} from '@angular/forms';import {RouterLink} from '@angular/router';import {firstValueFrom} from 'rxjs';import {IonContent,IonHeader,IonToolbar,IonTitle,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent} from '@ionic/angular/standalone';import {ApiService} from '../core/api.service';import {Alert} from '../core/models';
+@Component({standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent],templateUrl:'./alerts.page.html',styleUrls:['./alerts.page.scss']})export class AlertsPage{
+ private api=inject(ApiService);items:Alert[]=[];filter='ALL';loading=true;error='';get shown(){return this.items.filter(x=>this.filter==='ALL'||x.status===this.filter)}
+ async ionViewWillEnter(){await this.load()}async load(e?:any){this.loading=true;try{this.items=(await firstValueFrom(this.api.alerts())).items;this.error=''}catch(x){this.error=(x as Error).message}finally{this.loading=false;e?.target?.complete()}}
+}
