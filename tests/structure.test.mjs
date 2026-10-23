@@ -20,14 +20,14 @@ test('Capacitor Android identity and Angular output paths agree', () => {
   const cap = read('capacitor.config.ts');
   assert.equal(angular.projects.app.architect.build.options.outputPath.base, 'www');
   assert.equal(angular.projects.app.architect.build.options.outputPath.browser, '');
-  assert.match(cap, /webDir:\\s*["']www["']/);
-  assert.match(cap, /appId:\\s*["']io\\.erwin\\.oilspillbuoy["']/);
+  assert.match(cap, /webDir:\s*["']www["']/);
+  assert.match(cap, /appId:\s*["']io\.erwin\.oilspillbuoy["']/);
 });
 test('Angular and Capacitor major-version compatibility guardrails', () => {
   const pkg = JSON.parse(read('package.json'));
   const ts = JSON.parse(read('tsconfig.json'));
-  assert.match(pkg.dependencies.ionicons, /^\\^8\\./);
-  assert.match(pkg.dependencies['@capacitor/core'], /^\\^7\\./);
+  assert.match(pkg.dependencies.ionicons, /^\^8\./);
+  assert.match(pkg.dependencies['@capacitor/core'], /^\^7\./);
   assert.ok(ts.compilerOptions.esModuleInterop);
   assert.ok(ts.compilerOptions.isolatedModules);
   assert.ok(pkg.scripts.check);
