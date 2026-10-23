@@ -1,4 +1,4 @@
-# BlueWatch Mobile — Ionic Angular (Phase 1)
+# Oil Spill Monitoring Buoy Mobile — Ionic Angular (Phase 1)
 
 The project uses **Angular 20**, **Ionic 8**, **Capacitor 7**, and **Firebase JS SDK 12**. It uses the **Email/Password** provider for Phase 1; native and browser Google Sign-In are deliberately disabled until they can be independently configured and verified.
 

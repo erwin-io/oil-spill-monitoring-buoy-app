@@ -21,7 +21,6 @@ import {
   alertCircleOutline,
   checkmarkCircleOutline,
   hardwareChipOutline,
-  idCardOutline,
   informationCircleOutline,
   logOutOutline,
   mailOutline,
@@ -51,13 +50,13 @@ export class ProfilePage {
   constructor() {
     addIcons({
       alertCircleOutline, checkmarkCircleOutline, hardwareChipOutline,
-      idCardOutline, informationCircleOutline, logOutOutline, mailOutline,
+      informationCircleOutline, logOutOutline, mailOutline,
     });
   }
 
   initials(name?: string): string {
-    return (name ?? 'BW').trim().split(/\s+/).slice(0, 2)
-      .map((part) => part[0]?.toUpperCase() ?? '').join('') || 'BW';
+    return (name ?? 'OS').trim().split(/\s+/).slice(0, 2)
+      .map((part) => part[0]?.toUpperCase() ?? '').join('') || 'OS';
   }
 
   async logout(): Promise<void> {

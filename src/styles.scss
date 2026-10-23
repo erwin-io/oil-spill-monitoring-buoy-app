@@ -1,5 +1,5 @@
-/* BlueWatch design system deliberately follows the SEEFIX Reporter Ionic conventions.
- * SEEFIX uses bundled Poppins. BlueWatch loads the public stylesheet with system-font fallback.
+/* Oil Spill Monitoring Buoy design system deliberately follows the SEEFIX Reporter Ionic conventions.
+ * SEEFIX uses bundled Poppins. Oil Spill Monitoring Buoy loads the public stylesheet with system-font fallback.
  */
 @import '@ionic/angular/css/core.css';
 @import '@ionic/angular/css/normalize.css';
@@ -86,7 +86,7 @@ ion-tab-bar { height: 60px; --background: #fff; }
 ion-tab-button { font-size: 12px; }
 ion-tab-button ion-icon { font-size: 26px; }
 
-/* Existing BlueWatch dashboard/list classes: inherit SEEFIX white surfaces and spacing. */
+/* Existing Oil Spill Monitoring Buoy dashboard/list classes: inherit SEEFIX white surfaces and spacing. */
 .page { padding: 16px; max-width: 720px; margin: 0 auto; }
 .metric-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .metric {
@@ -109,4 +109,4 @@ ion-tab-button ion-icon { font-size: 26px; }
 
 ion-list { background: #fff; }
 ion-item > ion-icon[slot='start'] { margin-inline-end: 16px; }
-ion-searchbar { --box-shadow: none; --border-radius: 10px; }
+ion-searchbar { --box-shadow: none; --background: #ededed; --border-radius: 16px; }

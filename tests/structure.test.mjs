@@ -90,7 +90,7 @@ test('native status filters use the same outlined Ionic alert-select pattern', (
   }
 });
 
-test('Original BlueWatch brand section restored only above sign-in form', () => {
+test('Original Oil Spill Monitoring Buoy brand section restored only above sign-in form', () => {
   const login = read('src/app/pages/login.page.html');
   const register = read('src/app/pages/register.page.html');
   const style = read('src/app/pages/login.page.scss');
@@ -104,4 +104,40 @@ test('Original BlueWatch brand section restored only above sign-in form', () => 
   assert.ok(style.includes('.sign-in-wrap'));
   assert.ok(style.includes('gap: 20px'));
   assert.ok(style.includes('box-shadow: none !important'));
+});
+
+test('Only the correct product name appears in user-facing mobile source', () => {
+  const files = ['src/app/pages/login.page.html', 'src/app/pages/register.page.html',
+    'src/app/pages/dashboard.page.html', 'src/app/pages/profile.page.html',
+    'src/index.html', 'capacitor.config.ts'];
+  for(const path of files) assert.ok(!/BlueWatch/i.test(read(path)), path);
+  assert.ok(read('src/app/pages/login.page.html').includes('Oil Spill Monitoring Buoy'));
+  assert.ok(read('src/app/pages/dashboard.page.html').includes('<ion-title>Overview</ion-title>'));
+  assert.ok(read('capacitor.config.ts').includes('appName: "Oil Spill Monitoring Buoy"'));
+});
+
+test('SEEFIX search toolbar and separation from classification filter', () => {
+  const html=read('src/app/pages/devices.page.html');
+  const css=read('src/app/pages/devices.page.scss');
+  const ts=read('src/app/pages/devices.page.ts');
+  assert.match(html, /<ion-toolbar class="search">/);
+  assert.match(html, /\[debounce\]="200"/);
+  assert.match(html, /\(ionInput\)="onSearch\(\$event.detail.value\)"/);
+  assert.ok(html.indexOf('</ion-header>')<html.indexOf('class="classification-filter"'));
+  assert.match(css, /--border-radius:\s*16px/);
+  assert.match(css, /margin-top:\s*12px/);
+  assert.ok(ts.includes('onSearch(value: string | null | undefined)'));
+});
+
+test('Profile hides role and keeps log out sticky inside content', () => {
+  const html=read('src/app/pages/profile.page.html');
+  const css=read('src/app/pages/profile.page.scss');
+  assert.ok(!html.includes('<ion-label>Role</ion-label>'));
+  assert.ok(!html.includes('{{ p.role | titlecase }} account'));
+  assert.ok(html.includes('profile-layout'));
+  assert.ok(html.includes('profile-actions'));
+  assert.ok(html.indexOf('profile-actions')<html.indexOf('</ion-content>'));
+  assert.match(css, /position:\s*sticky/);
+  assert.match(css, /bottom:\s*0/);
+  assert.match(css, /margin-top:\s*auto/);
 });

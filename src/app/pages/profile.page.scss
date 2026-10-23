@@ -20,3 +20,21 @@ ion-note[slot='end'] {
 }
 ion-item > ion-icon[slot='start'] { margin-inline-end: 16px; }
 ion-button.logout { height: 45px !important; }
+
+/* Keep logout inside the Profile scroll container, pinned above the tab bar.
+   Flex pushes it to the bottom on tall screens; sticky keeps it reachable on short screens. */
+.profile-layout {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.profile-actions {
+  margin-top: auto;
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  flex-shrink: 0;
+  background: #fff;
+  padding: 16px max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+.profile-actions .logout { margin: 0; }

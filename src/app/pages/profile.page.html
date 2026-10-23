@@ -5,7 +5,7 @@
 </ion-header>
 
 <ion-content>
-  <div class="content-container">
+  <div class="content-container profile-layout">
     <ng-container *ngIf="auth.profile() as p">
       <ion-list>
         <ion-item lines="none" class="identity">
@@ -14,7 +14,7 @@
           </ion-avatar>
           <ion-label>
             <h2>{{ p.displayName }}</h2>
-            <p>{{ p.role | titlecase }} account</p>
+            <p>Account profile</p>
           </ion-label>
         </ion-item>
       </ion-list>
@@ -36,11 +36,6 @@
             </ion-badge>
           </ng-template>
         </ion-item>
-        <ion-item>
-          <ion-icon slot="start" name="id-card-outline" aria-hidden="true"></ion-icon>
-          <ion-label>Role</ion-label>
-          <ion-note slot="end">{{ p.role | titlecase }}</ion-note>
-        </ion-item>
         <ion-item lines="none">
           <ion-icon slot="start" name="hardware-chip-outline" aria-hidden="true"></ion-icon>
           <ion-label>Assigned buoys</ion-label>
@@ -52,7 +47,7 @@
         <ion-list-header><ion-label>About</ion-label></ion-list-header>
         <ion-item>
           <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
-          <ion-label>BlueWatch</ion-label>
+          <ion-label>Oil Spill Monitoring Buoy</ion-label>
           <ion-note slot="end">Version 0.1.0</ion-note>
         </ion-item>
         <ion-item lines="none">
@@ -62,7 +57,7 @@
         </ion-item>
       </ion-list>
 
-      <div class="ion-padding">
+      <div class="profile-actions">
         <p *ngIf="error" class="error" role="alert">{{ error }}</p>
         <ion-button class="regular logout" expand="block" color="danger" fill="outline"
           [disabled]="signingOut" (click)="logout()">

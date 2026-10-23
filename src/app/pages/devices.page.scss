@@ -1,1 +1,14 @@
-.card p{margin:6px 0}.card strong{max-width:62%;overflow-wrap:anywhere}
+/* Match the SEEFIX Reporter search toolbar and rounded, shadowless input. */
+ion-toolbar.search { --background: var(--ion-color-primary-contrast); }
+ion-toolbar.search ion-searchbar {
+  --border-radius: 16px;
+  --background: #ededed;
+  --box-shadow: none;
+  padding: 8px 12px;
+}
+.classification-filter {
+  margin-top: 12px;
+  margin-bottom: 20px;
+}
+.card p { margin: 6px 0; }
+.card strong { max-width: 62%; overflow-wrap: anywhere; }
