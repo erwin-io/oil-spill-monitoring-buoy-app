@@ -1,1 +1,40 @@
-<ion-content class="ion-padding"><div class="auth"><div class="panel"><h2>Verify your email</h2><p>Open the verification message and follow its link, then return here.</p><p>{{message}}</p><ion-button expand="block" (click)="check()">I verified my email</ion-button><ion-button expand="block" fill="outline" (click)="resend()">Resend email</ion-button><a routerLink="/login">Back to login</a></div></div></ion-content>
+<ion-header class="auth-header ion-no-border">
+  <ion-toolbar color="primary">
+    <ion-title>Verify email</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="auth-page">
+  <main class="auth-shell">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+      <p class="brand-eyebrow">Account verification</p>
+      <h1>One more step</h1>
+      <p class="brand-caption">Verify your email to protect your BlueWatch account.</p>
+    </div>
+    <ion-card class="auth-card">
+      <ion-card-header>
+        <ion-card-title>Check your inbox</ion-card-title>
+        <ion-card-subtitle>Open the Firebase verification email, follow its link, and then return here.</ion-card-subtitle>
+      </ion-card-header>
+      <ion-card-content>
+        <div class="fieldset">
+          @if (message) {
+            <ion-note class="form-error" role="status">{{ message }}</ion-note>
+          }
+          <ion-button class="regular submit-button" expand="block" [disabled]="busy" (click)="check()">
+            @if (busy) {
+              <ion-spinner name="dots" aria-label="Checking email verification"></ion-spinner>
+            } @else {
+              I've verified my email
+            }
+          </ion-button>
+          <ion-button class="regular" expand="block" fill="outline" [disabled]="busy" (click)="resend()">Resend verification email</ion-button>
+        </div>
+        <div class="switch-link">
+          <ion-button fill="clear" routerLink="/login">Back to sign in</ion-button>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </main>
+</ion-content>

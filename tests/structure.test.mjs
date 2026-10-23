@@ -32,3 +32,35 @@ test('Angular and Capacitor major-version compatibility guardrails', () => {
   assert.ok(ts.compilerOptions.isolatedModules);
   assert.ok(pkg.scripts.check);
 });
+
+test('Ionic password visibility controls are present in login and register', () => {
+  const login = read('src/app/pages/login.page.html');
+  const register = read('src/app/pages/register.page.html');
+  const loginComponent = read('src/app/pages/login.page.ts');
+  const registerComponent = read('src/app/pages/register.page.ts');
+  assert.equal((login.match(/<ion-input-password-toggle/g) || []).length, 1);
+  assert.equal((register.match(/<ion-input-password-toggle/g) || []).length, 2);
+  assert.ok(loginComponent.includes('IonInputPasswordToggle'));
+  assert.ok(registerComponent.includes('IonInputPasswordToggle'));
+});
+
+test('Registration requires matching confirmation before Firebase registration', () => {
+  const register = read('src/app/pages/register.page.ts');
+  const template = read('src/app/pages/register.page.html');
+  assert.ok(register.includes('confirmPassword'));
+  assert.ok(register.includes('passwordsMatch'));
+  assert.ok(register.includes('this.form.invalid'));
+  assert.ok(template.includes('Passwords do not match'));
+  assert.ok(template.includes('formControlName="confirmPassword"'));
+});
+
+test('All auth flows use the common Ionic card design', () => {
+  for (const name of ['login', 'register', 'forgot', 'verify']) {
+    const html = read('src/app/pages/' + name + '.page.html');
+    assert.ok(html.includes('ion-card'));
+    assert.ok(html.includes('auth-page'));
+  }
+  const stylesheet = read('src/styles.scss');
+  assert.ok(stylesheet.includes('ion-button.regular'));
+  assert.ok(stylesheet.includes("ion-input[fill='outline']"));
+});

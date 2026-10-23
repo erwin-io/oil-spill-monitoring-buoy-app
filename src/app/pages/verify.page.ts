@@ -1,6 +1,77 @@
-import {Component,inject} from '@angular/core';import {Router,RouterLink} from '@angular/router';import {IonContent,IonButton} from '@ionic/angular/standalone';import {AuthService} from '../core/auth.service';
-@Component({standalone:true,imports:[RouterLink,IonContent,IonButton],templateUrl:'./verify.page.html',styleUrls:['./login.page.scss']})export class VerifyPage{
- message='';private auth=inject(AuthService);private router=inject(Router);
- async resend(){try{await this.auth.resendVerification();this.message='Verification email sent.'}catch(e){this.message=(e as Error).message}}
- async check(){try{if(await this.auth.reloadVerified())await this.router.navigateByUrl('/tabs/overview');else this.message='Email not yet verified.'}catch(e){this.message=(e as Error).message}}
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import {
+  IonButton,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonContent,
+  IonHeader,
+  IonNote,
+  IonRouterLink,
+  IonSpinner,
+  IonTitle,
+  IonToolbar,
+} from '@ionic/angular/standalone';
+import { AuthService } from '../core/auth.service';
+
+@Component({
+  standalone: true,
+  imports: [
+    RouterLink,
+    IonRouterLink,
+    IonButton,
+    IonCard,
+    IonCardContent,
+    IonCardHeader,
+    IonCardSubtitle,
+    IonCardTitle,
+    IonContent,
+    IonHeader,
+    IonNote,
+    IonSpinner,
+    IonTitle,
+    IonToolbar,
+  ],
+  templateUrl: './verify.page.html',
+  styleUrls: ['./login.page.scss'],
+})
+export class VerifyPage {
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  message = '';
+  busy = false;
+
+  async resend(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.message = '';
+    try {
+      await this.auth.resendVerification();
+      this.message = 'Verification email sent. Check your inbox and spam folder.';
+    } catch (error) {
+      this.message = (error as Error).message;
+    } finally {
+      this.busy = false;
+    }
+  }
+
+  async check(): Promise<void> {
+    if (this.busy) return;
+    this.busy = true;
+    this.message = '';
+    try {
+      if (await this.auth.reloadVerified()) {
+        await this.router.navigateByUrl('/tabs/overview', { replaceUrl: true });
+      } else {
+        this.message = 'Email is not yet verified, or your account could not be initialized.';
+      }
+    } catch (error) {
+      this.message = (error as Error).message;
+    } finally {
+      this.busy = false;
+    }
+  }
 }
