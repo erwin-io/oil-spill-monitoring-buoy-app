@@ -62,7 +62,7 @@ test('All auth flows use the common Ionic card design', () => {
   }
   const stylesheet = read('src/styles.scss');
   assert.ok(stylesheet.includes('ion-button.regular'));
-  assert.ok(stylesheet.includes("ion-input[fill='outline']"));
+  assert.ok(stylesheet.includes('ion-input, ion-textarea, ion-select'));
 });
 
 test('SEEFIX-matched 2px/10px global controls, no-shadow auth, blue toolbars', () => {
