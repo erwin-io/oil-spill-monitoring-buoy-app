@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Oil Spill Monitoring Buoy</string>
+    <string name="title_activity_main">Oil Spill Monitoring Buoy</string>
+    <string name="package_name">com.oilspillmonitoringbuoy.app</string>
+    <string name="custom_url_scheme">com.oilspillmonitoringbuoy.app</string>
+</resources>

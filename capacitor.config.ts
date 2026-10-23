@@ -1,6 +1,6 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
-  appId: "io.erwin.oilspillbuoy",
+  appId: "com.oilspillmonitoringbuoy.app",
   appName: "Oil Spill Monitoring Buoy",
   webDir: "www",
   plugins: {
