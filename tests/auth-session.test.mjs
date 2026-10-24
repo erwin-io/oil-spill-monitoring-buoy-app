@@ -160,7 +160,7 @@ test('Android Google credential is exchanged for a Firebase JS token before call
 test('native Google login rejects missing plugin or token without calling the API', async () => {
   const missing = harness({native:true,pluginAvailable:false});
   await assert.rejects(missing.service.signInWithGoogle(),/unavailable/);
-  const noToken = harness({native:true,nativeGoogleToken:undefined});
+  const noToken = harness({native:true,nativeGoogleToken:null});
   await assert.rejects(noToken.service.signInWithGoogle(),/did not return an identity token/);
   assert.equal(noToken.service.profile(),null);
 });
