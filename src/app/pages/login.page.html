@@ -45,6 +45,12 @@
             @else { Sign in }
           </ion-button>
         </form>
+        <div class="google-divider" aria-hidden="true"><span>or</span></div>
+        <ion-button class="google-signin" type="button" expand="block" fill="outline"
+          [disabled]="busy" (click)="googleLogin()">
+          <span class="google-g" aria-hidden="true">G</span>
+          Continue with Google
+        </ion-button>
         <div class="switch-link">
           <span>New here?</span>
           <ion-button fill="clear" routerLink="/register">Create an account</ion-button>
