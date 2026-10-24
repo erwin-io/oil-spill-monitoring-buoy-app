@@ -15,16 +15,17 @@ function transpile(path) {
   }).outputText;
 }
 
-function pushHarness({ native, pluginAvailable = true, removalFails = false } = {}) {
-  const calls = { remove: 0, unregister: 0, request: 0 };
+function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken } = {}) {
+  const calls = { remove: 0, unregister: 0, request: 0, register: 0 };
+  const listeners = {};
   const api = {
-    registerToken: () => Promise.resolve(),
+    registerToken: (token) => { calls.register++; return registerToken ? registerToken(token) : Promise.resolve(); },
     unregisterToken: () => { calls.unregister++; return Promise.resolve(); },
   };
   const router = { navigate: () => Promise.resolve(true) };
   const PushNotifications = {
     requestPermissions: async () => { calls.request++; return { receive: 'granted' }; },
-    addListener: async () => ({ remove: async () => {} }),
+    addListener: async (name, callback) => { listeners[name] = callback; return { remove: async () => {} }; },
     register: async () => {},
     removeAllListeners: async () => {
       calls.remove++;
@@ -50,7 +51,7 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false } = 
     },
     console,
   });
-  return { service: new exports.PushService(), calls };
+  return { service: new exports.PushService(), calls, listeners };
 }
 
 test('web logout push.stop never accesses native-only PushNotifications', async () => {
@@ -143,4 +144,52 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
   assert.deepEqual(calls, { disconnect: 1, push: 1, logout: 1, redirect: 1 });
   assert.equal(page.error, '');
   assert.equal(page.signingOut, false);
+});
+
+test('native FCM token refresh retires old token and skips duplicate callbacks', async () => {
+  const { service, calls, listeners } = pushHarness({ native: true });
+  await service.start();
+  listeners.registration({ value: 'first-token' });
+  await service.registrationTask;
+  listeners.registration({ value: 'first-token' });
+  await service.registrationTask;
+  assert.equal(calls.register, 1);
+  listeners.registration({ value: 'rotated-token' });
+  await service.registrationTask;
+  assert.equal(calls.register, 2);
+  assert.equal(calls.unregister, 1, 'rotation revokes previous token');
+  await service.stop();
+  assert.equal(calls.unregister, 2, 'logout revokes latest token');
+});
+
+test('logout waits for an in-flight registration and revokes late token', async () => {
+  let entered;
+  const started = new Promise((resolve) => { entered = resolve; });
+  let release;
+  const delayed = new Promise((resolve) => { release = resolve; });
+  const { service, calls, listeners } = pushHarness({
+    native: true,
+    registerToken: () => { entered(); return delayed; },
+  });
+  await service.start();
+  listeners.registration({ value: 'late-registration-token' });
+  await started;
+  const stopping = service.stop();
+  release();
+  await stopping;
+  assert.equal(calls.register, 1);
+  assert.equal(calls.unregister, 1, 'server-side late token registration must be revoked');
+  assert.equal(service.token, undefined);
+  listeners.registration({ value: 'callback-after-logout' });
+  await service.registrationTask;
+  assert.equal(calls.register, 1, 'old callback must not register after logout');
+});
+
+test('old FCM notification callbacks cannot navigate after sign-out', async () => {
+  const { service, listeners } = pushHarness({ native: true });
+  await service.start();
+  const oldAction = listeners.pushNotificationActionPerformed;
+  await service.stop();
+  await oldAction({ notification: { data: { alertId: 'old-alert' } } });
+  assert.equal(service.token, undefined);
 });

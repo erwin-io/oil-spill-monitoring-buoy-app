@@ -1,13 +1,85 @@
-import {Injectable,inject,signal} from '@angular/core';import Pusher from 'pusher-js';
-import {AuthService} from './auth.service';import {environment} from '../../environments/environment';
-@Injectable({providedIn:'root'})export class RealtimeService{
- private auth=inject(AuthService);private client?:Pusher;readonly connected=signal(false);
- connect(deviceIds:string[],onRefresh:()=>void){this.disconnect();if(!environment.pusher.key)return;
-  this.client=new Pusher(environment.pusher.key,{cluster:environment.pusher.cluster,channelAuthorization:{transport:'ajax',endpoint:`${environment.api}/realtime/auth`,customHandler:(params,callback)=>{
-   this.auth.token().then(token=>fetch(`${environment.api}/realtime/auth`,{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},body:JSON.stringify({socket_id:params.socketId,channel_name:params.channelName})})).then(async r=>{const data=await r.json();if(!r.ok)throw new Error('Realtime authorization failed');callback(null,data)}).catch(e=>callback(e,null));
-  }}});
-  this.client.connection.bind('connected',()=>{this.connected.set(true);onRefresh()});this.client.connection.bind('disconnected',()=>this.connected.set(false));this.client.connection.bind('error',()=>this.connected.set(false));
-  for(const id of new Set(deviceIds)){const c=this.client.subscribe(`private-device-${id}`);for(const e of ['measurement.created','health.updated','alert.created'])c.bind(e,onRefresh)}
+import {Injectable, inject, signal} from '@angular/core';
+import Pusher from 'pusher-js';
+import {AuthService} from './auth.service';
+import {environment} from '../../environments/environment';
+
+const FALLBACK_POLL_MS = 60_000;
+
+@Injectable({providedIn:'root'})
+export class RealtimeService {
+ private auth=inject(AuthService);
+ private client?:Pusher;
+ private fallbackTimer?:ReturnType<typeof setInterval>;
+ private generation=0;
+ readonly connected=signal(false);
+
+ connect(deviceIds:string[],onRefresh:()=>void):void {
+  this.disconnect();
+  const generation=this.generation;
+  const refresh=()=>{if(generation===this.generation)onRefresh();};
+  const beginFallback=()=>{
+   if(generation!==this.generation)return;
+   this.connected.set(false);
+   if(!this.fallbackTimer)this.fallbackTimer=setInterval(refresh,FALLBACK_POLL_MS);
+  };
+  const stopFallback=()=>{
+   if(this.fallbackTimer){clearInterval(this.fallbackTimer);this.fallbackTimer=undefined;}
+  };
+  // REST is authoritative: continue periodic reconciliation when Pusher is
+  // disabled, unavailable or disconnected. An initial REST load is owned by
+  // the calling page before connect().
+  beginFallback();
+  if(!environment.pusher.key)return;
+  try{
+   this.client=new Pusher(environment.pusher.key,{
+    cluster:environment.pusher.cluster,
+    channelAuthorization:{
+     transport:'ajax',
+     endpoint:`${environment.api}/realtime/auth`,
+     customHandler:(params,callback)=>{
+      this.auth.token().then(token=>fetch(`${environment.api}/realtime/auth`,{
+       method:'POST',
+       headers:{'Content-Type':'application/json',Authorization:`Bearer ${token}`},
+       body:JSON.stringify({socket_id:params.socketId,channel_name:params.channelName})
+      })).then(async r=>{
+       const data=await r.json();
+       if(!r.ok)throw new Error('Realtime authorization failed');
+       callback(null,data);
+      }).catch(e=>callback(e,null));
+     }
+    }
+   });
+   this.client.connection.bind('connected',()=>{
+    if(generation!==this.generation)return;
+    stopFallback();
+    this.connected.set(true);
+    refresh(); // reconcile missed events after every reconnect
+   });
+   for(const event of ['disconnected','unavailable','failed','error']){
+    this.client.connection.bind(event,beginFallback);
+   }
+   for(const id of new Set(deviceIds)){
+    const channel=this.client.subscribe(`private-device-${id}`);
+    for(const event of ['measurement.created','health.updated','alert.created','alert.acknowledged']){
+     channel.bind(event,refresh);
+    }
+   }
+   const uid=this.auth.profile()?.uid;
+   if(uid){
+    const userChannel=this.client.subscribe(`private-user-${uid}`);
+    userChannel.bind('alert.acknowledged',refresh);
+   }
+  }catch(error){
+   console.warn('Realtime unavailable; continuing REST refresh:',error);
+   beginFallback();
+  }
  }
- disconnect(){this.client?.disconnect();this.client=undefined;this.connected.set(false)}
+
+ disconnect():void {
+  ++this.generation;
+  if(this.fallbackTimer){clearInterval(this.fallbackTimer);this.fallbackTimer=undefined;}
+  this.client?.disconnect();
+  this.client=undefined;
+  this.connected.set(false);
+ }
 }
