@@ -88,7 +88,7 @@ test('mobile history appends paginated measurements once and sends next cursor',
  assert.equal(page.items.length,1);
  await page.more();
  assert.deepEqual(cursors,[undefined,'cursor-1']);
- assert.deepEqual(page.items.map(x=>x.measurementId),['m1','m2']);
+ assert.deepEqual(Array.from(page.items,x=>x.measurementId),['m1','m2']);
  assert.equal(page.cursor,null);
 });
 test('optimistic conflict reloads current configuration and retains visible error message',async()=>{
