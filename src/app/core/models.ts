@@ -6,4 +6,4 @@ export interface Measurement {id:string;deviceId:string;measurementId:string;mea
 export interface Health { id:string;measuredAt:string;batteryPercent?:number;batteryVoltage?:number;charging?:boolean;signalStrengthDbm?:number;storage?:string;sensor?:string;samplePump?:string;washPump?:string;valve?:string;cellStatus?:string;pendingUploads?:number;errorCodes?:string[] }
 export interface Alert {id:string;deviceId:string;deviceName?:string;unread?:boolean;type:string;severity:string;status:string;createdAt:string;acknowledgedBy?:string;acknowledgedAt?:string;measurementId?:string}
 export interface Config {configVersion:number;samplingIntervalMinutes:number;measurementRepeats:number;settleSeconds:number;cleaningCycles:number;maxCleaningRetries:number;oilConfidenceThreshold:number;lowBatteryThreshold:number}
-export interface Page<T>{items:T[];nextCursor:string|null}
+export interface Page<T>{items:T[];nextCursor:string|null;openCount?:number;unreadCount?:number}
