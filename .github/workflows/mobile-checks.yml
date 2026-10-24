@@ -21,6 +21,8 @@ jobs:
           cache: npm
       - name: Reproducible dependency installation
         run: npm ci --no-audit --no-fund
+      - name: Local validation script syntax
+        run: node --check scripts/verify-local.mjs
       - name: Structural tests
         run: npm test
       - name: Angular production build
