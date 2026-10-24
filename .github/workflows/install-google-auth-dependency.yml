@@ -34,4 +34,8 @@ jobs:
           fi
           test "$(git branch --show-current)" = 'main'
           git commit -m 'build: lock Capacitor 7 Firebase Google Auth plugin'
+          # Source-only commits may land while the lockfile is being generated.
+          # Rebase the two dependency files onto the newest main, without force.
+          git fetch origin main
+          git rebase origin/main
           git push origin HEAD:main
