@@ -19,6 +19,15 @@ test('Email/Password remains available alongside native and web Google Sign-In',
   assert.ok(auth.includes('GoogleAuthProvider.credential(googleIdToken)'), 'native Google token exchanged for Firebase JS session');
   assert.ok(login.includes('(click)="googleLogin()"'));
   assert.ok(login.includes('Continue with Google'));
+  assert.ok(login.includes('class="google-icon"'));
+  assert.ok(login.includes('<svg viewBox="0 0 24 24"'));
+  for (const color of ['#4285F4', '#34A853', '#FBBC05', '#EA4335']) {
+    assert.ok(login.includes('fill="' + color + '"'), 'Google mark must contain ' + color);
+  }
+  assert.ok(!login.includes('class="google-g"'), 'Do not approximate the logo with styled text');
+  const logoStyles = read('src/app/pages/login.page.scss');
+  assert.ok(logoStyles.includes('.google-icon svg'));
+  assert.ok(!logoStyles.includes('.google-g {'));
   assert.ok(cap.includes('skipNativeAuth: true'));
   assert.ok(cap.includes('"google.com"'));
   assert.ok(gradle.includes('rgcfaIncludeGoogle = true'));
