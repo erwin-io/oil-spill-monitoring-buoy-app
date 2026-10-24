@@ -26,11 +26,16 @@ export class AuthService {
 
   readonly currentUser = signal<User | null>(null);
   readonly profile = signal<Profile | null>(null);
+  private sessionGeneration = 0;
 
   private readonly initialized = new Promise<void>((resolve) => {
     onAuthStateChanged(this.auth, (user) => {
+      if (this.currentUser()?.uid !== user?.uid) {
+        ++this.sessionGeneration;
+        // Invalidate the old profile before pages calculate role-dependent UI.
+        this.profile.set(null);
+      }
       this.currentUser.set(user);
-      if (!user) this.profile.set(null);
       resolve();
     });
   });
@@ -39,14 +44,14 @@ export class AuthService {
     await this.initialized;
     const user = this.auth.currentUser;
     if (!user || !user.emailVerified) return false;
-    if (!this.profile()) {
+    if (this.profile()?.uid !== user.uid) {
       try {
         await this.bootstrap();
       } catch {
         return false;
       }
     }
-    return true;
+    return this.profile()?.uid === user.uid;
   }
 
   async token(): Promise<string> {
@@ -56,12 +61,19 @@ export class AuthService {
   }
 
   async bootstrap(): Promise<Profile> {
-    const token = await this.token();
+    const user = this.auth.currentUser;
+    if (!user) throw new Error('Sign in required');
+    const generation = this.sessionGeneration;
+    const token = await user.getIdToken();
     const profile = await firstValueFrom(
       this.http.post<Profile>(`${environment.api}/auth/bootstrap`, {}, {
         headers: { Authorization: `Bearer ${token}` },
       }),
     );
+    if (generation !== this.sessionGeneration || this.auth.currentUser?.uid !== user.uid) {
+      throw new Error('Session changed during profile bootstrap');
+    }
+    if (profile.uid !== user.uid) throw new Error('Profile identity mismatch');
     this.profile.set(profile);
     return profile;
   }
@@ -97,6 +109,7 @@ export class AuthService {
   }
 
   async logout(): Promise<void> {
+    ++this.sessionGeneration;
     this.profile.set(null);
     await signOut(this.auth);
   }
