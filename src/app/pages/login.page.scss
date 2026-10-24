@@ -151,13 +151,18 @@ ion-button.regular { margin: 6px 0 0; }
   text-transform: none;
   font-weight: 600;
 }
-.google-g {
-  font-size: 21px;
-  line-height: 1;
-  font-weight: 800;
+.google-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
   margin-right: 12px;
-  background: conic-gradient(#4285f4 0 30%, #34a853 30% 55%, #fbbc05 55% 72%, #ea4335 72% 90%, #4285f4 90% 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  flex: 0 0 20px;
+}
+
+.google-icon svg {
+  display: block;
+  width: 20px;
+  height: 20px;
 }
