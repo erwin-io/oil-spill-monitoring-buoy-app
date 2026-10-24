@@ -1,5 +1,8 @@
 ext {
     minSdkVersion = 23
+    // Capawesome Google Sign-In on Capacitor 7.
+    rgcfaIncludeGoogle = true
+    androidxCredentialsVersion = '1.3.0'
     compileSdkVersion = 35
     targetSdkVersion = 35
     androidxActivityVersion = '1.9.2'
