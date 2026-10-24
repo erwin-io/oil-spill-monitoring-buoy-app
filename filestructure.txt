@@ -10,12 +10,16 @@
     |-- workflows
         |-- mobile-checks.yml
 |-- .gitignore
+|-- .test-output
+    |-- mobile-local-validation.json
 |-- android
     |-- .gitignore
     |-- .gradle
         |-- 8.11.1
             |-- checksums
                 |-- checksums.lock
+                |-- md5-checksums.bin
+                |-- sha1-checksums.bin
             |-- executionHistory
                 |-- executionHistory.bin
                 |-- executionHistory.lock
@@ -66,53 +70,57 @@
                         |-- 3rdpartylicenses.txt
                         |-- chunk-2NIBOUWM.js
                         |-- chunk-36YRN7VH.js
-                        |-- chunk-3LYQZMYJ.js
+                        |-- chunk-3D55CZMP.js
                         |-- chunk-656IAWIR.js
                         |-- chunk-7SCF5KWC.js
+                        |-- chunk-A2PV5G3R.js
                         |-- chunk-APZOKS4U.js
-                        |-- chunk-B2TXRPXA.js
-                        |-- chunk-B7H64NAE.js
-                        |-- chunk-B7S7ANGL.js
-                        |-- chunk-BRFKYRLY.js
+                        |-- chunk-AQ6C5CZ4.js
                         |-- chunk-BXCMWXT6.js
+                        |-- chunk-CPL7NXXH.js
+                        |-- chunk-CR6T5ZZO.js
                         |-- chunk-CZKVMTTX.js
-                        |-- chunk-EKOT6H4S.js
-                        |-- chunk-HFKN4Y6H.js
+                        |-- chunk-DQVKWHOP.js
+                        |-- chunk-DZ45DQPO.js
+                        |-- chunk-FCTVTU7J.js
+                        |-- chunk-FOMCA55Z.js
+                        |-- chunk-H5YL7S6X.js
+                        |-- chunk-HFTWBZX7.js
                         |-- chunk-HPCWH3QM.js
                         |-- chunk-I547WOKC.js
-                        |-- chunk-IM7G7C36.js
+                        |-- chunk-IS47WZPL.js
+                        |-- chunk-JCW7UVD2.js
                         |-- chunk-JGSK7KMF.js
-                        |-- chunk-KFYN6SOR.js
-                        |-- chunk-KISN3STP.js
-                        |-- chunk-KQVQQDK4.js
-                        |-- chunk-LNRCBENC.js
                         |-- chunk-MDHAG5BY.js
                         |-- chunk-NMFL75IO.js
                         |-- chunk-NQIP3AKQ.js
+                        |-- chunk-OMCW4V2X.js
                         |-- chunk-P5NMLNJJ.js
                         |-- chunk-PGJBL35M.js
-                        |-- chunk-PXSA46GH.js
                         |-- chunk-QABL74J7.js
                         |-- chunk-QOYJPVEA.js
                         |-- chunk-R7UQ33YU.js
-                        |-- chunk-RCKOBDXH.js
                         |-- chunk-SBTABI4F.js
-                        |-- chunk-ST2OJFQX.js
+                        |-- chunk-SEGBZJWZ.js
                         |-- chunk-T47GPCYE.js
+                        |-- chunk-TO6L2REN.js
                         |-- chunk-UFJVUPNV.js
-                        |-- chunk-VDRPDU5C.js
-                        |-- chunk-VHV6HNWG.js
-                        |-- chunk-VOUPST7K.js
+                        |-- chunk-V2XWZMPW.js
+                        |-- chunk-VBXQXPDC.js
+                        |-- chunk-VHRJK7NG.js
+                        |-- chunk-WFMAM73Y.js
                         |-- chunk-WH2HIQK6.js
                         |-- chunk-X63YDRJ4.js
+                        |-- chunk-X72UO2Y7.js
+                        |-- chunk-YMZTIMIZ.js
                         |-- chunk-YQOHQL6J.js
+                        |-- chunk-YWHMIVE7.js
                         |-- chunk-ZCLHWNTO.js
-                        |-- chunk-ZERN3Q7L.js
                         |-- chunk-ZLLWZI7G.js
                         |-- cordova.js
                         |-- cordova_plugins.js
                         |-- index.html
-                        |-- main-6XGP5NY2.js
+                        |-- main-GGEQT4HV.js
                         |-- polyfills-5CFQRCPP.js
                         |-- prerendered-routes.json
                         |-- styles-AEKRYFOG.css
@@ -249,6 +257,10 @@
     |-- variables.gradle
 |-- angular.json
 |-- capacitor.config.ts
+|-- docs
+    |-- GOOGLE_SIGN_IN_PRODUCTION.md
+    |-- PHASE2_MOBILE_SOFTWARE_ACCEPTANCE.md
+    |-- THESIS_LOCAL_MOBILE_VALIDATION.md
 |-- ionic.config.json
 |-- LICENSE
 |-- local-validation.log
@@ -260,13 +272,11 @@
 |-- README.md
 |-- resources
     |-- android
-        |-- icon
         |-- icon-background.png
         |-- icon-foreground.png
         |-- icon-only.png
         |-- icon-transparent.png
         |-- icon.png
-        |-- splash
         |-- splash-dark.png
         |-- splash.png
     |-- icon-background.png
@@ -276,6 +286,8 @@
     |-- icon.png
     |-- splash-dark.png
     |-- splash.png
+|-- scripts
+    |-- verify-local.mjs
 |-- src
     |-- app
         |-- app.component.ts
@@ -289,6 +301,7 @@
             |-- models.ts
             |-- push.service.ts
             |-- realtime.service.ts
+            |-- ui-error.ts
         |-- pages
             |-- alert-detail.page.html
             |-- alert-detail.page.scss
@@ -341,59 +354,69 @@
     |-- theme
         |-- variables.scss
 |-- tests
+    |-- api-contract.test.mjs
+    |-- auth-session.test.mjs
+    |-- pages-flow.test.mjs
     |-- push-platform.test.mjs
+    |-- realtime-reconnect.test.mjs
     |-- structure.test.mjs
+    |-- trends-fixture.test.mjs
+    |-- ui-error.test.mjs
 |-- tsconfig.app.json
 |-- tsconfig.json
 |-- www
     |-- 3rdpartylicenses.txt
     |-- chunk-2NIBOUWM.js
     |-- chunk-36YRN7VH.js
-    |-- chunk-3LYQZMYJ.js
+    |-- chunk-3D55CZMP.js
     |-- chunk-656IAWIR.js
     |-- chunk-7SCF5KWC.js
+    |-- chunk-A2PV5G3R.js
     |-- chunk-APZOKS4U.js
-    |-- chunk-B2TXRPXA.js
-    |-- chunk-B7H64NAE.js
-    |-- chunk-B7S7ANGL.js
-    |-- chunk-BRFKYRLY.js
+    |-- chunk-AQ6C5CZ4.js
     |-- chunk-BXCMWXT6.js
+    |-- chunk-CPL7NXXH.js
+    |-- chunk-CR6T5ZZO.js
     |-- chunk-CZKVMTTX.js
-    |-- chunk-EKOT6H4S.js
-    |-- chunk-HFKN4Y6H.js
+    |-- chunk-DQVKWHOP.js
+    |-- chunk-DZ45DQPO.js
+    |-- chunk-FCTVTU7J.js
+    |-- chunk-FOMCA55Z.js
+    |-- chunk-H5YL7S6X.js
+    |-- chunk-HFTWBZX7.js
     |-- chunk-HPCWH3QM.js
     |-- chunk-I547WOKC.js
-    |-- chunk-IM7G7C36.js
+    |-- chunk-IS47WZPL.js
+    |-- chunk-JCW7UVD2.js
     |-- chunk-JGSK7KMF.js
-    |-- chunk-KFYN6SOR.js
-    |-- chunk-KISN3STP.js
-    |-- chunk-KQVQQDK4.js
-    |-- chunk-LNRCBENC.js
     |-- chunk-MDHAG5BY.js
     |-- chunk-NMFL75IO.js
     |-- chunk-NQIP3AKQ.js
+    |-- chunk-OMCW4V2X.js
     |-- chunk-P5NMLNJJ.js
     |-- chunk-PGJBL35M.js
-    |-- chunk-PXSA46GH.js
     |-- chunk-QABL74J7.js
     |-- chunk-QOYJPVEA.js
     |-- chunk-R7UQ33YU.js
-    |-- chunk-RCKOBDXH.js
     |-- chunk-SBTABI4F.js
-    |-- chunk-ST2OJFQX.js
+    |-- chunk-SEGBZJWZ.js
     |-- chunk-T47GPCYE.js
+    |-- chunk-TO6L2REN.js
     |-- chunk-UFJVUPNV.js
-    |-- chunk-VDRPDU5C.js
-    |-- chunk-VHV6HNWG.js
-    |-- chunk-VOUPST7K.js
+    |-- chunk-V2XWZMPW.js
+    |-- chunk-VBXQXPDC.js
+    |-- chunk-VHRJK7NG.js
+    |-- chunk-WFMAM73Y.js
     |-- chunk-WH2HIQK6.js
     |-- chunk-X63YDRJ4.js
+    |-- chunk-X72UO2Y7.js
+    |-- chunk-YMZTIMIZ.js
     |-- chunk-YQOHQL6J.js
+    |-- chunk-YWHMIVE7.js
     |-- chunk-ZCLHWNTO.js
-    |-- chunk-ZERN3Q7L.js
     |-- chunk-ZLLWZI7G.js
     |-- index.html
-    |-- main-6XGP5NY2.js
+    |-- main-GGEQT4HV.js
     |-- polyfills-5CFQRCPP.js
     |-- prerendered-routes.json
     |-- styles-AEKRYFOG.css
