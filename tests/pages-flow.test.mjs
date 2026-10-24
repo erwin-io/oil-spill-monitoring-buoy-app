@@ -28,6 +28,7 @@ function mount(pageName,{api={},role='VIEWER'}={}){
   '../core/realtime.service':{RealtimeService},
   '../core/push.service':{PushService},
   '../core/auth.service':{AuthService},
+  '../core/ui-error':{uiError: e=>e?.message??'Test error'},
  };
  const exports={};
  vm.runInNewContext(ts.transpileModule(readFileSync(`src/app/pages/${pageName}.page.ts`,'utf8'),{
