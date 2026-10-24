@@ -4,22 +4,16 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding page">
-  <div class="wrap sign-in-wrap">
+<ion-content class="ion-padding login-page">
+  <main class="login-layout">
     <div class="brand" aria-label="Oil Spill Monitoring Buoy">
       <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
       <p class="brand-eyebrow">Oil Spill Monitoring Buoy</p>
       <h1>Welcome back</h1>
-      <p class="brand-caption">Secure monitoring for cleaner coastal waters.</p>
+      <p class="brand-caption">Sign in to monitor coastal waters and follow buoy alerts.</p>
     </div>
 
     <ion-card class="card no-shadow">
-      <ion-card-header>
-        <ion-card-title>Oil Spill Monitoring Buoy</ion-card-title>
-        <ion-card-subtitle>
-          Sign in to <strong>monitor oil spill conditions</strong> and follow buoy alerts.
-        </ion-card-subtitle>
-      </ion-card-header>
       <ion-card-content>
         <form [formGroup]="form" (ngSubmit)="login()" novalidate class="fieldset">
           <ion-input formControlName="email" type="email" label="Email"
@@ -52,10 +46,10 @@
           </ion-button>
         </form>
         <div class="switch-link">
-          <span>New to Oil Spill Monitoring Buoy?</span>
+          <span>New here?</span>
           <ion-button fill="clear" routerLink="/register">Create an account</ion-button>
         </div>
       </ion-card-content>
     </ion-card>
-  </div>
+  </main>
 </ion-content>
