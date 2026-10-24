@@ -1,54 +1,35 @@
-/* SEEFIX auth page layout: white background, centered flat card, no border/shadow. */
-.page { --background: var(--ion-color-primary-contrast); }
-.wrap {
-  min-height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+/* Compact, scroll-safe sign-in layout. Scoped to login; keep other Ionic pages unchanged. */
+.login-page {
+  --background: #fff;
+  --padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
 }
-.card {
+
+.login-layout {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: 12px 0 16px;
+  gap: 18px;
+}
+
+.card {
+  box-sizing: border-box;
+  width: 100%;
   margin: 0 !important;
   padding: 0;
-  border: none !important;
+  border: 0 !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   --background: #fff;
 }
-ion-card-title { font-weight: 700; color: var(--ion-color-primary); }
-ion-card-subtitle { font-size: 16px !important; text-transform: none; font-weight: 400; }
-ion-button.regular { margin: 10px 0 0; }
-.forgot-row {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: -8px;
-}
-.forgot-row ion-button, .switch-link ion-button, .link-row ion-button {
-  margin: 0;
-  text-transform: none;
-  font-weight: 600;
-}
-.switch-link, .link-row {
-  margin-top: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.notice { margin-bottom: 15px; }
-.field-error { display: block; margin-top: -7px; color: var(--ion-color-danger); font-size: 13px; }
-.field-hint { display: block; font-size: 13px; color: var(--ion-color-medium-shade); margin: -8px 0 2px; }
-@media (max-width: 380px) { .switch-link { flex-wrap: wrap; } }
 
-/* Restore the original Oil Spill Monitoring Buoy sign-in banner, scoped to the login page only.
-   Markup, dimensions and copy are from the pre-SEEFIX sign-in implementation.
-   The existing SEEFIX form, toolbar and shadowless card styling remain unchanged. */
-.sign-in-wrap {
-  flex-direction: column;
-  gap: 20px;
-  width: 100%;
-  max-width: 470px;
-  margin: 0 auto;
+.card ion-card-content {
+  padding: 4px 8px 10px;
 }
 
 .brand {
@@ -57,15 +38,16 @@ ion-button.regular { margin: 10px 0 0; }
 }
 
 .brand-mark {
-  width: 48px;
-  height: 48px;
-  border-radius: 15px;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  border-radius: 14px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   gap: 4px;
-  margin: 0 auto 13px;
-  padding: 13px 10px;
+  margin: 0 auto 10px;
+  padding: 11px 9px;
   background: #e0f4f5;
   box-shadow: inset 0 0 0 1px #cae9eb;
 
@@ -74,38 +56,70 @@ ion-button.regular { margin: 10px 0 0; }
     background: var(--ion-color-primary);
     width: 7px;
     border-radius: 6px 6px 2px 2px;
-    height: 17px;
+    height: 16px;
   }
-
-  span:nth-child(2) {
-    height: 26px;
-  }
-
-  span:nth-child(3) {
-    height: 21px;
-  }
+  span:nth-child(2) { height: 22px; }
+  span:nth-child(3) { height: 18px; }
 }
 
 .brand-eyebrow {
-  margin: 0 0 6px;
-  font-size: 12px;
-  letter-spacing: 0.09em;
+  margin: 0 0 5px;
+  font-size: 11px;
+  letter-spacing: 0.075em;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--ion-color-primary);
 }
 
 .brand h1 {
-  font-size: clamp(26px, 6vw, 32px);
+  margin: 0 0 5px;
+  font-size: clamp(25px, 6vw, 30px);
   letter-spacing: -0.03em;
   line-height: 1.2;
   font-weight: 750;
-  margin: 0 0 8px;
 }
 
 .brand-caption {
-  color: var(--app-muted);
-  font-size: 14px;
-  line-height: 1.55;
   margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--app-muted, #64748b);
+}
+
+ion-button.regular { margin: 6px 0 0; }
+
+.forgot-row {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: -8px;
+}
+.forgot-row ion-button,
+.switch-link ion-button {
+  margin: 0;
+  text-transform: none;
+  font-weight: 600;
+}
+.switch-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 4px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+.switch-link ion-button { font-size: 13px; }
+.field-error {
+  display: block;
+  margin-top: -7px;
+  color: var(--ion-color-danger);
+  font-size: 13px;
+}
+@media (max-height: 700px) {
+  .login-layout {
+    justify-content: flex-start;
+    gap: 12px;
+    padding-top: 8px;
+  }
+  .brand-mark { margin-bottom: 7px; }
 }
