@@ -18,7 +18,7 @@ function trendsHarness(){
    .map(x=>[x,class{}])
  );
  const modules={
-  '@angular/core':{Component:()=>x=>x,inject:(type)=>{
+  '@angular/core':{Component:()=>x=>x,ViewChild:()=>()=>{},inject:(type)=>{
    if(type===ActivatedRoute)return {snapshot:{paramMap:{get:()=> 'THESIS_TEST_01'}}};
    return {};
   }},
