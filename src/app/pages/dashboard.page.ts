@@ -9,6 +9,13 @@ import {ApiService} from '../core/api.service';import {Device,Alert} from '../co
  get lowBattery(){return this.devices.filter(d=>d.batteryPercent!==undefined&&d.batteryPercent<20).length}
  get maintenance(){return this.devices.filter(d=>d.cellStatus==='MAINTENANCE_REQUIRED').length}
  async ionViewWillEnter(){await this.reload();await this.push.start()}
+ ionViewWillLeave(){this.realtime.disconnect()}
  async reload(event?:any){this.busy=!event;this.error='';try{const [d,a]=await Promise.all([firstValueFrom(this.api.devices()),firstValueFrom(this.api.alerts())]);this.devices=d.items;this.alerts=a.items;this.updated=new Date().toISOString();this.realtime.connect(d.items.map(v=>v.id),()=>{void this.refreshSilent()})}catch(e){this.error=(e as Error).message}finally{this.busy=false;event?.target?.complete()}}
- async refreshSilent(){try{const [d,a]=await Promise.all([firstValueFrom(this.api.devices()),firstValueFrom(this.api.alerts())]);this.devices=d.items;this.alerts=a.items;this.updated=new Date().toISOString()}catch{this.error='Data may be stale. Pull to refresh.'}}
+ async refreshSilent(){try{
+  const previousIds=this.devices.map(x=>x.id).sort().join('|');
+  const [d,a]=await Promise.all([firstValueFrom(this.api.devices()),firstValueFrom(this.api.alerts())]);
+  this.devices=d.items;this.alerts=a.items;this.updated=new Date().toISOString();this.error='';
+  const currentIds=d.items.map(x=>x.id).sort().join('|');
+  if(previousIds!==currentIds)this.realtime.connect(d.items.map(x=>x.id),()=>{void this.refreshSilent()});
+ }catch{this.error='Data may be stale. Pull to refresh.'}}
 }
