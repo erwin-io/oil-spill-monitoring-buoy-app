@@ -28,6 +28,7 @@ function mount(pageName,{api={},role='VIEWER'}={}){
   '../core/realtime.service':{RealtimeService},
   '../core/push.service':{PushService},
   '../core/auth.service':{AuthService},
+  '../core/ui-error':{uiError: e=>e?.message??'Test error'},
  };
  const exports={};
  vm.runInNewContext(ts.transpileModule(readFileSync(`src/app/pages/${pageName}.page.ts`,'utf8'),{
@@ -36,15 +37,15 @@ function mount(pageName,{api={},role='VIEWER'}={}){
   exports,require:name=>{if(!(name in modules))throw Error('Unknown '+name);return modules[name];},console,
  });
  const className={'dashboard':'DashboardPage','devices':'DevicesPage',
-  'history':'HistoryPage','config':'ConfigPage'}[pageName];
+  'history':'HistoryPage','config':'ConfigPage','alerts':'AlertsPage','device-detail':'DeviceDetailPage'}[pageName];
  return {page:new exports[className](),realtime,auth};
 }
 test('dashboard counters read actual fixture classifications, battery and current last-seen time',async()=>{
  const records=[
   {id:'THESIS_TEST_01',name:'One',latestClassification:'PETROLEUM',batteryPercent:10,
-   cellStatus:'MAINTENANCE_REQUIRED',lastSeenAt:new Date().toISOString()},
+   cellStatus:'MAINTENANCE_REQUIRED',lastSeenAt:new Date().toISOString(),lastMeasurementAt:new Date().toISOString()},
   {id:'THESIS_TEST_02',name:'Two',latestClassification:'INTERFERENCE',batteryPercent:80,
-   cellStatus:'CLEAN',lastSeenAt:'2000-01-01T00:00:00.000Z'},
+   cellStatus:'CLEAN',lastSeenAt:'2000-01-01T00:00:00.000Z',lastMeasurementAt:'2026-01-01T00:00:00Z'},
  ];
  const alerts=[{id:'test-alert',status:'OPEN',type:'PETROLEUM'}];
  let subscribed=[];
@@ -60,6 +61,7 @@ test('dashboard counters read actual fixture classifications, battery and curren
  assert.equal(page.lowBattery,1);
  assert.equal(page.maintenance,1);
  assert.equal(page.alerts.length,1);
+ assert.deepEqual(Array.from(page.recentMeasurements,x=>x.id),['THESIS_TEST_01','THESIS_TEST_02']);
  assert.deepEqual(Array.from(subscribed),['THESIS_TEST_01','THESIS_TEST_02']);
 });
 test('buoy page searches and classification filters authoritative API items',async()=>{
@@ -112,4 +114,48 @@ test('viewer cannot attempt a configuration mutation',async()=>{
  await page.save();
  assert.equal(page.canEdit,false);
  assert.equal(calls,0);
+});
+
+
+test('buoy list labels online, offline, not-yet-seen and disabled status correctly',()=>{
+ const {page}=mount('devices');
+ assert.equal(page.onlineLabel({id:'A',status:'ACTIVE'}),'Not yet online');
+ assert.equal(page.onlineLabel({id:'A',status:'DISABLED',lastSeenAt:new Date().toISOString()}),'Disabled');
+ assert.equal(page.onlineLabel({id:'A',status:'ACTIVE',lastSeenAt:new Date().toISOString()}),'Online');
+ assert.equal(page.onlineLabel({id:'A',status:'ACTIVE',lastSeenAt:'2001-01-01T00:00:00Z'}),'Offline');
+});
+
+test('alert inbox resolves buoy name, filters server-side, paginates without duplicate records',async()=>{
+ const cursors=[];const {page}=mount('alerts',{api:{
+  alerts:(cursor,status)=>{
+   cursors.push([cursor,status]);
+   return Promise.resolve(cursor?{items:[{id:'a2',deviceId:'B1',status:'OPEN'},{id:'a3',deviceId:'B1',status:'OPEN'}],nextCursor:null}
+    :{items:[{id:'a1',deviceId:'B1',status:'OPEN',unread:true},{id:'a2',deviceId:'B1',status:'OPEN'}],nextCursor:'a2'});
+  },
+  devices:()=>Promise.resolve({items:[{id:'B1',name:'Buoy One'}]})
+ }});
+ page.filter='OPEN';
+ await page.ionViewWillEnter();
+ assert.equal(page.nameOf(page.items[0]),'Buoy One');
+ assert.equal(page.items[0].unread,true);
+ assert.equal(page.cursor,'a2');
+ await page.more();
+ assert.deepEqual(Array.from(page.items,x=>x.id),['a1','a2','a3']);
+ assert.equal(page.cursor,null);
+ assert.equal(cursors.length,2);
+ assert.equal(cursors[0][1],'OPEN');
+ assert.equal(cursors[1][0],'a2');
+});
+
+test('buoy detail uses truthful last-known cleaning telemetry and tolerates absent health',async()=>{
+ const api={
+  device:()=>Promise.resolve({id:'B1',name:'Test buoy'}),
+  latest:()=>Promise.reject({status:404}),
+  health:()=>Promise.resolve({items:[{washPump:'RUNNING',valve:'OPEN',samplePump:'OFF'}]})
+ };
+ const {page}=mount('device-detail',{api});
+ await page.ionViewWillEnter();
+ assert.equal(page.device.name,'Test buoy');
+ assert.equal(page.health.washPump,'RUNNING');
+ assert.equal(page.latest,undefined);
 });

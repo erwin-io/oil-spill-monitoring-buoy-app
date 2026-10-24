@@ -29,14 +29,14 @@
       </ion-select>
     </div>
     <p *ngIf="loading">Loading...</p>
-    <p *ngIf="error" class="error">{{error}}</p>
+    <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button fill="outline" expand="block" (click)="load()">Retry loading</ion-button></div>
     <div *ngFor="let d of shown" class="card tap" [routerLink]="['/tabs/buoys',d.id]">
       <div class="row">
         <strong>{{d.name}}</strong>
         <span class="badge">{{d.latestClassification||'No reading'}}</span>
       </div>
       <p class="hint">{{d.id}} · Battery {{d.batteryPercent??'—'}}% · GSM {{d.signalStrengthDbm??'—'}} dBm</p>
-      <p class="hint">Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p>
+      <p class="hint">Status: <strong>{{onlineLabel(d)}}</strong> · Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p>
     </div>
     <div *ngIf="!loading&&!shown.length" class="empty">
       No matching buoys. Your administrator may need to assign device access.
