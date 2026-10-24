@@ -23,7 +23,5 @@ jobs:
         run: npm ci --no-audit --no-fund
       - name: Local validation script syntax
         run: node --check scripts/verify-local.mjs
-      - name: Structural tests
-        run: npm test
-      - name: Angular production build
-        run: npm run check
+      - name: Execute local mobile validation runner
+        run: npm run verify:local -- --skip-install
