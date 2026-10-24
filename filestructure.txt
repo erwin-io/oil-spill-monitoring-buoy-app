@@ -40,7 +40,16 @@
         |-- .gitignore
         |-- build.gradle
         |-- capacitor.build.gradle
+        |-- google-services.json
         |-- proguard-rules.pro
+        |-- release
+            |-- app-release.apk
+            |-- baselineProfiles
+                |-- 0
+                    |-- app-release.dm
+                |-- 1
+                    |-- app-release.dm
+            |-- output-metadata.json
         |-- src
             |-- androidTest
                 |-- java
