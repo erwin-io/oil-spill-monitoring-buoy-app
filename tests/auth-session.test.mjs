@@ -6,9 +6,12 @@ import ts from 'typescript';
 
 // Test the real AuthService implementation with controlled Firebase callbacks;
 // a source-string assertion cannot detect late bootstrap/profile identity races.
-function harness() {
+function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'valid-native-google-id-token', verifiedGoogle = true} = {}) {
   let observer;
   let nextProfile;
+  let nativeCalls = 0;
+  let popupCalls = 0;
+  let lastNativeToken;
   const auth = { currentUser: null };
   const http = { post: () => {
     if (!nextProfile) throw new Error('Profile response not configured');
@@ -32,8 +35,29 @@ function harness() {
     '@angular/common/http': { HttpClient },
     'rxjs': { firstValueFrom: async (p) => p },
     'firebase/app': { getApps: () => [], initializeApp: () => ({}), getApp: () => ({}) },
+    '@capacitor/core': { Capacitor: {
+      isNativePlatform: () => native,
+      isPluginAvailable: name => name === 'FirebaseAuthentication' && pluginAvailable
+    } },
+    '@capacitor-firebase/authentication': { FirebaseAuthentication: {
+      signInWithGoogle: async () => {
+        nativeCalls++;
+        return {credential: {idToken: nativeGoogleToken}};
+      }
+    } },
     'firebase/auth': {
       getAuth: () => auth,
+      GoogleAuthProvider: class {static credential(token) {return {idToken: token};}},
+      signInWithPopup: async () => {
+        popupCalls++;
+        auth.currentUser = {uid:'google-account',emailVerified:verifiedGoogle,getIdToken:async()=> 'firebase-google-id-token'};
+        observer(auth.currentUser);
+      },
+      signInWithCredential: async (_auth, credential) => {
+        lastNativeToken = credential.idToken;
+        auth.currentUser = {uid:'google-account',emailVerified:verifiedGoogle,getIdToken:async()=> 'firebase-google-id-token'};
+        observer(auth.currentUser);
+      },
       onAuthStateChanged: (_auth, callback) => { observer = callback; callback(auth.currentUser); return () => {}; },
       signInWithEmailAndPassword: async () => ({ user: auth.currentUser }),
       createUserWithEmailAndPassword: async () => ({ user: auth.currentUser }),
@@ -55,7 +79,8 @@ function harness() {
   const service = new exports.AuthService();
   const setUser = (user) => { auth.currentUser = user; observer(user); };
   const queueProfile = (profile) => { nextProfile = profile; };
-  return { service, setUser, queueProfile };
+  return { service, setUser, queueProfile,
+    getGoogleCalls: () => ({nativeCalls,popupCalls,lastNativeToken}) };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -105,4 +130,50 @@ test('API profile identity mismatch does not update current account state', asyn
   queueProfile(Promise.resolve(profile('account-A')));
   await assert.rejects(service.bootstrap(), /Profile identity mismatch/);
   assert.equal(service.profile(), null);
+});
+
+
+test('browser Google login creates the same Firebase JS session and bootstraps a VIEWER profile', async () => {
+  const {service,queueProfile,getGoogleCalls}=harness();
+  queueProfile(Promise.resolve(profile('google-account')));
+  assert.equal((await service.signInWithGoogle()).uid,'google-account');
+  assert.equal(service.currentUser().uid,'google-account');
+  assert.equal(service.profile().role,'VIEWER');
+  assert.equal(getGoogleCalls().popupCalls,1);
+  assert.equal(getGoogleCalls().nativeCalls,0);
+});
+
+test('Android Google credential is exchanged for a Firebase JS token before calling bootstrap', async () => {
+  const {service,queueProfile,getGoogleCalls}=harness({native:true});
+  queueProfile(Promise.resolve(profile('google-account')));
+  assert.equal((await service.signInWithGoogle()).uid,'google-account');
+  assert.equal(getGoogleCalls().nativeCalls,1);
+  assert.equal(getGoogleCalls().popupCalls,0);
+  assert.equal(getGoogleCalls().lastNativeToken,'valid-native-google-id-token');
+  assert.equal(await service.token(),'firebase-google-id-token',
+    'API must use Firebase JS ID token, not the Google provider ID token');
+  await service.logout();
+  assert.equal(service.profile(),null);
+  assert.equal(service.currentUser(),null);
+});
+
+test('native Google login rejects missing plugin or token without calling the API', async () => {
+  const missing = harness({native:true,pluginAvailable:false});
+  await assert.rejects(missing.service.signInWithGoogle(),/unavailable/);
+  const noToken = harness({native:true,nativeGoogleToken:undefined});
+  await assert.rejects(noToken.service.signInWithGoogle(),/did not return an identity token/);
+  assert.equal(noToken.service.profile(),null);
+});
+
+test('unverified Google email cannot bootstrap a profile', async () => {
+  const {service}=harness({verifiedGoogle:false});
+  await assert.rejects(service.signInWithGoogle(),/Google account email must be verified/);
+  assert.equal(service.profile(),null);
+});
+
+test('Google login cannot accept a profile for a different Firebase user', async () => {
+  const {service,queueProfile}=harness({native:true});
+  queueProfile(Promise.resolve(profile('old-account')));
+  await assert.rejects(service.signInWithGoogle(),/Profile identity mismatch/);
+  assert.equal(service.profile(),null);
 });
