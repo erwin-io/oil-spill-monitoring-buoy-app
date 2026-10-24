@@ -93,20 +93,25 @@ test('native status filters use the same outlined Ionic alert-select pattern', (
   }
 });
 
-test('Original Oil Spill Monitoring Buoy brand section restored only above sign-in form', () => {
+test('Login has one branded welcome section, compact form and scroll-safe mobile layout', () => {
   const login = read('src/app/pages/login.page.html');
   const register = read('src/app/pages/register.page.html');
   const style = read('src/app/pages/login.page.scss');
-  assert.ok(login.includes('<div class="wrap sign-in-wrap">'));
+  assert.ok(login.includes('<main class="login-layout">'));
   assert.ok(login.includes('class="brand-mark"'));
-  assert.ok(login.includes('Oil Spill Monitoring Buoy'));
+  assert.ok(login.includes('<p class="brand-eyebrow">Oil Spill Monitoring Buoy</p>'));
   assert.ok(login.includes('<h1>Welcome back</h1>'));
-  assert.ok(login.includes('Secure monitoring for cleaner coastal waters.'));
+  assert.ok(login.includes('Sign in to monitor coastal waters and follow buoy alerts.'));
   assert.ok(login.indexOf('class="brand"') < login.indexOf('<ion-card class="card no-shadow">'));
+  assert.equal(login.includes('<ion-card-title>Oil Spill Monitoring Buoy</ion-card-title>'), false,
+    'Product branding must not be repeated above the form');
   assert.equal(register.includes('class="brand-mark"'), false);
-  assert.ok(style.includes('.sign-in-wrap'));
-  assert.ok(style.includes('gap: 20px'));
+  assert.match(style, /\.login-layout\s*\{/);
+  assert.match(style, /max-width:\s*420px/);
+  assert.match(style, /@media \(max-height:\s*700px\)/);
   assert.ok(style.includes('box-shadow: none !important'));
+  assert.ok(login.includes('routerLink="/forgot-password"'));
+  assert.ok(login.includes('routerLink="/register"'));
 });
 
 test('Only the correct product name appears in user-facing mobile source', () => {
