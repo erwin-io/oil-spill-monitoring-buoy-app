@@ -2,7 +2,7 @@ name: BlueWatch Mobile Checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, 'feat/**', 'fix/**']
   pull_request:
 
 permissions:
@@ -25,3 +25,26 @@ jobs:
         run: node --check scripts/verify-local.mjs
       - name: Execute local mobile validation runner
         run: npm run verify:local -- --skip-install
+
+  android-apk-compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci --no-audit --no-fund
+      - run: npm run check
+      - run: npx cap sync android
+      - name: Build native debug APK without actual Firebase service file
+        working-directory: android
+        run: bash gradlew assembleDebug --no-daemon
+      - name: Verify APK output
+        run: test -s android/app/build/outputs/apk/debug/app-debug.apk
