@@ -104,7 +104,9 @@ export class AuthService {
       if (!Capacitor.isPluginAvailable('FirebaseAuthentication')) {
         throw new Error('Native Google Sign-In is unavailable. Rebuild the Android app and try again.');
       }
-      const result = await FirebaseAuthentication.signInWithGoogle();
+      // Avoid Credential Manager's 'No credentials available' failure on affected Android devices.
+      // The legacy Google Sign-In SDK still returns an ID token for the Firebase JS session.
+      const result = await FirebaseAuthentication.signInWithGoogle({ useCredentialManager: false });
       const googleIdToken = result.credential?.idToken;
       if (!googleIdToken) {
         throw new Error('Google Sign-In did not return an identity token. Check the Android SHA-1 and google-services.json configuration.');

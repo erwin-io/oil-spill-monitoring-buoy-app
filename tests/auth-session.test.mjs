@@ -10,6 +10,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let observer;
   let nextProfile;
   let nativeCalls = 0;
+  let nativeOptions;
   let popupCalls = 0;
   let lastNativeToken;
   const auth = { currentUser: null };
@@ -40,7 +41,8 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       isPluginAvailable: name => name === 'FirebaseAuthentication' && pluginAvailable
     } },
     '@capacitor-firebase/authentication': { FirebaseAuthentication: {
-      signInWithGoogle: async () => {
+      signInWithGoogle: async (options) => {
+        nativeOptions = options;
         nativeCalls++;
         return {credential: {idToken: nativeGoogleToken}};
       }
@@ -80,7 +82,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   const setUser = (user) => { auth.currentUser = user; observer(user); };
   const queueProfile = (profile) => { nextProfile = profile; };
   return { service, setUser, queueProfile,
-    getGoogleCalls: () => ({nativeCalls,popupCalls,lastNativeToken}) };
+    getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}) };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -148,6 +150,8 @@ test('Android Google credential is exchanged for a Firebase JS token before call
   queueProfile(Promise.resolve(profile('google-account')));
   assert.equal((await service.signInWithGoogle()).uid,'google-account');
   assert.equal(getGoogleCalls().nativeCalls,1);
+  assert.equal(getGoogleCalls().nativeOptions?.useCredentialManager,false,
+    'Android Google login must bypass Credential Manager when using the compatibility path');
   assert.equal(getGoogleCalls().popupCalls,0);
   assert.equal(getGoogleCalls().lastNativeToken,'valid-native-google-id-token');
   assert.equal(await service.token(),'firebase-google-id-token',
