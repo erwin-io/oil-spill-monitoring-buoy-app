@@ -1,0 +1,15 @@
+<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Add Device</ion-title></ion-toolbar></ion-header>
+<ion-content><div class="page">
+  <h2 class="top-title">Connect your BlueGuard Buoy</h2>
+  <p class="hint">Open the protected QR label inside your buoy. Press its separate PAIR button while the buoy and phone are online. The pairing window lasts five minutes.</p>
+  <ion-button expand="block" (click)="scan()" [disabled]="busy || state==='PENDING'">Scan protected QR</ion-button>
+  <p class="hint">If scanning is unavailable, enter the device ID and protected claim code from the label. Never enter the buoy's upload key.</p>
+  <ion-item><ion-input label="Device ID" labelPlacement="stacked" autocomplete="off" [(ngModel)]="deviceId" [disabled]="busy || state==='PENDING'"></ion-input></ion-item>
+  <ion-item><ion-input label="Protected claim code" labelPlacement="stacked" type="password" autocomplete="off" [(ngModel)]="claimCode" [disabled]="busy || state==='PENDING'"></ion-input></ion-item>
+  <ion-button expand="block" fill="outline" (click)="claim()" [disabled]="busy || state==='PENDING'">{{busy?'Connecting…':'Claim device'}}</ion-button>
+  <div *ngIf="state==='PENDING'" class="card" role="status"><strong>Waiting for your buoy</strong><p>Keep PAIR mode active. Your buoy must confirm the request before the five-minute window closes.</p></div>
+  <div *ngIf="state==='EXPIRED'" class="card" role="status"><strong>Pairing expired</strong><p>Press PAIR again, then scan the protected label or enter the claim code to retry.</p></div>
+  <div *ngIf="state==='CONFIRMED'" class="card" role="status"><strong>Device claimed</strong><p>Your buoy is now linked to this account.</p></div>
+  <p *ngIf="error" role="alert" class="error">{{error}}</p>
+  <ion-button fill="clear" routerLink="/tabs/buoys">Back to My Buoys</ion-button>
+</div></ion-content>

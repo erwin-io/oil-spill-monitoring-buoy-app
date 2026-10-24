@@ -1,8 +1,8 @@
 import {uiError} from '../core/ui-error';
 import {Component,inject} from '@angular/core';import {CommonModule} from '@angular/common';import {FormsModule} from '@angular/forms';import {ActivatedRoute} from '@angular/router';import {firstValueFrom} from 'rxjs';import {IonContent,IonHeader,IonToolbar,IonTitle,IonButtons,IonBackButton,IonInput,IonButton} from '@ionic/angular/standalone';import {ApiService} from '../core/api.service';import {AuthService} from '../core/auth.service';import {Config} from '../core/models';
 @Component({standalone:true,imports:[CommonModule,FormsModule,IonContent,IonHeader,IonToolbar,IonTitle,IonButtons,IonBackButton,IonInput,IonButton],templateUrl:'./config.page.html',styleUrls:['./config.page.scss']})export class ConfigPage{
- private api=inject(ApiService);readonly auth=inject(AuthService);id=inject(ActivatedRoute).snapshot.paramMap.get('id')??'';config?:Config;error='';saved='';busy=false;
- get canEdit(){return ['OPERATOR','ADMIN'].includes(this.auth.profile()?.role??'')}
- async ionViewWillEnter(){await this.reload()}async reload(){try{this.config=await firstValueFrom(this.api.config(this.id));this.error=''}catch(e){this.error=uiError(e)}}
+ private api=inject(ApiService);readonly auth=inject(AuthService);id=inject(ActivatedRoute).snapshot.paramMap.get('id')??'';config?:Config;access='';error='';saved='';busy=false;
+ get canEdit(){return this.access==='OWNER'||this.access==='LEGACY_ADMIN'||this.access==='LEGACY_VIEWER'&&this.auth.profile()?.role==='OPERATOR'}
+ async ionViewWillEnter(){await this.reload()}async reload(){try{const [device,config]=await Promise.all([firstValueFrom(this.api.device(this.id)),firstValueFrom(this.api.config(this.id))]);this.access=device.access??'';this.config=config;this.error=''}catch(e){this.config=undefined;this.access='';this.error=uiError(e)}}
  async save(){if(!this.config||!this.canEdit)return;this.busy=true;this.error='';try{this.config=await firstValueFrom(this.api.updateConfig(this.id,this.config));this.saved='Configuration saved. The buoy applies the newer version when it next connects.'}catch(e:any){if(e.status===409){await this.reload();this.error='Configuration changed elsewhere. Latest version has been loaded.'}else this.error=uiError(e)}finally{this.busy=false}}
 }

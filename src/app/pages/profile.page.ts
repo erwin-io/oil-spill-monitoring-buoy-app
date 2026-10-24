@@ -20,7 +20,6 @@ import { addIcons } from 'ionicons';
 import {
   alertCircleOutline,
   checkmarkCircleOutline,
-  hardwareChipOutline,
   informationCircleOutline,
   logOutOutline,
   mailOutline,
@@ -49,7 +48,7 @@ export class ProfilePage {
 
   constructor() {
     addIcons({
-      alertCircleOutline, checkmarkCircleOutline, hardwareChipOutline,
+      alertCircleOutline, checkmarkCircleOutline,
       informationCircleOutline, logOutOutline, mailOutline,
     });
   }

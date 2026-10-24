@@ -116,11 +116,11 @@ test('Login has one branded welcome section, compact form and scroll-safe mobile
   const style = read('src/app/pages/login.page.scss');
   assert.ok(login.includes('<main class="login-layout">'));
   assert.ok(login.includes('class="brand-mark"'));
-  assert.ok(login.includes('<p class="brand-eyebrow">Oil Spill Monitoring Buoy</p>'));
+  assert.ok(login.includes('<p class="brand-eyebrow">BlueGuard Buoy</p>'));
   assert.ok(login.includes('<h1>Welcome back</h1>'));
   assert.ok(login.includes('Sign in to monitor coastal waters and follow buoy alerts.'));
   assert.ok(login.indexOf('class="brand"') < login.indexOf('<ion-card class="card no-shadow">'));
-  assert.equal(login.includes('<ion-card-title>Oil Spill Monitoring Buoy</ion-card-title>'), false,
+  assert.equal(login.includes('<ion-card-title>BlueGuard Buoy</ion-card-title>'), false,
     'Product branding must not be repeated above the form');
   assert.equal(register.includes('class="brand-mark"'), false);
   assert.match(style, /\.login-layout\s*\{/);
@@ -136,9 +136,9 @@ test('Only the correct product name appears in user-facing mobile source', () =>
     'src/app/pages/dashboard.page.html', 'src/app/pages/profile.page.html',
     'src/index.html', 'capacitor.config.ts'];
   for(const path of files) assert.ok(!/BlueWatch/i.test(read(path)), path);
-  assert.ok(read('src/app/pages/login.page.html').includes('Oil Spill Monitoring Buoy'));
+  assert.ok(read('src/app/pages/login.page.html').includes('BlueGuard Buoy'));
   assert.ok(read('src/app/pages/dashboard.page.html').includes('<ion-title>Overview</ion-title>'));
-  assert.ok(read('capacitor.config.ts').includes('appName: "Oil Spill Monitoring Buoy"'));
+  assert.ok(read('capacitor.config.ts').includes('appName: "BlueGuard Buoy"'));
 });
 
 test('SEEFIX search toolbar and separation from classification filter', () => {

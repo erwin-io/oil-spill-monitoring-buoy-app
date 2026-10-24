@@ -5,6 +5,11 @@ import {environment} from '../../environments/environment';import {Device,Alert,
  me():Observable<Profile>{return this.http.get<Profile>(`${this.url}/auth/me`)}
  devices():Observable<{items:Device[]}>{return this.http.get<{items:Device[]}>(`${this.url}/devices`)}
  device(id:string):Observable<Device>{return this.http.get<Device>(`${this.url}/devices/${encodeURIComponent(id)}`)}
+ requestClaim(id:string,claimCode:string):Observable<{deviceId:string;challengeId:string;state:'PENDING'}>{return this.http.post<{deviceId:string;challengeId:string;state:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/claims`,{claimCode})}
+ claimStatus(id:string,challengeId:string):Observable<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>{return this.http.get<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/claims/${encodeURIComponent(challengeId)}`)}
+ invitations():Observable<{items:{deviceId:string;invitedAt:string}[]}>{return this.http.get<{items:{deviceId:string;invitedAt:string}[]}>(`${this.url}/invitations`)}
+ acceptInvitation(id:string):Observable<{deviceId:string;access:'VIEWER'}>{return this.http.post<{deviceId:string;access:'VIEWER'}>(`${this.url}/devices/${encodeURIComponent(id)}/invitations/accept`,{})}
+ inviteViewer(id:string,email:string):Observable<{deviceId:string;email:string;status:'PENDING'}>{return this.http.post<{deviceId:string;email:string;status:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/invitations`,{email})}
  history(id:string,cursor?:string,limit=30):Observable<Page<Measurement>>{const params:Record<string,string>={limit:String(limit)};if(cursor)params['cursor']=cursor;return this.http.get<Page<Measurement>>(`${this.url}/devices/${encodeURIComponent(id)}/measurements`,{params})}
  latest(id:string):Observable<Measurement>{return this.http.get<Measurement>(`${this.url}/devices/${encodeURIComponent(id)}/measurements/latest`)}
  health(id:string):Observable<Page<Health>>{return this.http.get<Page<Health>>(`${this.url}/devices/${encodeURIComponent(id)}/health`)}

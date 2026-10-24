@@ -1,45 +1,16 @@
 <ion-header class="no-shadow">
-  <ion-toolbar color="primary">
-    <ion-title>Monitoring buoys</ion-title>
-  </ion-toolbar>
-  <ion-toolbar class="search">
-    <ion-searchbar
-      placeholder="Search buoy name or ID"
-      [value]="term"
-      [debounce]="200"
-      (ionInput)="onSearch($event.detail.value)"
-      aria-label="Search buoys"
-    ></ion-searchbar>
-  </ion-toolbar>
+  <ion-toolbar color="primary"><ion-title>My Buoys</ion-title></ion-toolbar>
+  <ion-toolbar class="search"><ion-searchbar placeholder="Search buoy name or ID" [value]="term" [debounce]="200" (ionInput)="onSearch($event.detail.value)" aria-label="Search buoys"></ion-searchbar></ion-toolbar>
 </ion-header>
-
-<ion-content>
-  <ion-refresher slot="fixed" (ionRefresh)="load($event)">
-    <ion-refresher-content></ion-refresher-content>
-  </ion-refresher>
-  <div class="page">
-    <div class="classification-filter">
-      <ion-select label="Classification" label-placement="stacked" fill="outline"
-        interface="alert" [interfaceOptions]="{ header: 'Classification' }" [(ngModel)]="filter">
-        <ion-select-option value="ALL">All</ion-select-option>
-        <ion-select-option value="NORMAL">Normal</ion-select-option>
-        <ion-select-option value="PETROLEUM">Petroleum</ion-select-option>
-        <ion-select-option value="INTERFERENCE">Interference</ion-select-option>
-        <ion-select-option value="INCONCLUSIVE">Inconclusive</ion-select-option>
-      </ion-select>
-    </div>
-    <p *ngIf="loading">Loading...</p>
-    <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button fill="outline" expand="block" (click)="load()">Retry loading</ion-button></div>
-    <div *ngFor="let d of shown" class="card tap" [routerLink]="['/tabs/buoys',d.id]">
-      <div class="row">
-        <strong>{{d.name}}</strong>
-        <span class="badge">{{d.latestClassification||'No reading'}}</span>
-      </div>
-      <p class="hint">{{d.id}} · Battery {{d.batteryPercent??'—'}}% · GSM {{d.signalStrengthDbm??'—'}} dBm</p>
-      <p class="hint">Status: <strong>{{onlineLabel(d)}}</strong> · Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p>
-    </div>
-    <div *ngIf="!loading&&!shown.length" class="empty">
-      No matching buoys. Your administrator may need to assign device access.
-    </div>
-  </div>
-</ion-content>
+<ion-content><ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher><div class="page">
+  <ion-button expand="block" routerLink="/tabs/add-device">Add Device</ion-button>
+  <div class="classification-filter"><ion-select label="Classification" label-placement="stacked" fill="outline" interface="alert" [interfaceOptions]="{ header: 'Classification' }" [(ngModel)]="filter"><ion-select-option value="ALL">All</ion-select-option><ion-select-option value="NORMAL">Normal</ion-select-option><ion-select-option value="PETROLEUM">Petroleum</ion-select-option><ion-select-option value="INTERFERENCE">Interference</ion-select-option><ion-select-option value="INCONCLUSIVE">Inconclusive</ion-select-option></ion-select></div>
+  <p *ngIf="loading">Loading your buoys...</p>
+  <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button fill="outline" expand="block" (click)="load()">Retry loading</ion-button></div>
+  <section *ngIf="!loading&&invitations.length"><h3>Invitations</h3><div *ngFor="let invitation of invitations" class="card"><strong>{{invitation.deviceId}}</strong><p class="hint">Shared with your verified account.</p><ion-button fill="outline" [disabled]="!!accepting" (click)="accept(invitation.deviceId)">{{accepting===invitation.deviceId?'Accepting…':'Accept invitation'}}</ion-button></div></section>
+  <section *ngIf="!loading&&owned.length"><h3>Owned</h3><div *ngFor="let d of owned" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Battery {{d.batteryPercent??'—'}}% · GSM {{d.signalStrengthDbm??'—'}} dBm</p><p class="hint">Status: <strong>{{onlineLabel(d)}}</strong> · Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p></div></section>
+  <section *ngIf="!loading&&shared.length"><h3>Shared with me</h3><div *ngFor="let d of shared" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Status: <strong>{{onlineLabel(d)}}</strong> · Read-only access</p></div></section>
+  <section *ngIf="!loading&&legacy.length"><h3>Available during setup</h3><div *ngFor="let d of legacy" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><strong>{{d.name}}</strong><p class="hint">{{d.id}} · {{onlineLabel(d)}}</p></div></section>
+  <div *ngIf="!loading&&!items.length&&!invitations.length&&!error" class="empty">No buoys yet. Add your device with its protected QR code, or ask its owner to invite your verified email.</div>
+  <div *ngIf="!loading&&items.length&&!shown.length" class="empty">No matching buoys.</div>
+</div></ion-content>

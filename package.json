@@ -25,6 +25,7 @@
     "@angular/platform-browser": "^20.3.0",
     "@angular/router": "^20.3.0",
     "@capacitor-firebase/authentication": "7.5.0",
+    "@capacitor-mlkit/barcode-scanning": "7.5.0",
     "@capacitor/core": "^7.4.0",
     "@capacitor/push-notifications": "^7.0.0",
     "@ionic/angular": "^8.7.0",

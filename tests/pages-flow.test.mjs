@@ -64,6 +64,15 @@ test('dashboard counters read actual fixture classifications, battery and curren
  assert.deepEqual(Array.from(page.recentMeasurements,x=>x.id),['THESIS_TEST_01','THESIS_TEST_02']);
  assert.deepEqual(Array.from(subscribed),['THESIS_TEST_01','THESIS_TEST_02']);
 });
+test('no-device Overview clears prior-account data and does not request alerts',async()=>{
+ let alertCalls=0;
+ const {page}=mount('dashboard',{api:{devices:()=>Promise.resolve({items:[]}),alerts:()=>{alertCalls++;return Promise.resolve({items:[]})}}});
+ page.devices=[{id:'previous-account',name:'Private'}];page.alerts=[{id:'private-alert'}];
+ await page.reload();
+ assert.equal(page.devices.length,0);
+ assert.equal(page.alerts.length,0);
+ assert.equal(alertCalls,0);
+});
 test('buoy page searches and classification filters authoritative API items',async()=>{
  const {page}=mount('devices',{api:{devices:()=>Promise.resolve({items:[
   {id:'THESIS_TEST_01',name:'South',latestClassification:'PETROLEUM'},
@@ -96,6 +105,7 @@ test('mobile history appends paginated measurements once and sends next cursor',
 test('optimistic conflict reloads current configuration and retains visible error message',async()=>{
  let read=0,write=0;
  const {page}=mount('config',{role:'OPERATOR',api:{
+  device:()=>Promise.resolve({id:'THESIS_TEST_01',access:'LEGACY_VIEWER'}),
   config:()=>{read++;return Promise.resolve({configVersion:read, samplingIntervalMinutes:15});},
   updateConfig:()=>{write++;return Promise.reject({status:409,message:'CONFIG_CONFLICT'});}
  }});
@@ -106,6 +116,14 @@ test('optimistic conflict reloads current configuration and retains visible erro
  assert.equal(page.config.configVersion,2);
  assert.match(page.error,/changed elsewhere/);
  assert.equal(page.busy,false);
+});
+test('claimed owner can configure despite legacy global VIEWER role',async()=>{
+ const {page}=mount('config',{role:'VIEWER',api:{
+  device:()=>Promise.resolve({id:'THESIS_TEST_01',access:'OWNER'}),
+  config:()=>Promise.resolve({configVersion:1,samplingIntervalMinutes:15}),
+ }});
+ await page.ionViewWillEnter();
+ assert.equal(page.canEdit,true);
 });
 test('viewer cannot attempt a configuration mutation',async()=>{
  let calls=0;
