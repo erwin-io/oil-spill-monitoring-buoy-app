@@ -1,0 +1,37 @@
+name: Install pinned Capacitor 7 Google Authentication dependency
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/install-google-auth-dependency.yml']
+permissions:
+  contents: write
+jobs:
+  install-dependency:
+    if: github.repository == 'erwin-io/oil-spill-monitoring-buoy-app'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Add Capawesome Firebase Auth compatible with Capacitor 7
+        run: npm install --save-exact @capacitor-firebase/authentication@7.5.0 --no-audit --no-fund
+      - name: Validate deterministic install
+        run: npm ci --no-audit --no-fund
+      - name: Commit dependency and lockfile to main
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package.json package-lock.json
+          if git diff --staged --quiet; then
+            echo 'Dependencies already up-to-date'
+            exit 0
+          fi
+          test "$(git branch --show-current)" = 'main'
+          git commit -m 'build: lock Capacitor 7 Firebase Google Auth plugin'
+          git push origin HEAD:main
