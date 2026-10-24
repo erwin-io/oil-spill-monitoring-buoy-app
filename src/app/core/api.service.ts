@@ -8,8 +8,9 @@ import {environment} from '../../environments/environment';import {Device,Alert,
  history(id:string,cursor?:string,limit=30):Observable<Page<Measurement>>{const params:Record<string,string>={limit:String(limit)};if(cursor)params['cursor']=cursor;return this.http.get<Page<Measurement>>(`${this.url}/devices/${encodeURIComponent(id)}/measurements`,{params})}
  latest(id:string):Observable<Measurement>{return this.http.get<Measurement>(`${this.url}/devices/${encodeURIComponent(id)}/measurements/latest`)}
  health(id:string):Observable<Page<Health>>{return this.http.get<Page<Health>>(`${this.url}/devices/${encodeURIComponent(id)}/health`)}
- alerts():Observable<Page<Alert>>{return this.http.get<Page<Alert>>(`${this.url}/alerts`)}
+ alerts(cursor?:string,status?:string):Observable<Page<Alert>>{const params:Record<string,string>={limit:'30'};if(cursor)params['cursor']=cursor;if(status)params['status']=status;return this.http.get<Page<Alert>>(`${this.url}/alerts`,{params})}
  alert(id:string):Observable<Alert>{return this.http.get<Alert>(`${this.url}/alerts/${encodeURIComponent(id)}`)}
+ markRead(id:string):Observable<{alertId:string;unread:boolean}>{return this.http.post<{alertId:string;unread:boolean}>(`${this.url}/alerts/${encodeURIComponent(id)}/read`,{})}
  acknowledge(id:string):Observable<unknown>{return this.http.patch(`${this.url}/alerts/${encodeURIComponent(id)}/acknowledge`,{})}
  config(id:string):Observable<Config>{return this.http.get<Config>(`${this.url}/devices/${encodeURIComponent(id)}/config`)}
  updateConfig(id:string,c:Config):Observable<Config>{return this.http.put<Config>(`${this.url}/devices/${encodeURIComponent(id)}/config`,c)}
