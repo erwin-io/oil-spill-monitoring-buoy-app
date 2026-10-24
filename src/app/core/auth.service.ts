@@ -2,11 +2,16 @@ import { inject, Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { initializeApp, getApp, getApps } from 'firebase/app';
+import { Capacitor } from '@capacitor/core';
+import { FirebaseAuthentication } from '@capacitor-firebase/authentication';
 import {
   getAuth,
   type Auth,
   type User,
   onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithCredential,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendEmailVerification,
@@ -82,6 +87,35 @@ export class AuthService {
     await signInWithEmailAndPassword(this.auth, email, password);
     if (!this.auth.currentUser?.emailVerified) {
       throw new Error('Verify your email before continuing');
+    }
+    return this.bootstrap();
+  }
+
+  /**
+   * Browser: Firebase popup. Android: system Google account chooser, then
+   * exchange the native Google ID token for a Firebase JS session.
+   *
+   * Keeping Firebase JS as the single session authority is essential:
+   * /auth/bootstrap and the HTTP interceptor use its Firebase ID token.
+   * Only basic Google identity is requested; no Drive/Gmail scopes.
+   */
+  async signInWithGoogle(): Promise<Profile> {
+    if (Capacitor.isNativePlatform()) {
+      if (!Capacitor.isPluginAvailable('FirebaseAuthentication')) {
+        throw new Error('Native Google Sign-In is unavailable. Rebuild the Android app and try again.');
+      }
+      const result = await FirebaseAuthentication.signInWithGoogle();
+      const googleIdToken = result.credential?.idToken;
+      if (!googleIdToken) {
+        throw new Error('Google Sign-In did not return an identity token. Check the Android SHA-1 and google-services.json configuration.');
+      }
+      await signInWithCredential(this.auth, GoogleAuthProvider.credential(googleIdToken));
+    } else {
+      await signInWithPopup(this.auth, new GoogleAuthProvider());
+    }
+
+    if (!this.auth.currentUser?.emailVerified) {
+      throw new Error('Your Google account email must be verified before continuing');
     }
     return this.bootstrap();
   }
