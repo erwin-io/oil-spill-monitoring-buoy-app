@@ -123,3 +123,41 @@ ion-button.regular { margin: 6px 0 0; }
   }
   .brand-mark { margin-bottom: 7px; }
 }
+
+.google-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 13px 8px 10px;
+  color: var(--app-muted, #64748b);
+  font-size: 12px;
+  text-transform: uppercase;
+}
+.google-divider::before,
+.google-divider::after {
+  content: '';
+  height: 1px;
+  flex: 1;
+  background: #dce4ed;
+}
+.google-signin {
+  --border-color: #cbd5e1;
+  --color: #25354d;
+  --border-width: 1px;
+  --border-radius: 10px;
+  --background: #fff;
+  margin: 0 8px 2px;
+  height: 48px;
+  text-transform: none;
+  font-weight: 600;
+}
+.google-g {
+  font-size: 21px;
+  line-height: 1;
+  font-weight: 800;
+  margin-right: 12px;
+  background: conic-gradient(#4285f4 0 30%, #34a853 30% 55%, #fbbc05 55% 72%, #ea4335 72% 90%, #4285f4 90% 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
