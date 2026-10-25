@@ -8,7 +8,7 @@ function mount(pageName,{api={},role='VIEWER'}={}){
  class ApiService{} class RealtimeService{} class PushService{} class AuthService{} class ActivatedRoute{}
  const realtime={connect:()=>{},disconnect:()=>{},connected:()=>false};
  const push={start:async()=>{}};
- const auth={profile:()=>({uid:'test-user',role})};
+ const auth={profile:()=>({uid:'test-user',role}),bootstrap:async()=>({uid:'test-user',role})};
  const route={snapshot:{paramMap:{get:()=> 'THESIS_TEST_01'}}};
  const dependencies=new Map([[ApiService,api],[RealtimeService,realtime],[PushService,push],
   [AuthService,auth],[ActivatedRoute,route]]);
@@ -186,4 +186,38 @@ test('buoy detail uses truthful last-known cleaning telemetry and tolerates abse
  assert.equal(page.device.name,'Test buoy');
  assert.equal(page.health.washPump,'RUNNING');
  assert.equal(page.latest,undefined);
+});
+
+test('P2-03 incoming ownership transfer requires recipient acceptance and bootstrap refresh',async()=>{
+ let calls=0;
+ const offer={deviceId:'THESIS_TEST_01',requestId:'tx-1',expiresAt:'2099-01-01T00:00:00Z'};
+ const {page}=mount('devices',{api:{
+  devices:()=>Promise.resolve({items:[]}),
+  invitations:()=>Promise.resolve({items:[]}),
+  incomingTransfers:()=>Promise.resolve({items:[offer]}),
+  acceptTransfer:(id,requestId)=>{calls++;assert.equal(id,offer.deviceId);assert.equal(requestId,offer.requestId);return Promise.resolve({access:'OWNER'})},
+ }});
+ await page.ionViewWillEnter();
+ assert.equal(page.transfers.length,1);
+ await page.acceptOwnership(offer);
+ assert.equal(calls,1);
+ assert.equal(page.accepting,'');
+});
+test('P2-03 owner transfer UI refuses requests without exact buoy ID confirmation',async()=>{
+ let requests=0;
+ const {page}=mount('device-detail',{api:{
+  device:()=>Promise.resolve({id:'THESIS_TEST_01',access:'OWNER'}),
+  latest:()=>Promise.reject({status:404}),
+  health:()=>Promise.resolve({items:[]}),
+  startTransfer:()=>{requests++;return Promise.resolve({expiresAt:'2099-01-01T00:00:00Z'})},
+ }});
+ await page.load();
+ page.transferEmail='recipient@example.test';
+ page.transferConfirmId='WRONG';
+ await page.requestTransfer();
+ assert.equal(requests,0);
+ page.transferConfirmId='THESIS_TEST_01';
+ await page.requestTransfer();
+ assert.equal(requests,1);
+ assert.match(page.transferMessage,/pending recipient acceptance/);
 });
