@@ -16,6 +16,9 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
   signOut,
 } from 'firebase/auth';
 import { environment } from '../../environments/environment';
@@ -142,6 +145,19 @@ export class AuthService {
 
   async resetPassword(email: string): Promise<void> {
     await sendPasswordResetEmail(this.auth, email);
+  }
+
+  async changePassword(currentPassword: string, nextPassword: string): Promise<void> {
+    const user=this.auth.currentUser;
+    if(!user?.email||!user.emailVerified)throw new Error('Sign in with a verified email first');
+    if(!user.providerData.some(p=>p.providerId==='password'))throw new Error('This account signs in with Google; password changes are not available.');
+    if(nextPassword.length<8||nextPassword.length>128)throw new Error('New password must contain 8–128 characters');
+    if(currentPassword===nextPassword)throw new Error('Choose a different new password');
+    const generation=this.sessionGeneration;
+    await reauthenticateWithCredential(user,EmailAuthProvider.credential(user.email,currentPassword));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid)
+      throw new Error('Account changed during password reauthentication');
+    await updatePassword(user,nextPassword);
   }
 
   async logout(): Promise<void> {
