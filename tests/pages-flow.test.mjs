@@ -5,13 +5,13 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 function mount(pageName,{api={},role='VIEWER'}={}){
- class ApiService{} class RealtimeService{} class PushService{} class AuthService{} class ActivatedRoute{}
+ class ApiService{} class RealtimeService{} class PushService{} class AuthService{} class ActivatedRoute{} class AddDeviceModalService{} class EmptyStateComponent{}
  const realtime={connect:()=>{},disconnect:()=>{},connected:()=>false};
  const push={start:async()=>{}};
  const auth={profile:()=>({uid:'test-user',role}),bootstrap:async()=>({uid:'test-user',role})};
  const route={snapshot:{paramMap:{get:()=> 'THESIS_TEST_01'}}};
  const dependencies=new Map([[ApiService,api],[RealtimeService,realtime],[PushService,push],
-  [AuthService,auth],[ActivatedRoute,route]]);
+  [AuthService,auth],[ActivatedRoute,route],[AddDeviceModalService,{open:()=>{},close:()=>{}}]]);
  const ions=Object.fromEntries([
   'IonContent','IonHeader','IonToolbar','IonTitle','IonButton','IonButtons','IonBackButton',
   'IonSearchbar','IonSelect','IonSelectOption','IonRefresher','IonRefresherContent',
@@ -22,6 +22,10 @@ function mount(pageName,{api={},role='VIEWER'}={}){
   '@angular/common':{CommonModule:class{}},
   '@angular/forms':{FormsModule:class{}},
   '@angular/router':{RouterLink:class{},ActivatedRoute},
+  'ionicons':{addIcons:()=>{}},
+  'ionicons/icons':{addOutline:{},arrowForwardOutline:{}},
+  '../core/add-device-modal.service':{AddDeviceModalService},
+  './empty-state.component':{EmptyStateComponent},
   '@ionic/angular/standalone':ions,
   'rxjs':{firstValueFrom:async x=>x},
   '../core/api.service':{ApiService},
