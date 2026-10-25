@@ -5,6 +5,23 @@
   </ion-toolbar>
 </ion-header>
 <ion-content class="ion-padding page">
+  @if(sent){<main class="verify-wait-layout"><section class="verify-wait-group" aria-labelledby="reset-sent-heading">
+    <div class="verify-wait-illustration" aria-hidden="true">
+      <svg viewBox="0 0 180 160" width="180" height="160" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="90" cy="80" r="73" fill="#eaf3ff"/><circle cx="90" cy="80" r="62" fill="#f5faff"/>
+        <rect x="42" y="49" width="96" height="71" rx="8" fill="#fff" stroke="#0058db" stroke-width="4"/>
+        <path d="M44 57 L90 91 L136 57" fill="none" stroke="#0058db" stroke-width="4"/>
+        <circle cx="134" cy="44" r="21" fill="#0cbb89"/>
+        <path d="M125 44 L132 51 L144 37" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+      </svg>
+    </div>
+    <h1 id="reset-sent-heading">Check your inbox</h1>
+    <p class="verify-wait-description">If the address is eligible, a password reset link has been sent. Open the email in Gmail to choose a new password securely inside BlueGuard Buoy.</p>
+    <ion-button class="regular verify-resend-button" expand="block" fill="outline" [disabled]="busy" (click)="reset()">
+      @if(busy){<ion-spinner name="dots" aria-label="Resending password reset"></ion-spinner>}@else{Resend reset email}
+    </ion-button>
+    @if(message){<ion-note class="verify-wait-message" role="status">{{message}}</ion-note>}
+  </section></main>}@else{
   <div class="wrap">
     <ion-card class="card no-shadow">
       <ion-card-header>
@@ -23,10 +40,8 @@
             @else { Send reset link }
           </ion-button>
         </form>
-        <div class="link-row">
-          <ion-button fill="clear" routerLink="/login">Back to sign in</ion-button>
-        </div>
+
       </ion-card-content>
     </ion-card>
-  </div>
+  </div>}
 </ion-content>

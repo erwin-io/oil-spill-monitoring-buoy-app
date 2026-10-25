@@ -44,13 +44,15 @@ import { AuthService } from '../core/auth.service';
     IonToolbar,
   ],
   templateUrl: './forgot.page.html',
-  styleUrls: ['./login.page.scss'],
+  styleUrls: ['./login.page.scss','./verify.page.scss'],
 })
 export class ForgotPage {
   private readonly auth = inject(AuthService);
   email = '';
   message = '';
   busy = false;
+  sent = false;
+  sendingEmail = '';
 
   async reset(): Promise<void> {
     if (this.busy || !this.email.trim()) return;
@@ -58,7 +60,9 @@ export class ForgotPage {
     this.message = '';
     try {
       await this.auth.resetPassword(this.email.trim().toLowerCase());
-      this.message = 'If the address is eligible, password reset instructions have been sent.';
+      this.sendingEmail=this.email.trim().toLowerCase();
+      this.sent=true;
+      this.message='';
     } catch {
       this.message = 'Unable to submit the password reset request. Please try again.';
     } finally {

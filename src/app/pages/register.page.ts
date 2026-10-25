@@ -27,6 +27,7 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth.service';
+import { AuthBusyOverlayComponent } from './auth-busy-overlay.component';
 
 export function passwordsMatch(control: AbstractControl): ValidationErrors | null {
   const password = control.get('password')?.value as string | undefined;
@@ -58,6 +59,7 @@ export function passwordsMatch(control: AbstractControl): ValidationErrors | nul
     IonButton,
     IonNote,
     IonSpinner,
+    AuthBusyOverlayComponent,
   ],
   templateUrl: './register.page.html',
   styleUrls: ['./login.page.scss'],

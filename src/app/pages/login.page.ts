@@ -1,4 +1,6 @@
 import { Component, inject } from '@angular/core';
+import { Platform } from '@ionic/angular';
+import type {Subscription} from 'rxjs';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import {
@@ -17,6 +19,7 @@ import {
 } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth.service';
 import { getPostLoginTarget } from '../core/app-links';
+import { AuthBusyOverlayComponent } from './auth-busy-overlay.component';
 
 @Component({
   standalone: true,
@@ -35,6 +38,7 @@ import { getPostLoginTarget } from '../core/app-links';
     IonButton,
     IonNote,
     IonSpinner,
+    AuthBusyOverlayComponent,
   ],
   templateUrl: './login.page.html',
   styleUrls: ['./login.page.scss'],
@@ -42,6 +46,10 @@ import { getPostLoginTarget } from '../core/app-links';
 export class LoginPage {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly platform=inject(Platform);
+  private backSubscription?:Subscription;
+  ionViewWillEnter():void{this.backSubscription?.unsubscribe();this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{});}
+  ionViewWillLeave():void{this.backSubscription?.unsubscribe();this.backSubscription=undefined;}
 
   readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
@@ -49,10 +57,12 @@ export class LoginPage {
   });
 
   busy = false;
+  busyLabel='Signing in';
   error = '';
 
   async googleLogin(): Promise<void> {
     if (this.busy) return;
+    this.busyLabel='Connecting to Google';
     this.busy = true;
     this.error = '';
     try {
@@ -77,6 +87,7 @@ export class LoginPage {
 
   async login(): Promise<void> {
     if (this.busy) return;
+    this.busyLabel='Signing in';
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 

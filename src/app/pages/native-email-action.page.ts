@@ -170,6 +170,8 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
    return;
   }
   this.busy=true;
+  this.loading=true;
+  this.progressMessage='Updating your password…';
   try{
    await this.auth.finishNativePasswordReset(this.nextPassword);
    if(this.closed)return;
@@ -181,6 +183,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
    this.nextPassword='';
    this.confirmPassword='';
    this.busy=false;
+   if(!this.closed)this.loading=false;
   }
  }
 

@@ -53,10 +53,10 @@
             @else { Create account }
           </ion-button>
         </form>
-        <div class="link-row">
-          <ion-button fill="clear" routerLink="/login">Back to sign in</ion-button>
-        </div>
+
       </ion-card-content>
     </ion-card>
   </div>
 </ion-content>
+
+@if(busy){<app-auth-busy-overlay label="Creating your account"></app-auth-busy-overlay>}
