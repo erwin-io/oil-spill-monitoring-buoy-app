@@ -130,18 +130,33 @@ export class AuthService {
     return this.bootstrap();
   }
 
-  // Prefer the configured API provider only when that API instance confirms
-  // readiness. Old/non-deployed APIs return 404 and keep Firebase SDK emails.
-  // A send failure AFTER backend activation is never silently retried via
-  // Firebase, avoiding duplicate/mismatched secure action links.
+  // Android requires native-only Firebase Admin action links. Falling back
+  // to Firebase SDK email templates would instead open Google's browser
+  // verification page, violating the app-only Phase 2 contract. Fail closed
+  // when the deployed API is older, disabled or unreachable.
   private async useBackendEmail(): Promise<boolean> {
     try {
-      const config=await firstValueFrom(this.http.get<{delivery:'smtp'|'resend'|'firebase'}>(
-        `${environment.api}/auth/email/config`));
-      return config?.delivery==='smtp'||config?.delivery==='resend';
-    } catch {
-      return false;
+      const config=await firstValueFrom(this.http.get<{
+        delivery:'smtp'|'resend'|'firebase';
+        nativeActionLinks?:boolean;
+      }>(`${environment.api}/auth/email/config`));
+      const customProvider=config?.delivery==='smtp'||config?.delivery==='resend';
+      if(Capacitor.isNativePlatform()){
+        if(customProvider && config.nativeActionLinks===true)return true;
+      }else{
+        // Web development retains the original Firebase SDK fallback.
+        return customProvider;
+      }
+    }catch{
+      // No Firebase SDK email fallback on Android: it uses browser actions.
     }
+    if(Capacitor.isNativePlatform()){
+      throw new Error(
+        'BlueGuard email delivery is not ready on the connected API. '+
+        'Activate the Firebase Admin native-email provider in the deployed API, then retry.'
+      );
+    }
+    return false;
   }
 
   async register(email: string, password: string): Promise<User> {
