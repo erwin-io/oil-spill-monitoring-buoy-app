@@ -62,4 +62,15 @@
       </div>
     </ng-container>
   </div>
+<div class="page">
+ <div class="card">
+  <h3>Change password</h3>
+  <p class="hint">Email/password accounts must enter their current password. Google-only accounts can manage their password with Google.</p>
+  <ion-input label="Current password" label-placement="stacked" type="password" autocomplete="current-password" [(ngModel)]="currentPassword"></ion-input>
+  <ion-input label="New password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="newPassword"></ion-input>
+  <ion-input label="Confirm new password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="confirmPassword"></ion-input>
+  <ion-button expand="block" fill="outline" [disabled]="changingPassword||!currentPassword||!newPassword||!confirmPassword" (click)="changePassword()">Update password</ion-button>
+  <p *ngIf="passwordFeedback" role="status">{{passwordFeedback}}</p>
+ </div>
+</div>
 </ion-content>
