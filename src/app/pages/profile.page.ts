@@ -77,6 +77,28 @@ export class ProfilePage {
     finally{this.savingName=false}
   }
 
+  async selectAvatar(event:Event):Promise<void>{
+    const input=event.target as HTMLInputElement;
+    const image=input.files?.[0];
+    input.value='';
+    if(!image||this.savingAvatar)return;
+    this.avatarFeedback='';
+    if(!['image/png','image/jpeg','image/webp'].includes(image.type)||image.size>2*1024*1024||image.size<12){
+      this.avatarFeedback='Choose a JPG, PNG, or WebP image up to 2 MB.';return;
+    }
+    this.savingAvatar=true;
+    try{await this.auth.uploadAvatar(image);this.avatarFeedback='Profile photo updated.';}
+    catch(error){this.avatarFeedback=(error as Error).message||'Unable to update photo';}
+    finally{this.savingAvatar=false;}
+  }
+  async removeAvatar():Promise<void>{
+    if(this.savingAvatar)return;
+    this.savingAvatar=true;this.avatarFeedback='';
+    try{await this.auth.removeAvatar();this.avatarFeedback='Profile photo removed.';}
+    catch(error){this.avatarFeedback=(error as Error).message||'Unable to remove photo';}
+    finally{this.savingAvatar=false;}
+  }
+
   async changePassword():Promise<void>{
     if(this.changingPassword)return;
     this.passwordFeedback='';
