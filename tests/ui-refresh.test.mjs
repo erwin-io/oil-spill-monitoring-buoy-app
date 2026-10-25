@@ -26,7 +26,7 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  assert.match(profile,/routerLink="\/tabs\/profile\/password"/);
  assert.doesNotMatch(profile,/Current password|Confirm new password/);
  assert.doesNotMatch(profile,/Save display name/);
- assert.match(code,/confirmSignOut=true/);
+ assert.match(profile,/confirmSignOut=true/);
  assert.match(code,/text:'No',role:'cancel'/);
  assert.match(code,/text:'Yes',role:'confirm'/);
  assert.match(code,/canvas\.toBlob/);
