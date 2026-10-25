@@ -16,13 +16,14 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let reauthentication,updatedPassword,completedReset,appliedEmailCode;
   const emails=[],backendEmails=[];
   let emailDelivery='firebase';
+  let nativeActionLinks=true;
   const auth = { currentUser: null };
   const takeProfile = () => {
     if (!nextProfile) throw new Error('Profile response not configured');
     const p = nextProfile;nextProfile = undefined;return p;
   };
   const http = {
-    get:async()=>({delivery:emailDelivery}),
+    get:async()=>({delivery:emailDelivery,nativeActionLinks}),
     post:(url,body,options)=>{
       if(url.includes('/auth/email/')){
         backendEmails.push({url,body,options});
@@ -117,7 +118,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
     getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
     getPasswordCalls: () => ({reauthentication,updatedPassword,completedReset,appliedEmailCode}),
     getEmailActions: () => emails,
-    setEmailDelivery:mode=>{emailDelivery=mode;},getBackendEmails:()=>backendEmails };
+    setEmailDelivery:mode=>{emailDelivery=mode;},setNativeActionLinks:enabled=>{nativeActionLinks=enabled;},getBackendEmails:()=>backendEmails };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -372,4 +373,32 @@ test('P2 native email: verification action may not authorize a different signed-
  assert.equal(getPasswordCalls().appliedEmailCode,'GOOD_VERIFY_CODE');
  assert.equal(service.profile(),null);
  await assert.rejects(service.inspectNativeEmailAction(),/fresh BlueGuard email link/);
+});
+
+test('P2 native Android never falls back to Firebase browser verification when production API is disabled',async()=>{
+ const {service,setUser,setEmailDelivery,getBackendEmails,getEmailActions}=harness({native:true});
+ setUser({...user('unverified-id'),email:'demo@example.test',emailVerified:false});
+ setEmailDelivery('firebase');
+ await assert.rejects(service.resendVerification(),/email delivery is not ready/);
+ await assert.rejects(service.resetPassword('demo@example.test'),/email delivery is not ready/);
+ assert.equal(getBackendEmails().length,0);
+ assert.equal(getEmailActions().length,0,'Never send default Firebase browser action on Android');
+});
+test('P2 native Android rejects old API that does not explicitly advertise verified App Links',async()=>{
+ const {service,setUser,setEmailDelivery,setNativeActionLinks,getBackendEmails,getEmailActions}=harness({native:true});
+ setUser({...user('unverified-id'),email:'demo@example.test',emailVerified:false});
+ setEmailDelivery('smtp');
+ setNativeActionLinks(false);
+ await assert.rejects(service.resendVerification(),/email delivery is not ready/);
+ assert.equal(getBackendEmails().length,0);
+ assert.equal(getEmailActions().length,0);
+});
+test('P2 native Android sends through verified Firebase Admin provider when exact native capability is advertised',async()=>{
+ const {service,setUser,setEmailDelivery,getBackendEmails,getEmailActions}=harness({native:true});
+ setUser({...user('unverified-id'),email:'demo@example.test',emailVerified:false});
+ setEmailDelivery('smtp');
+ await service.resendVerification();
+ assert.equal(getBackendEmails().length,1);
+ assert.match(getBackendEmails()[0].url,/auth\/email\/verification$/);
+ assert.equal(getEmailActions().length,0);
 });
