@@ -16,6 +16,7 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth.service';
+import { getPostLoginTarget } from '../core/app-links';
 
 @Component({
   standalone: true,
