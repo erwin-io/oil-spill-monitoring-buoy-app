@@ -48,7 +48,9 @@ export function parseNativeEmailAction(raw:string):NativeEmailAction|null{
   if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
       url.pathname!=='/open/auth-action'||url.username||url.password||url.hash)return null;
   const p=url.searchParams;
-  if([...p.keys()].length!==3||['mode','oobCode','apiKey'].some(k=>p.getAll(k).length!==1))
+  let parameterCount=0;
+  p.forEach(()=>{parameterCount++});
+  if(parameterCount!==3||['mode','oobCode','apiKey'].some(k=>p.getAll(k).length!==1))
     return null;
   if(p.get('apiKey')!==environment.firebase.apiKey)return null;
   const mode=p.get('mode');
