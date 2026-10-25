@@ -307,3 +307,20 @@ test('P2-15 Firebase fallback remains until backend is explicitly activated',asy
  assert.equal(getBackendEmails().length,0);
  assert.deepEqual(getEmailActions().map(x=>x.type),['verification','verification','reset']);
 });
+
+test('P2-15 Gmail SMTP capability selects Firebase Admin one-time verification/reset API without duplicate Firebase emails',async()=>{
+ const {service,setUser,setEmailDelivery,getBackendEmails,getEmailActions}=harness();
+ setUser({...user('smtp-uid'),email:'verified.demo@gmail.com'});
+ setEmailDelivery('smtp');
+ await service.register('verified.demo@gmail.com','StrongTestPassword123!');
+ await service.resendVerification();
+ await service.resetPassword('verified.demo@gmail.com');
+ const calls=getBackendEmails();
+ assert.equal(calls.length,3);
+ assert.ok(calls[0].url.endsWith('/auth/email/verification'));
+ assert.equal(calls[0].options.headers.Authorization,'Bearer test-token-smtp-uid');
+ assert.ok(calls[1].url.endsWith('/auth/email/verification'));
+ assert.ok(calls[2].url.endsWith('/auth/email/password-reset'));
+ assert.equal(calls[2].body.email,'verified.demo@gmail.com');
+ assert.deepEqual(getEmailActions(),[]);
+});
