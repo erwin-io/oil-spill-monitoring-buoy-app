@@ -132,9 +132,9 @@ export class AuthService {
   // Firebase, avoiding duplicate/mismatched secure action links.
   private async useBackendEmail(): Promise<boolean> {
     try {
-      const config=await firstValueFrom(this.http.get<{delivery:'resend'|'firebase'}>(
+      const config=await firstValueFrom(this.http.get<{delivery:'smtp'|'resend'|'firebase'}>(
         `${environment.api}/auth/email/config`));
-      return config?.delivery==='resend';
+      return config?.delivery==='smtp'||config?.delivery==='resend';
     } catch {
       return false;
     }
