@@ -16,11 +16,14 @@ function transpile(path) {
 }
 
 function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken } = {}) {
-  const calls = { remove: 0, unregister: 0, request: 0, register: 0 };
+  const calls = { remove: 0, unregister: 0, request: 0, register: 0,sessionStart:0,sessionEnd:0,sessionRefresh:0 };
   const listeners = {};
   const api = {
     registerToken: (token) => { calls.register++; return registerToken ? registerToken(token) : Promise.resolve(); },
     unregisterToken: () => { calls.unregister++; return Promise.resolve(); },
+    startPushSession: () => {calls.sessionStart++;return Promise.resolve({sessionId:'session-one',sessionSecret:'test-push-secret',expiresAt:'2099-01-01T00:00:00Z'})},
+    refreshPushSession: () => {calls.sessionRefresh++;return Promise.resolve({expiresAt:'2099-01-01T00:00:00Z'})},
+    endPushSession: () => {calls.sessionEnd++;return Promise.resolve({revoked:true})},
   };
   const router = { navigate: () => Promise.resolve(true) };
   const PushNotifications = {
@@ -33,15 +36,18 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
     },
   };
   class ApiService {}
+  class AuthService {}
+  const auth={currentUser:()=>({uid:'test-user',emailVerified:true})};
   class Router {}
   const exports = {};
   const modules = {
-    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : router },
+    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : token === AuthService ? auth : router },
     '@angular/router': { Router },
     '@capacitor/core': { Capacitor: { isNativePlatform: () => native, isPluginAvailable: () => pluginAvailable } },
     '@capacitor/push-notifications': { PushNotifications },
     'rxjs': { firstValueFrom: async (promise) => promise },
     './api.service': { ApiService },
+    './auth.service': { AuthService },
   };
   vm.runInNewContext(transpile('src/app/core/push.service.ts'), {
     exports,
@@ -50,6 +56,8 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
       return modules[name];
     },
     console,
+    crypto:{randomUUID:()=> '12345678-1234-1234-1234-123456789012'},
+    localStorage:{getItem:()=>null,setItem:()=>{}},
   });
   return { service: new exports.PushService(), calls, listeners };
 }
@@ -178,7 +186,7 @@ test('logout waits for an in-flight registration and revokes late token', async 
   release();
   await stopping;
   assert.equal(calls.register, 1);
-  assert.equal(calls.unregister, 1, 'server-side late token registration must be revoked');
+  assert.equal(calls.sessionEnd, 1, 'revoked installation session suppresses late FCM registration');
   assert.equal(service.token, undefined);
   listeners.registration({ value: 'callback-after-logout' });
   await service.registrationTask;
