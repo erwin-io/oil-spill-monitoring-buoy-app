@@ -13,6 +13,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let nativeOptions;
   let popupCalls = 0;
   let lastNativeToken;
+  let reauthentication,updatedPassword;
   const auth = { currentUser: null };
   const http = { post: () => {
     if (!nextProfile) throw new Error('Profile response not configured');
@@ -65,6 +66,9 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       createUserWithEmailAndPassword: async () => ({ user: auth.currentUser }),
       sendEmailVerification: async () => {},
       sendPasswordResetEmail: async () => {},
+      EmailAuthProvider: {credential: (email,password)=>({email,password})},
+      reauthenticateWithCredential: async (_user,credential)=>{reauthentication=credential;},
+      updatePassword: async (_user,password)=>{updatedPassword=password;},
       signOut: async () => { auth.currentUser = null; observer(null); },
     },
     '../../environments/environment': { environment: { api: 'https://example.test/api/v1', firebase: {} } },
@@ -82,7 +86,8 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   const setUser = (user) => { auth.currentUser = user; observer(user); };
   const queueProfile = (profile) => { nextProfile = profile; };
   return { service, setUser, queueProfile,
-    getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}) };
+    getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
+    getPasswordCalls: () => ({reauthentication,updatedPassword}) };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -180,4 +185,17 @@ test('Google login cannot accept a profile for a different Firebase user', async
   queueProfile(Promise.resolve(profile('old-account')));
   await assert.rejects(service.signInWithGoogle(),/Profile identity mismatch/);
   assert.equal(service.profile(),null);
+});
+
+test('P2-14 password change demands current credentials, validates next password, preserves Google identity',async()=>{
+ const {service,setUser,getPasswordCalls}=harness();
+ setUser({...user('password-user'),email:'person@example.test',providerData:[{providerId:'password'}]});
+ await assert.rejects(service.changePassword('old','tiny'),/8–128/);
+ await assert.rejects(service.changePassword('same-password','same-password'),/different/);
+ await service.changePassword('old-password','new-password-123');
+ assert.equal(getPasswordCalls().reauthentication.email,'person@example.test');
+ assert.equal(getPasswordCalls().reauthentication.password,'old-password');
+ assert.equal(getPasswordCalls().updatedPassword,'new-password-123');
+ setUser({...user('google-user'),email:'google@example.test',providerData:[{providerId:'google.com'}]});
+ await assert.rejects(service.changePassword('unused','new-password-123'),/Google/);
 });
