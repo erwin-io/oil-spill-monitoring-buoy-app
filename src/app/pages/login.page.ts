@@ -58,7 +58,7 @@ export class LoginPage {
     try {
       await this.auth.signInWithGoogle();
       this.form.controls.password.reset();
-      await this.router.navigateByUrl('/tabs/overview', { replaceUrl: true });
+      await this.router.navigateByUrl(getPostLoginTarget(), { replaceUrl: true });
     } catch (error) {
       const message = (error as Error).message ?? '';
       if (/auth\/(popup-closed-by-user|cancelled-popup-request)|cancelled|canceled/i.test(message)) {
@@ -86,7 +86,7 @@ export class LoginPage {
     try {
       await this.auth.signIn(email.trim().toLowerCase(), password);
       this.form.controls.password.reset();
-      await this.router.navigateByUrl('/tabs/overview', { replaceUrl: true });
+      await this.router.navigateByUrl(getPostLoginTarget(), { replaceUrl: true });
     } catch (error) {
       const message = (error as Error).message ?? '';
       this.form.controls.password.reset();
