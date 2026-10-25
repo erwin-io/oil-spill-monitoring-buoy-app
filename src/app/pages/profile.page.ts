@@ -19,7 +19,7 @@ export class ProfilePage implements OnDestroy {
  error='';signingOut=false;confirmSignOut=false;
  editingPhoto=false;savingAvatar=false;avatarFeedback='';
  photoSrc='';photoZoom=1;photoX=0;photoY=0;
- private photoImage?:HTMLImageElement;
+ photoImage?:HTMLImageElement;
  private photoUrl='';
  readonly signOutButtons=[
   {text:'No',role:'cancel'},
