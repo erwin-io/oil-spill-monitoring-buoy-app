@@ -13,7 +13,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let nativeOptions;
   let popupCalls = 0;
   let lastNativeToken;
-  let reauthentication,updatedPassword;
+  let reauthentication,updatedPassword,completedReset,appliedEmailCode;
   const emails=[],backendEmails=[];
   let emailDelivery='firebase';
   const auth = { currentUser: null };
@@ -77,6 +77,22 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       createUserWithEmailAndPassword: async () => ({ user: auth.currentUser }),
       sendEmailVerification: async (_user, settings) => {emails.push({type:'verification',settings});},
       sendPasswordResetEmail: async (_auth,_email, settings) => {emails.push({type:'reset',settings});},
+      verifyPasswordResetCode:async (_auth,code)=>{
+        if(code!=='GOOD_RESET_CODE')throw Error('auth/invalid-action-code');
+        return 'test.account@example.test';
+      },
+      confirmPasswordReset:async (_auth,code,password)=>{
+        if(code!=='GOOD_RESET_CODE')throw Error('auth/invalid-action-code');
+        completedReset={code,password};
+      },
+      checkActionCode:async (_auth,code)=>{
+        if(code!=='GOOD_VERIFY_CODE')throw Error('auth/expired-action-code');
+        return {operation:'VERIFY_EMAIL',data:{email:'test.account@example.test'}};
+      },
+      applyActionCode:async (_auth,code)=>{
+        if(code!=='GOOD_VERIFY_CODE')throw Error('auth/invalid-action-code');
+        appliedEmailCode=code;
+      },
       EmailAuthProvider: {credential: (email,password)=>({email,password})},
       reauthenticateWithCredential: async (_user,credential)=>{reauthentication=credential;},
       updatePassword: async (_user,password)=>{updatedPassword=password;},
@@ -99,7 +115,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   const queueProfile = (profile) => { nextProfile = profile; };
   return { service, setUser, queueProfile,
     getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
-    getPasswordCalls: () => ({reauthentication,updatedPassword}),
+    getPasswordCalls: () => ({reauthentication,updatedPassword,completedReset,appliedEmailCode}),
     getEmailActions: () => emails,
     setEmailDelivery:mode=>{emailDelivery=mode;},getBackendEmails:()=>backendEmails };
 }
@@ -323,4 +339,37 @@ test('P2-15 Gmail SMTP capability selects Firebase Admin one-time verification/r
  assert.ok(calls[2].url.endsWith('/auth/email/password-reset'));
  assert.equal(calls[2].body.email,'verified.demo@gmail.com');
  assert.deepEqual(getEmailActions(),[]);
+});
+
+test('P2 native email: real Firebase reset is completed inside AuthService, credential then cleared and local session logged out',async()=>{
+ const {service,setUser,getPasswordCalls}=harness();
+ setUser({...user('account-A'),email:'account.a@example.test'});
+ service.stageNativeEmailAction({mode:'resetPassword',code:'GOOD_RESET_CODE'});
+ const preview=await service.inspectNativeEmailAction();
+ assert.equal(preview.mode,'resetPassword');
+ assert.equal(preview.email,'test.account@example.test');
+ await assert.rejects(service.finishNativePasswordReset('weak'),/8–128 characters/);
+ await service.finishNativePasswordReset('NewSecurePassword2026!');
+ assert.equal(getPasswordCalls().completedReset.password,'NewSecurePassword2026!');
+ assert.equal(service.currentUser(),null,'reset must not automatically sign in');
+ await assert.rejects(service.inspectNativeEmailAction(),/fresh BlueGuard email link/);
+ await assert.rejects(service.finishNativePasswordReset('SecondSecurePassword2026!'),/fresh password-reset email link/);
+});
+test('P2 native email: expired reset code is discarded before any password update',async()=>{
+ const {service,getPasswordCalls}=harness();
+ service.stageNativeEmailAction({mode:'resetPassword',code:'INVALID'});
+ await assert.rejects(service.inspectNativeEmailAction(),/invalid, expired/);
+ assert.equal(getPasswordCalls().completedReset,undefined);
+ await assert.rejects(service.finishNativePasswordReset('SecurePassword2026!'),/fresh password-reset email link/);
+});
+test('P2 native email: verification action may not authorize a different signed-in Firebase user',async()=>{
+ const {service,setUser,getPasswordCalls}=harness();
+ setUser({...user('other-account'),email:'other@example.test'});
+ service.stageNativeEmailAction({mode:'verifyEmail',code:'GOOD_VERIFY_CODE'});
+ const preview=await service.inspectNativeEmailAction();
+ assert.equal(preview.email,'test.account@example.test');
+ assert.equal(await service.finishNativeVerification(),false);
+ assert.equal(getPasswordCalls().appliedEmailCode,'GOOD_VERIFY_CODE');
+ assert.equal(service.profile(),null);
+ await assert.rejects(service.inspectNativeEmailAction(),/fresh BlueGuard email link/);
 });
