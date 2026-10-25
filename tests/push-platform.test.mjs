@@ -95,7 +95,7 @@ test('native listener cleanup errors are contained', async () => {
   assert.equal(calls.remove, 1);
 });
 
-test('ProfilePage signs out even when push cleanup rejects', async () => {
+test('ProfilePage blocks sign-out when server push revocation rejects', async () => {
   const calls = { disconnect: 0, push: 0, logout: 0, redirect: 0 };
   const auth = { logout: async () => { calls.logout++; }, profile: () => null };
   const realtime = { disconnect: () => { calls.disconnect++; } };
