@@ -108,11 +108,12 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
   const exports = {};
   const ionic = Object.fromEntries(
     ['IonAvatar', 'IonBadge', 'IonButton', 'IonContent', 'IonHeader', 'IonIcon',
-     'IonItem', 'IonLabel', 'IonList', 'IonListHeader', 'IonNote', 'IonTitle', 'IonToolbar'
+     'IonInput', 'IonItem', 'IonLabel', 'IonList', 'IonListHeader', 'IonNote', 'IonTitle', 'IonToolbar'
     ].map((n) => [n, class {}]),
   );
   const modules = {
     '@angular/common': { CommonModule: class {} },
+    '@angular/forms': { FormsModule: class {} },
     '@angular/core': {
       Component: () => (cls) => cls,
       inject: (token) => {
