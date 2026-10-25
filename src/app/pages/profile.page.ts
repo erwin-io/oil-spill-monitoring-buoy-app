@@ -118,11 +118,9 @@ export class ProfilePage {
     this.error = '';
     try {
       this.realtime.disconnect();
-      try {
-        await this.push.stop();
-      } catch (error) {
-        console.warn('Push cleanup failed during logout:', error);
-      }
+      // Explicit sign-out must first retire the server session. If offline, keep
+      // the signed-in account and in-memory revocation proof for an online retry.
+      await this.push.stop(true);
       await this.auth.logout();
       await this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch (error) {
