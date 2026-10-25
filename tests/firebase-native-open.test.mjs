@@ -48,17 +48,17 @@ test('P2-15 native browser fallback checks Firebase before showing a launch butt
   const script=readFileSync('hosting/public/firebase-native-open.mjs','utf8');
   assert.match(html,/id="open-blueguard" type="button" hidden disabled/);
   assert.match(html,/name="referrer" content="no-referrer"/);
-  assert.match(html,/src="\\/firebase-native-open\\.mjs"/);
-  assert.match(script,/window\\.history\\.replaceState\\(null,'','\\/open\\/auth-action'\\)/);
-  assert.match(script,/await checkActionCode\\(auth,action\\.code\\)/);
-  assert.match(script,/await verifyPasswordResetCode\\(auth,action\\.code\\)/);
-  assert.match(script,/info\\.operation!=='VERIFY_EMAIL'/);
-  assert.match(script,/button\\.addEventListener\\('click',/);
-  assert.match(script,/window\\.location\\.href=buildBlueGuardIntent\\(action\\)/);
-  assert.match(script,/window\\.addEventListener\\('pageshow',onReturn\\)/);
-  assert.match(script,/document\\.addEventListener\\('visibilitychange',/);
-  assert.match(script,/if\\(!launched\\)return/);
-  assert.doesNotMatch(script,/setTimeout|setInterval|localStorage|sessionStorage|console\\.log|applyActionCode|confirmPasswordReset/);
+  assert.match(html,/src="\/firebase-native-open\.mjs"/);
+  assert.match(script,/window\.history\.replaceState\(null,'','\/open\/auth-action'\)/);
+  assert.match(script,/await checkActionCode\(auth,action\.code\)/);
+  assert.match(script,/await verifyPasswordResetCode\(auth,action\.code\)/);
+  assert.match(script,/info\.operation!=='VERIFY_EMAIL'/);
+  assert.match(script,/button\.addEventListener\('click',/);
+  assert.match(script,/window\.location\.href=buildBlueGuardIntent\(action\)/);
+  assert.match(script,/window\.addEventListener\('pageshow',onReturn\)/);
+  assert.match(script,/document\.addEventListener\('visibilitychange',/);
+  assert.match(script,/if\(!launched\)return/);
+  assert.doesNotMatch(script,/setTimeout|setInterval|localStorage|sessionStorage|console\.log|applyActionCode|confirmPasswordReset/);
 });
 test('P2-15 consumed Firebase codes hide the browser action; temporary errors fail closed',()=>{
   for(const code of ['auth/invalid-action-code','auth/expired-action-code','auth/user-disabled','auth/user-not-found']) {
