@@ -62,7 +62,12 @@ export class PushService {
      if(!current)return;
      try{
       await firstValueFrom(this.api.registerToken(value,current.sessionId,current.sessionSecret));
-      if(gen!==this.generation||this.auth.currentUser()?.uid!==uid)return;
+      if(gen!==this.generation||this.auth.currentUser()?.uid!==uid){
+       // stop() waits for this registration task while the old Firebase user
+       // is still authenticated; retire a late token before signing out.
+       try{await firstValueFrom(this.api.unregisterToken(value))}catch{}
+       return;
+      }
       this.token=value;
       if(previous&&previous!==value)await firstValueFrom(this.api.unregisterToken(previous));
      }catch{ /* The next registration or sign-in may retry. Do not log token. */ }
