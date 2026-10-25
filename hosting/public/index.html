@@ -1,61 +1,25 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="referrer" content="no-referrer">
-  <title>BlueGuard Buoy — Continue in app</title>
-  <style>
-    body{font-family:system-ui,Arial,sans-serif;background:#f2f7fa;color:#123048;margin:0;display:grid;place-items:center;min-height:100vh}
-    main{box-sizing:border-box;width:min(460px,calc(100% - 32px));padding:30px;background:#fff;border-radius:16px;box-shadow:0 5px 35px #102c4320}
-    h1{color:#08718b;margin-top:0}p{line-height:1.6}
-    button{width:100%;border:0;border-radius:10px;background:#08718b;color:#fff;font:600 1rem system-ui,sans-serif;padding:14px 20px;cursor:pointer}
-    button:focus-visible{outline:3px solid #e7ab29;outline-offset:3px}
-    [hidden]{display:none!important}.help{font-size:.9rem;color:#496477}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>BlueGuard Buoy — Continue in app</title>
+<style>
+body{font-family:system-ui,Arial,sans-serif;background:#f2f7fa;color:#123048;margin:0;display:grid;place-items:center;min-height:100vh}
+main{box-sizing:border-box;width:min(460px,calc(100% - 32px));padding:30px;background:#fff;border-radius:16px;box-shadow:0 5px 35px #102c4320}
+h1{color:#08718b;margin-top:0}p{line-height:1.6}
+button{width:100%;border:0;border-radius:10px;background:#08718b;color:#fff;font:600 1rem system-ui,sans-serif;padding:14px 20px;cursor:pointer}
+button:focus-visible{outline:3px solid #e7ab29;outline-offset:3px}
+[hidden]{display:none!important}.help{font-size:.9rem;color:#496477}
+</style>
 </head>
-<body>
-  <main>
-    <h1>BlueGuard Buoy</h1>
-    <p id="message" aria-live="polite">Open BlueGuard Buoy to continue.</p>
-    <button id="open-blueguard" type="button" hidden>Open BlueGuard Buoy</button>
-    <p id="help" class="help">If the app does not open automatically, check that BlueGuard is installed and that Android's Open supported links setting is enabled.</p>
-    <p class="help">This page does not verify accounts, reset passwords, or grant device access. Those actions are completed inside BlueGuard.</p>
-  </main>
-  <script type="module">
-    import {parseFallbackAction,buildBlueGuardIntent} from '/firebase-native-open-core.mjs';
-    const message = document.getElementById('message');
-    const help = document.getElementById('help');
-    const button = document.getElementById('open-blueguard');
-    const path = window.location.pathname;
-    if (path === '/open/auth-action') {
-      const action = parseFallbackAction(window.location.href);
-      // Hide one-time Firebase credentials from the address bar and browser history.
-      // Keep the validated action only in this module's memory until the user taps.
-      window.history.replaceState(null, '', '/open/auth-action');
-      if (action && /Android/i.test(navigator.userAgent)) {
-        message.textContent = action.mode === 'verifyEmail' ?
-          'Complete email verification securely in the installed BlueGuard Buoy app.' :
-          'Reset your password securely in the installed BlueGuard Buoy app.';
-        help.textContent = 'Tap the button to open BlueGuard. If your Gmail browser blocks opening apps, open this email in Chrome on your Android phone and try again. If BlueGuard is not installed, install it and request a fresh email.';
-        button.hidden = false;
-        button.addEventListener('click', () => {
-          // Deliberate user gesture only; never auto-launch or store codes in DOM.
-          window.location.href = buildBlueGuardIntent(action);
-        });
-      } else {
-        message.textContent = action ?
-          'Open this message in Gmail on your Android phone with BlueGuard installed.' :
-          'This email link is invalid or incomplete. Request a new verification or reset email in BlueGuard.';
-        help.textContent = 'This website cannot perform Firebase email actions. Open the installed BlueGuard Android app to request a fresh email when necessary.';
-      }
-    } else if (path === '/open/email-verified') {
-      message.textContent = 'After completing verification in Firebase, return to BlueGuard Buoy and sign in.';
-    } else if (path === '/open/password-reset-complete') {
-      message.textContent = 'After resetting your password, return to BlueGuard Buoy and sign in with your new password.';
-    } else if (path === '/open/invite' || path === '/open/transfer') {
-      message.textContent = 'Open the installed BlueGuard Buoy app and sign in to review your pending buoy offers.';
-    }
-  </script>
-</body>
-</html>
+<body><main>
+<h1>BlueGuard Buoy</h1>
+<p id="message" aria-live="polite">Checking your secure email link with Firebase…</p>
+<button id="open-blueguard" type="button" hidden disabled>Open BlueGuard Buoy</button>
+<p id="help" class="help">This requires an internet connection. Please keep this page open.</p>
+<p class="help">This page cannot verify accounts, reset passwords, or grant device access. Those actions are completed inside BlueGuard.</p>
+</main>
+<script type="module" src="/firebase-native-open.mjs"></script>
+</body></html>

@@ -81,6 +81,27 @@
             "value": "nosniff"
           }
         ]
+      },
+      {
+        "source": "/firebase-native-open*.mjs",
+        "headers": [
+          {
+            "key": "Content-Type",
+            "value": "text/javascript"
+          },
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          }
+        ]
       }
     ],
     "appAssociation": "NONE"

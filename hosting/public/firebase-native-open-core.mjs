@@ -38,3 +38,11 @@ export function buildBlueGuardIntent(action) {
     '#Intent;scheme=https;action=android.intent.action.VIEW;' +
     'category=android.intent.category.BROWSABLE;package=' + BLUEGUARD_PACKAGE + ';end';
 }
+
+export function firebaseActionState(errorCode) {
+  if (['auth/invalid-action-code','auth/expired-action-code',
+       'auth/user-disabled','auth/user-not-found'].includes(errorCode)) {
+    return 'unavailable';
+  }
+  return 'network-error';
+}
