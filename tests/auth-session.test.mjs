@@ -280,3 +280,30 @@ test('P2-15 registration, resend verification and password reset supply Firebase
  assert.match(actions[0].settings.url,/\/open\/email-verified$/);
  assert.match(actions[2].settings.url,/\/open\/password-reset-complete$/);
 });
+
+test('P2-15 active backend capability uses Firebase identity proof for verification and generic password reset',async()=>{
+ const {service,setUser,setEmailDelivery,getBackendEmails,getEmailActions}=harness();
+ const u={...user('new-id'),email:'new@example.test'};
+ setUser(u);setEmailDelivery('resend');
+ await service.register('new@example.test','testPassword1234');
+ await service.resendVerification();
+ await service.resetPassword('NEW@EXAMPLE.TEST');
+ const calls=getBackendEmails();
+ assert.equal(calls.length,3);
+ assert.match(calls[0].url,/\/auth\/email\/verification$/);
+ assert.equal(calls[0].options.headers.Authorization,'Bearer test-token-new-id');
+ assert.match(calls[1].url,/\/auth\/email\/verification$/);
+ assert.match(calls[2].url,/\/auth\/email\/password-reset$/);
+ assert.equal(calls[2].body.email,'new@example.test');
+ assert.equal(getEmailActions().length,0);
+});
+test('P2-15 Firebase fallback remains until backend is explicitly activated',async()=>{
+ const {service,setUser,setEmailDelivery,getBackendEmails,getEmailActions}=harness();
+ setUser({...user('new-id'),email:'new@example.test'});
+ setEmailDelivery('firebase');
+ await service.register('new@example.test','testPassword1234');
+ await service.resendVerification();
+ await service.resetPassword('new@example.test');
+ assert.equal(getBackendEmails().length,0);
+ assert.deepEqual(getEmailActions().map(x=>x.type),['verification','verification','reset']);
+});
