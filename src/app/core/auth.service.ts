@@ -147,6 +147,21 @@ export class AuthService {
     await sendPasswordResetEmail(this.auth, email);
   }
 
+  async updateDisplayName(displayName: string): Promise<Profile> {
+    const user=this.auth.currentUser;
+    if(!user||!user.emailVerified)throw new Error('Verified sign-in required');
+    const generation=this.sessionGeneration;
+    const token=await user.getIdToken();
+    const profile=await firstValueFrom(this.http.patch<Profile>(
+      `${environment.api}/auth/me`,{displayName},
+      {headers:{Authorization:`Bearer ${token}`}},
+    ));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid||profile.uid!==user.uid)
+      throw new Error('Account changed during profile update');
+    this.profile.set(profile);
+    return profile;
+  }
+
   async changePassword(currentPassword: string, nextPassword: string): Promise<void> {
     const user=this.auth.currentUser;
     if(!user?.email||!user.emailVerified)throw new Error('Sign in with a verified email first');
