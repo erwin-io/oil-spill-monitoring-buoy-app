@@ -17,8 +17,9 @@ export class ProfilePasswordPage{
   if(this.busy)return;
   const email=this.auth.profile()?.email;
   if(!email){this.message='Account email unavailable. Sign in again.';return;}
+  const resending=this.sent;
   this.busy=true;this.message='';
-  try{await this.auth.resetPassword(email);this.sent=true;}
+  try{await this.auth.resetPassword(email);this.sent=true;this.message=resending?'If eligible, another reset email has been sent.':'';}
   catch{this.message='Unable to send the reset email. Please try again.';}
   finally{this.busy=false;}
  }

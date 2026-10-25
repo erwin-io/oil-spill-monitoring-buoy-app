@@ -56,13 +56,14 @@ export class ForgotPage {
 
   async reset(): Promise<void> {
     if (this.busy || !this.email.trim()) return;
+    const resending=this.sent;
     this.busy = true;
     this.message = '';
     try {
       await this.auth.resetPassword(this.email.trim().toLowerCase());
       this.sendingEmail=this.email.trim().toLowerCase();
       this.sent=true;
-      this.message='';
+      this.message=resending?'If eligible, another reset email has been sent. Check your inbox.':'';
     } catch {
       this.message = 'Unable to submit the password reset request. Please try again.';
     } finally {
