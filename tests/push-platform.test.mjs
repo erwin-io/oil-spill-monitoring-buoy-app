@@ -23,7 +23,7 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
     unregisterToken: () => { calls.unregister++; return Promise.resolve(); },
     startPushSession: () => {calls.sessionStart++;return Promise.resolve({sessionId:'session-one',sessionSecret:'test-push-secret',expiresAt:'2099-01-01T00:00:00Z'})},
     refreshPushSession: () => {calls.sessionRefresh++;return Promise.resolve({expiresAt:'2099-01-01T00:00:00Z'})},
-    endPushSession: () => {calls.sessionEnd++;return Promise.resolve({revoked:true})},
+    endPushSession: () => {calls.sessionEnd++;return endSession ? endSession() : Promise.resolve({revoked:true})},
   };
   const router = { navigate: () => Promise.resolve(true) };
   const PushNotifications = {
