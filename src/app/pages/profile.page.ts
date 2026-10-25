@@ -1,5 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import {
   IonAvatar,
@@ -8,6 +9,7 @@ import {
   IonContent,
   IonHeader,
   IonIcon,
+  IonInput,
   IonItem,
   IonLabel,
   IonList,
@@ -31,8 +33,8 @@ import { PushService } from '../core/push.service';
 @Component({
   standalone: true,
   imports: [
-    CommonModule, IonAvatar, IonBadge, IonButton, IonContent, IonHeader,
-    IonIcon, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle, IonToolbar,
+    CommonModule, FormsModule, IonAvatar, IonBadge, IonButton, IonContent, IonHeader,
+    IonIcon, IonInput, IonItem, IonLabel, IonList, IonListHeader, IonNote, IonTitle, IonToolbar,
   ],
   templateUrl: './profile.page.html',
   styleUrls: ['./profile.page.scss'],
@@ -45,6 +47,7 @@ export class ProfilePage {
 
   error = '';
   signingOut = false;
+  currentPassword='';newPassword='';confirmPassword='';changingPassword=false;passwordFeedback='';
 
   constructor() {
     addIcons({
@@ -56,6 +59,19 @@ export class ProfilePage {
   initials(name?: string): string {
     return (name ?? 'OS').trim().split(/\s+/).slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '').join('') || 'OS';
+  }
+
+  async changePassword():Promise<void>{
+    if(this.changingPassword)return;
+    this.passwordFeedback='';
+    if(this.newPassword!==this.confirmPassword){this.passwordFeedback='New passwords do not match';return}
+    this.changingPassword=true;
+    try{
+      await this.auth.changePassword(this.currentPassword,this.newPassword);
+      this.currentPassword='';this.newPassword='';this.confirmPassword='';
+      this.passwordFeedback='Password updated successfully.';
+    }catch(e){this.passwordFeedback=(e as Error)?.message||'Unable to change password'}
+    finally{this.changingPassword=false}
   }
 
   async logout(): Promise<void> {
