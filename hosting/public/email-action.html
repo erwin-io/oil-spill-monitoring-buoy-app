@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="light">
+  <title>BlueGuard Buoy — Secure account action</title>
+  <style>
+    :root{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#123047;background:#edf5f8}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;display:grid;place-items:center;padding:18px}
+    main{background:white;border:1px solid #d7e6ec;border-radius:18px;box-shadow:0 15px 38px #0d33451a;
+      width:100%;max-width:480px;padding:26px}
+    small{letter-spacing:.12em;text-transform:uppercase;font-weight:700;color:#077d97}
+    h1{font-size:1.6rem;line-height:1.3;margin:12px 0 10px}
+    p{line-height:1.65;color:#425a6a}
+    form{display:grid;gap:12px}
+    label{font-weight:600}
+    input{padding:13px;border:1px solid #9eb6c0;border-radius:10px;font:inherit;width:100%}
+    button,.button{display:block;text-align:center;border:0;background:#05728e;color:#fff;cursor:pointer;
+      font:600 1rem system-ui;padding:14px 16px;border-radius:10px;text-decoration:none;width:100%}
+    button:disabled{opacity:.65;cursor:wait}
+    .secondary{background:white;border:1px solid #08768e;color:#086982;margin-top:10px}
+    .assist{font-size:.86rem}
+    .error{color:#b52424}
+    .success{color:#116b43}
+    [hidden]{display:none!important}
+  </style>
+</head>
+<body>
+<main>
+  <small>BlueGuard Buoy · Secure account</small>
+  <h1 id="heading">Checking your email link…</h1>
+  <p id="message" role="status" aria-live="polite">Checking this request against Firebase Authentication.</p>
+  <button id="verify-button" hidden>Verify email address</button>
+  <form id="reset-form" hidden autocomplete="off">
+    <label for="new-password">New password</label>
+    <input id="new-password" type="password" minlength="8" maxlength="128" required autocomplete="new-password">
+    <label for="confirm-password">Confirm new password</label>
+    <input id="confirm-password" type="password" minlength="8" maxlength="128" required autocomplete="new-password">
+    <button id="reset-submit" type="submit">Reset password</button>
+  </form>
+  <button id="recover-button" hidden>Restore previous email</button>
+  <section id="return-panel" hidden>
+    <a id="open-app" class="button" href="#">Open BlueGuard Buoy</a>
+    <a id="open-https" class="button secondary" href="#">Open supported HTTPS link</a>
+    <p class="assist">On Android, tap <strong>Open BlueGuard Buoy</strong> to switch directly to the installed app. If your browser blocks app launching, open BlueGuard manually and sign in or check email verification.</p>
+  </section>
+  <p id="hint" class="assist">Never share verification or password reset links. This page will never ask for your current password.</p>
+</main>
+<script type="module" src="/firebase-email-action.mjs"></script>
+</body>
+</html>

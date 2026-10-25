@@ -60,7 +60,8 @@ test('P2-15 Android only intercepts existing Firebase domain with verified HTTPS
  assert.match(java,/JSONObject\.quote/);
  assert.match(java,/getWebView\(\)\.evaluateJavascript/);
  assert.equal(config.hosting.public,'hosting/public');
- assert.equal(config.hosting.rewrites[0].source,'/open/**');
+ assert.ok(config.hosting.rewrites.some(x=>x.source==='/open/**'&&x.destination==='/index.html'));
+ assert.ok(config.hosting.rewrites.some(x=>x.source==='/auth/action'&&x.destination==='/email-action.html'));
 });
 
 test('P2-15 sensitive Firebase email-action codes NEVER pass into Android return links',()=>{
