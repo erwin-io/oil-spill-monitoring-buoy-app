@@ -23,6 +23,7 @@ import {
 } from 'firebase/auth';
 import { environment } from '../../environments/environment';
 import { Profile } from './models';
+import {firebaseEmailActionSettings} from './firebase-email-actions';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -127,14 +128,14 @@ export class AuthService {
 
   async register(email: string, password: string): Promise<User> {
     const result = await createUserWithEmailAndPassword(this.auth, email, password);
-    await sendEmailVerification(result.user);
+    await sendEmailVerification(result.user,firebaseEmailActionSettings('verify'));
     return result.user;
   }
 
   async resendVerification(): Promise<void> {
     const user = this.auth.currentUser;
     if (!user) throw new Error('Sign in required');
-    await sendEmailVerification(user);
+    await sendEmailVerification(user,firebaseEmailActionSettings('verify'));
   }
 
   async reloadVerified(): Promise<boolean> {
@@ -144,7 +145,7 @@ export class AuthService {
   }
 
   async resetPassword(email: string): Promise<void> {
-    await sendPasswordResetEmail(this.auth, email);
+    await sendPasswordResetEmail(this.auth, email,firebaseEmailActionSettings('reset'));
   }
 
   async updateDisplayName(displayName: string): Promise<Profile> {
