@@ -19,6 +19,13 @@
         </ion-item>
       </ion-list>
 
+      <div class="card">
+        <h3>Display name</h3>
+        <p class="hint">Your display name is visible on your own account profile.</p>
+        <ion-input label="Name" label-placement="stacked" [maxlength]="80" [(ngModel)]="displayNameDraft"></ion-input>
+        <ion-button expand="block" fill="outline" [disabled]="savingName || displayNameDraft.trim().length<2 || displayNameDraft.trim().length>80" (click)="saveDisplayName()">Save name</ion-button>
+        <p *ngIf="nameFeedback" role="status">{{nameFeedback}}</p>
+      </div>
       <ion-list inset="true">
         <ion-list-header><ion-label>Account</ion-label></ion-list-header>
         <ion-item>
