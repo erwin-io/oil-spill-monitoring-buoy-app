@@ -15,7 +15,7 @@ function transpile(path) {
   }).outputText;
 }
 
-function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken } = {}) {
+function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken, endSession } = {}) {
   const calls = { remove: 0, unregister: 0, request: 0, register: 0,sessionStart:0,sessionEnd:0,sessionRefresh:0 };
   const listeners = {};
   const api = {
