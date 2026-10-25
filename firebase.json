@@ -9,11 +9,45 @@
     ],
     "rewrites": [
       {
+        "source": "/auth/action",
+        "destination": "/email-action.html"
+      },
+      {
         "source": "/open/**",
         "destination": "/index.html"
       }
     ],
     "headers": [
+      {
+        "source": "/auth/action",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "no-store"
+          },
+          {
+            "key": "Referrer-Policy",
+            "value": "no-referrer"
+          },
+          {
+            "key": "X-Content-Type-Options",
+            "value": "nosniff"
+          }
+        ]
+      },
+      {
+        "source": "/firebase-email-action*.mjs",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "public, max-age=300"
+          },
+          {
+            "key": "Content-Type",
+            "value": "text/javascript"
+          }
+        ]
+      },
       {
         "source": "/.well-known/assetlinks.json",
         "headers": [
