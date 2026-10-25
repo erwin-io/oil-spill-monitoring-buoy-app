@@ -10,7 +10,8 @@
       <ion-list>
         <ion-item lines="none" class="identity">
           <ion-avatar slot="start" aria-hidden="true">
-            <div class="initials">{{ initials(p.displayName) }}</div>
+            <img *ngIf="p.avatarUrl; else avatarInitials" [src]="p.avatarUrl" alt="" />
+            <ng-template #avatarInitials><div class="initials">{{ initials(p.displayName) }}</div></ng-template>
           </ion-avatar>
           <ion-label>
             <h2>{{ p.displayName }}</h2>
