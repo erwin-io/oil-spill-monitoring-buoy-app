@@ -15,7 +15,7 @@ test('Email/Password remains available alongside native and web Google Sign-In',
   assert.equal(pkg.dependencies.firebase, '11.10.0');
   assert.ok(auth.includes('signInWithEmailAndPassword'), 'password login preserved');
   assert.ok(auth.includes('signInWithPopup'), 'browser popup supported');
-  assert.ok(auth.includes('FirebaseAuthentication.signInWithGoogle()'), 'native Google account flow');
+  assert.match(auth, /FirebaseAuthentication\.signInWithGoogle\(\s*\{\s*useCredentialManager:\s*false\s*\}\s*\)/, 'native legacy Google account flow');
   assert.ok(auth.includes('GoogleAuthProvider.credential(googleIdToken)'), 'native Google token exchanged for Firebase JS session');
   assert.ok(login.includes('(click)="googleLogin()"'));
   assert.ok(login.includes('Continue with Google'));
