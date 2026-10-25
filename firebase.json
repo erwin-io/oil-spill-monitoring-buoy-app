@@ -9,6 +9,10 @@
     ],
     "rewrites": [
       {
+        "source": "/.well-known/assetlinks.json",
+        "destination": "/assetlinks.json"
+      },
+      {
         "source": "/auth/action",
         "destination": "/email-action.html"
       },
