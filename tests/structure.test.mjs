@@ -100,14 +100,14 @@ test('SEEFIX-matched 2px/10px global controls, no-shadow auth, blue toolbars', (
   }
 });
 
-test('native status filters use the same outlined Ionic alert-select pattern', () => {
-  for (const name of ['devices', 'alerts']) {
-    const html = read('src/app/pages/' + name + '.page.html');
-    assert.ok(html.includes('ion-select'));
-    assert.ok(html.includes('fill="outline"'));
-    assert.ok(html.includes('interface="alert"'));
-    assert.ok(html.includes('interfaceOptions'));
-  }
+test('buoy list retains outlined native filter while personal Notifications has no status filters', () => {
+ const devices=read('src/app/pages/devices.page.html');
+ for(const needle of ['ion-select','fill="outline"','interface="alert"','interfaceOptions'])
+  assert.ok(devices.includes(needle));
+ const inbox=read('src/app/pages/alerts.page.html');
+ assert.ok(!inbox.includes('ion-select'), 'P2-DEC-003 requires no inbox filters');
+ assert.ok(inbox.includes('Mark All Read'));
+ assert.ok(inbox.includes('<ion-title>Notifications</ion-title>'));
 });
 
 test('Login has one branded welcome section, compact form and scroll-safe mobile layout', () => {
