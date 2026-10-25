@@ -15,7 +15,7 @@ function load(){
    if(moduleName==='../../environments/environment')return {environment:{firebase:{authDomain:'oil-spill-monitoring-buoy.firebaseapp.com'}}};
    throw Error('Unexpected '+moduleName);
   },
-  URL,sessionStorage:{getItem:x=>storage.get(x)??null,setItem:(x,v)=>storage.set(x,v),removeItem:x=>storage.delete(x)}
+  URL,URLSearchParams,sessionStorage:{getItem:x=>storage.get(x)??null,setItem:(x,v)=>storage.set(x,v),removeItem:x=>storage.delete(x)}
  });
  return {links:exports,storage};
 }
