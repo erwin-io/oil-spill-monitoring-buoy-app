@@ -9,7 +9,7 @@ import {
 import {AuthService} from '../core/auth.service';
 
 // Strictly native Firebase email action UI. The code never enters a route,
-// native logs, a Web URL, HTML markup, analytics or localStorage.
+// native logs, a Web URL, HTML markup, analytics or persistent storage.
 @Component({
  standalone:true,
  imports:[
