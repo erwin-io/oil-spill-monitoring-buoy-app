@@ -1,15 +1,21 @@
 import {uiError} from '../core/ui-error';
+import {AddDeviceModalService} from '../core/add-device-modal.service';
+import {EmptyStateComponent} from './empty-state.component';
+import {addIcons} from 'ionicons';
+import {addOutline} from 'ionicons/icons';
 import {Component,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
-import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent} from '@ionic/angular/standalone';
+import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon} from '@ionic/angular/standalone';
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
 import {Device} from '../core/models';
-@Component({standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent],templateUrl:'./devices.page.html',styleUrls:['./devices.page.scss']})
+@Component({standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon,EmptyStateComponent],templateUrl:'./devices.page.html',styleUrls:['./devices.page.scss']})
 export class DevicesPage{
+ readonly addDeviceModal=inject(AddDeviceModalService);
+ constructor(){addIcons({addOutline});}
  private api=inject(ApiService);private auth=inject(AuthService);
  items:Device[]=[];invitations:{deviceId:string;invitedAt:string}[]=[];transfers:{deviceId:string;requestId:string;expiresAt:string}[]=[];term='';filter='ALL';loading=true;error='';accepting='';
  onSearch(value: string | null | undefined):void{this.term=value??''}

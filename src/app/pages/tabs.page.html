@@ -1,1 +1,7 @@
 <ion-tabs><ion-tab-bar slot="bottom"><ion-tab-button tab="overview" href="/tabs/overview"><ion-icon name="home-outline"></ion-icon><ion-label>Overview</ion-label></ion-tab-button><ion-tab-button tab="buoys" href="/tabs/buoys"><ion-icon name="water-outline"></ion-icon><ion-label>Buoys</ion-label></ion-tab-button><ion-tab-button tab="alerts" href="/tabs/alerts"><ion-icon name="notifications-outline"></ion-icon><ion-label>Alerts</ion-label></ion-tab-button><ion-tab-button tab="profile" href="/tabs/profile"><ion-icon name="person-circle-outline"></ion-icon><ion-label>Profile</ion-label></ion-tab-button></ion-tab-bar></ion-tabs>
+
+<ion-modal [isOpen]="deviceModal.opened()" cssClass="add-device-fullscreen"
+ [enterAnimation]="enterAnimation" [leaveAnimation]="leaveAnimation"
+ (didDismiss)="deviceModal.close()">
+ <ng-template><app-add-device></app-add-device></ng-template>
+</ion-modal>

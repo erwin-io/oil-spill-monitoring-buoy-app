@@ -1,4 +1,7 @@
-<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Add Device</ion-title></ion-toolbar></ion-header>
+<ion-header class="no-shadow"><ion-toolbar color="primary">
+<ion-title>Add Device</ion-title>
+<ion-buttons slot="end"><ion-button aria-label="Close Add Device" color="light" fill="clear" (click)="close()"><ion-icon name="close-outline" slot="icon-only"></ion-icon></ion-button></ion-buttons>
+</ion-toolbar></ion-header>
 <ion-content><div class="page">
   <h2 class="top-title">Connect your BlueGuard Buoy</h2>
   <p class="hint">Open the protected QR label inside your buoy. Press its separate PAIR button while the buoy and phone are online. The pairing window lasts five minutes.</p>
@@ -11,5 +14,5 @@
   <div *ngIf="state==='EXPIRED'" class="card" role="status"><strong>Pairing expired</strong><p>Press PAIR again, then scan the protected label or enter the claim code to retry.</p></div>
   <div *ngIf="state==='CONFIRMED'" class="card" role="status"><strong>Device claimed</strong><p>Your buoy is now linked to this account.</p></div>
   <p *ngIf="error" role="alert" class="error">{{error}}</p>
-  <ion-button fill="clear" routerLink="/tabs/buoys">Back to My Buoys</ion-button>
+  <ion-button fill="clear" (click)="close()">Cancel</ion-button>
 </div></ion-content>
