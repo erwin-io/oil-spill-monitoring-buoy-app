@@ -49,6 +49,7 @@ export class ProfilePage {
   signingOut = false;
   displayNameDraft='';savingName=false;nameFeedback='';
   currentPassword='';newPassword='';confirmPassword='';changingPassword=false;passwordFeedback='';
+  savingAvatar=false;avatarFeedback='';
 
   constructor() {
     addIcons({
