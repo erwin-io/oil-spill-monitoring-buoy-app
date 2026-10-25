@@ -10,6 +10,7 @@ import com.getcapacitor.BridgeActivity;
 // Never handle OAuth tokens, Firebase email actions, pairing secrets or login state here.
 public class MainActivity extends BridgeActivity {
     private static final String APP_LINK_HOST = "oil-spill-monitoring-buoy.firebaseapp.com";
+    private String lastDeliveredAppLink = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,6 +22,7 @@ public class MainActivity extends BridgeActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        lastDeliveredAppLink = null; // A new explicit tap may intentionally repeat a previous link.
         deliverAppLink(intent);
     }
 
@@ -38,6 +40,8 @@ public class MainActivity extends BridgeActivity {
         final String path = uri.getPath();
         if (!"/open/invite".equals(path) && !"/open/transfer".equals(path)) return;
         if (uri.toString().length() > 1024) return;
+        if (uri.toString().equals(lastDeliveredAppLink)) return; // Prevent onCreate/onResume duplicates.
+        lastDeliveredAppLink = uri.toString();
         final String value = JSONObject.quote(uri.toString());
         // Store the pending link before dispatch. Cold-start JS may not have subscribed.
         // JSON quoting prevents script injection from URL content.
