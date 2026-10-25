@@ -81,6 +81,14 @@ export const routes: Routes = [
           import("./pages/alert-detail.page").then((m) => m.AlertDetailPage),
       },
       {
+        path: "profile/edit-name",
+        loadComponent: () => import("./pages/edit-display-name.page").then(m => m.EditDisplayNamePage),
+      },
+      {
+        path: "profile/password",
+        loadComponent: () => import("./pages/profile-password.page").then(m => m.ProfilePasswordPage),
+      },
+      {
         path: "profile",
         loadComponent: () =>
           import("./pages/profile.page").then((m) => m.ProfilePage),

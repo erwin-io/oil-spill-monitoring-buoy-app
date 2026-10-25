@@ -1,91 +1,67 @@
-<ion-header class="no-shadow">
-  <ion-toolbar color="primary">
-    <ion-title>Profile</ion-title>
-  </ion-toolbar>
-</ion-header>
-
+<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Profile</ion-title></ion-toolbar></ion-header>
 <ion-content>
-  <div class="content-container profile-layout">
-    <ng-container *ngIf="auth.profile() as p">
-      <ion-list>
-        <ion-item lines="none" class="identity">
-          <ion-avatar slot="start" aria-hidden="true">
-            <img *ngIf="p.avatarUrl; else avatarInitials" [src]="p.avatarUrl" alt="" />
-            <ng-template #avatarInitials><div class="initials">{{ initials(p.displayName) }}</div></ng-template>
-          </ion-avatar>
-          <ion-label>
-            <h2>{{ p.displayName }}</h2>
-            <p>Account profile</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <div class="card">
-        <h3>Profile photo</h3>
-        <p class="hint">JPG, PNG, or WebP, maximum 2 MB. Files are uploaded through an authenticated, server-signed service.</p>
-        <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Select profile photo" [disabled]="savingAvatar" (change)="selectAvatar($event)" />
-        <ion-button expand="block" fill="outline" color="medium" [disabled]="savingAvatar || !p.avatarUrl" (click)="removeAvatar()">Remove photo</ion-button>
-        <p *ngIf="avatarFeedback" role="status">{{ avatarFeedback }}</p>
-      </div>
-      <div class="card">
-        <h3>Display name</h3>
-        <p class="hint">Your display name is visible on your own account profile.</p>
-        <ion-input label="Name" label-placement="stacked" [maxlength]="80" [(ngModel)]="displayNameDraft"></ion-input>
-        <ion-button expand="block" fill="outline" [disabled]="savingName || displayNameDraft.trim().length<2 || displayNameDraft.trim().length>80" (click)="saveDisplayName()">Save name</ion-button>
-        <p *ngIf="nameFeedback" role="status">{{nameFeedback}}</p>
-      </div>
-      <ion-list inset="true">
-        <ion-list-header><ion-label>Account</ion-label></ion-list-header>
-        <ion-item>
-          <ion-icon slot="start" name="mail-outline" aria-hidden="true"></ion-icon>
-          <ion-label class="ion-text-wrap">
-            <h3>Email</h3>
-            <p>{{ p.email }}</p>
-          </ion-label>
-          <ion-badge *ngIf="auth.currentUser()?.emailVerified; else unverified" slot="end" color="success" class="status-badge">
-            <ion-icon name="checkmark-circle-outline" aria-hidden="true"></ion-icon> Verified
-          </ion-badge>
-          <ng-template #unverified>
-            <ion-badge slot="end" color="medium" class="status-badge">
-              <ion-icon name="alert-circle-outline" aria-hidden="true"></ion-icon> Not verified
-            </ion-badge>
-          </ng-template>
-        </ion-item>
-      </ion-list>
-
-      <ion-list inset="true">
-        <ion-list-header><ion-label>About</ion-label></ion-list-header>
-        <ion-item>
-          <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
-          <ion-label>BlueGuard Buoy</ion-label>
-          <ion-note slot="end">Version 0.1.0</ion-note>
-        </ion-item>
-        <ion-item lines="none">
-          <ion-label class="ion-text-wrap">
-            <p>Oil classifications are advisory fluorescence signatures, not certified evidence of oil contamination.</p>
-          </ion-label>
-        </ion-item>
-      </ion-list>
-
-      <div class="profile-actions">
-        <p *ngIf="error" class="error" role="alert">{{ error }}</p>
-        <ion-button class="regular logout" expand="block" color="danger" fill="outline"
-          [disabled]="signingOut" (click)="logout()">
-          <ion-icon slot="start" name="log-out-outline" aria-hidden="true"></ion-icon>
-          {{ signingOut ? 'Signing out…' : 'Log Out' }}
-        </ion-button>
-      </div>
-    </ng-container>
-  </div>
-<div class="page">
- <div class="card">
-  <h3>Change password</h3>
-  <p class="hint">Email/password accounts must enter their current password. Google-only accounts can manage their password with Google.</p>
-  <ion-input label="Current password" label-placement="stacked" type="password" autocomplete="current-password" [(ngModel)]="currentPassword"></ion-input>
-  <ion-input label="New password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="newPassword"></ion-input>
-  <ion-input label="Confirm new password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="confirmPassword"></ion-input>
-  <ion-button expand="block" fill="outline" [disabled]="changingPassword||!currentPassword||!newPassword||!confirmPassword" (click)="changePassword()">Update password</ion-button>
-  <p *ngIf="passwordFeedback" role="status">{{passwordFeedback}}</p>
+<div class="content-container profile-layout">
+<ng-container *ngIf="auth.profile() as p">
+ <ion-item lines="none" class="identity">
+  <button slot="start" type="button" class="avatar-trigger" aria-label="Edit profile photo" (click)="openPhotoEditor()">
+   <ion-avatar><img *ngIf="p.avatarUrl; else initialsAvatar" [src]="p.avatarUrl" alt="Profile photo"/>
+    <ng-template #initialsAvatar><div class="initials">{{initials(p.displayName)}}</div></ng-template>
+   </ion-avatar><ion-icon name="camera-outline" class="avatar-camera" aria-hidden="true"></ion-icon>
+  </button>
+  <ion-label><h2>{{p.displayName}}</h2><p>BlueGuard account</p></ion-label>
+ </ion-item>
+ <ion-list inset="true">
+  <ion-list-header><ion-label>Account</ion-label></ion-list-header>
+  <ion-item>
+   <ion-icon name="mail-outline" slot="start" aria-hidden="true"></ion-icon>
+   <ion-label class="ion-text-wrap"><h3>Email</h3><p>{{p.email}}</p></ion-label>
+   <ion-badge *ngIf="auth.currentUser()?.emailVerified; else unverified" slot="end" color="success" class="status-badge"><ion-icon name="checkmark-circle-outline"></ion-icon> Verified</ion-badge>
+   <ng-template #unverified><ion-badge slot="end" color="medium">Not verified</ion-badge></ng-template>
+  </ion-item>
+  <ion-item><ion-icon name="information-circle-outline" slot="start"></ion-icon><ion-label>Role</ion-label><ion-note slot="end">{{p.role}}</ion-note></ion-item>
+ </ion-list>
+ <ion-list inset="true" class="profile-settings">
+  <ion-list-header><ion-label>Settings</ion-label></ion-list-header>
+  <ion-item button detail="true" routerLink="/tabs/profile/edit-name">
+   <ion-icon name="create-outline" slot="start" color="primary"></ion-icon><ion-label>Edit display name</ion-label>
+  </ion-item>
+  <ion-item button detail="true" routerLink="/tabs/profile/password">
+   <ion-icon name="lock-closed-outline" slot="start" color="primary"></ion-icon><ion-label>Change password</ion-label>
+  </ion-item>
+ </ion-list>
+ <ion-list inset="true"><ion-list-header><ion-label>About</ion-label></ion-list-header>
+  <ion-item><ion-icon name="information-circle-outline" slot="start"></ion-icon><ion-label>BlueGuard Buoy</ion-label><ion-note slot="end">Version 0.1.0</ion-note></ion-item>
+  <ion-item lines="none"><ion-label class="ion-text-wrap"><p>Oil classifications are advisory fluorescence signatures, not certified oil-contamination evidence.</p></ion-label></ion-item>
+ </ion-list>
+ <div class="profile-actions"><p *ngIf="error" class="error" role="alert">{{error}}</p>
+  <ion-button class="regular logout" expand="block" color="danger" fill="outline" [disabled]="signingOut" (click)="confirmSignOut=true">
+   <ion-icon slot="start" name="log-out-outline"></ion-icon>{{signingOut?'Signing out…':'Log Out'}}
+  </ion-button>
  </div>
+</ng-container>
 </div>
+<ion-modal [isOpen]="editingPhoto" (didDismiss)="closePhotoEditor()" [canDismiss]="!savingAvatar" cssClass="photo-editor-modal">
+ <ng-template>
+ <ion-header><ion-toolbar color="primary"><ion-title>Edit profile photo</ion-title>
+ <ion-button slot="end" type="button" color="light" fill="clear" [disabled]="savingAvatar" (click)="closePhotoEditor()">Cancel</ion-button>
+ </ion-toolbar></ion-header>
+ <ion-content class="ion-padding">
+  <div class="crop-editor">
+   <canvas #cropCanvas width="512" height="512" aria-label="Square crop preview"></canvas>
+   <label class="photo-file-label">Choose a photo
+    <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose profile image" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
+   </label>
+   <div class="crop-controls" *ngIf="photoSrc">
+    <label>Zoom <input type="range" min="1" max="3" step="0.05" [(ngModel)]="photoZoom" (ngModelChange)="drawPreview()" aria-label="Zoom photo"/></label>
+    <label>Move horizontally <input type="range" min="-100" max="100" step="1" [(ngModel)]="photoX" (ngModelChange)="drawPreview()" aria-label="Move photo horizontally"/></label>
+    <label>Move vertically <input type="range" min="-100" max="100" step="1" [(ngModel)]="photoY" (ngModelChange)="drawPreview()" aria-label="Move photo vertically"/></label>
+   </div>
+   <p *ngIf="avatarFeedback" role="alert" class="error">{{avatarFeedback}}</p>
+   <ion-button expand="block" [disabled]="savingAvatar||!photoImage?.naturalWidth" (click)="saveAvatar()">@if(savingAvatar){<ion-spinner name="dots"></ion-spinner>}@else{Crop and save photo}</ion-button>
+   <ion-button *ngIf="auth.profile()?.avatarUrl" expand="block" fill="clear" color="danger" [disabled]="savingAvatar" (click)="removeAvatar()">Remove current photo</ion-button>
+  </div>
+ </ion-content>
+ </ng-template>
+</ion-modal>
+<ion-alert [isOpen]="confirmSignOut" header="Sign out?" message="Do you want to sign out of BlueGuard Buoy?" [buttons]="signOutButtons" (didDismiss)="confirmSignOut=false"></ion-alert>
 </ion-content>
