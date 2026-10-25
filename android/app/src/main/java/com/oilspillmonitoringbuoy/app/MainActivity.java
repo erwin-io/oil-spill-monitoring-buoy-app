@@ -7,7 +7,8 @@ import org.json.JSONObject;
 import com.getcapacitor.BridgeActivity;
 
 // HTTPS App Links are verified by Android against the Hosting assetlinks.json.
-// Never handle OAuth tokens, Firebase email actions, pairing secrets or login state here.
+// Only the trusted Angular Firebase SDK consumes email-action codes. Native
+// code forwards an exact verified-host App Link, never validates or logs codes.
 public class MainActivity extends BridgeActivity {
     private static final String APP_LINK_HOST = "oil-spill-monitoring-buoy.firebaseapp.com";
     private String lastDeliveredAppLink = null;
@@ -40,8 +41,9 @@ public class MainActivity extends BridgeActivity {
         final String path = uri.getPath();
         if (!"/open/invite".equals(path) && !"/open/transfer".equals(path)
                 && !"/open/email-verified".equals(path)
-                && !"/open/password-reset-complete".equals(path)) return;
-        if (uri.toString().length() > 1024) return;
+                && !"/open/password-reset-complete".equals(path)
+                && !"/open/auth-action".equals(path)) return;
+        if (uri.toString().length() > ("/open/auth-action".equals(path) ? 4096 : 1024)) return;
         if (uri.toString().equals(lastDeliveredAppLink)) return; // Prevent onCreate/onResume duplicates.
         lastDeliveredAppLink = uri.toString();
         final String value = JSONObject.quote(uri.toString());

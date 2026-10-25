@@ -16,6 +16,10 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  verifyPasswordResetCode,
+  confirmPasswordReset,
+  checkActionCode,
+  applyActionCode,
   EmailAuthProvider,
   reauthenticateWithCredential,
   updatePassword,
@@ -177,6 +181,61 @@ export class AuthService {
     }else{
       await sendPasswordResetEmail(this.auth, email,firebaseEmailActionSettings('reset'));
     }
+  }
+
+  // Keep one-time action credentials in memory only. The verified native link
+  // is erased from WebView sessionStorage BEFORE staging; Angular routes never
+  // receive oobCode, email or an action token.
+  private pendingEmailAction: {mode:'resetPassword'|'verifyEmail';code:string}|null=null;
+
+  stageNativeEmailAction(action:{mode:'resetPassword'|'verifyEmail';code:string}):void{
+    this.pendingEmailAction={mode:action.mode,code:action.code};
+  }
+
+  clearNativeEmailAction():void{
+    this.pendingEmailAction=null;
+  }
+
+  async inspectNativeEmailAction():Promise<{mode:'resetPassword'|'verifyEmail';email:string}>{
+    const action=this.pendingEmailAction;
+    if(!action)throw new Error('Open a fresh BlueGuard email link to continue.');
+    try{
+      if(action.mode==='resetPassword'){
+        const email=await verifyPasswordResetCode(this.auth,action.code);
+        return {mode:action.mode,email};
+      }
+      const info=await checkActionCode(this.auth,action.code);
+      if(info.operation!=='VERIFY_EMAIL'||!info.data.email)
+        throw new Error('This is not a verification link.');
+      return {mode:action.mode,email:info.data.email};
+    }catch{
+      this.pendingEmailAction=null;
+      throw new Error('This email link is invalid, expired, or has already been used. Request a new one.');
+    }
+  }
+
+  async finishNativePasswordReset(nextPassword:string):Promise<void>{
+    const action=this.pendingEmailAction;
+    if(!action||action.mode!=='resetPassword')throw new Error('Open a fresh password-reset email link.');
+    if(nextPassword.length<8||nextPassword.length>128)throw new Error('New password must contain 8–128 characters.');
+    await confirmPasswordReset(this.auth,action.code,nextPassword);
+    this.clearNativeEmailAction();
+    // Reset NEVER signs a user in. End any existing local session so that
+    // the user must authenticate again with the new password.
+    await this.logout();
+  }
+
+  async finishNativeVerification():Promise<boolean>{
+    const action=this.pendingEmailAction;
+    if(!action||action.mode!=='verifyEmail')throw new Error('Open a fresh verification email link.');
+    const detail=await this.inspectNativeEmailAction();
+    await applyActionCode(this.auth,action.code);
+    this.clearNativeEmailAction();
+    if(!this.auth.currentUser||this.auth.currentUser.email?.toLowerCase()!==detail.email.toLowerCase())
+      return false;
+    await this.auth.currentUser.reload();
+    await this.auth.currentUser.getIdToken(true);
+    return this.ready();
   }
 
   async updateDisplayName(displayName: string): Promise<Profile> {

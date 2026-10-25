@@ -35,3 +35,28 @@ export function getPostLoginTarget():string{
  }
  return '/tabs/overview';
 }
+
+// Native Firebase action links are single-use bearer credentials: an Android
+// verified App Link delivers them to BlueGuard, which alone calls Firebase.
+// Do not pass these parameters to the Angular Router or post-login target.
+// Never accept arbitrary HTTPS origins, duplicate/extra parameters or fragments.
+export type NativeEmailAction={mode:'verifyEmail'|'resetPassword';code:string};
+export function parseNativeEmailAction(raw:string):NativeEmailAction|null{
+ if(!raw||raw.length>4096)return null;
+ try{
+  const url=new URL(raw);
+  if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
+      url.pathname!=='/open/auth-action'||url.username||url.password||url.hash)return null;
+  const p=url.searchParams;
+  let parameterCount=0;
+  p.forEach(()=>{parameterCount++});
+  if(parameterCount!==3||['mode','oobCode','apiKey'].some(k=>p.getAll(k).length!==1))
+    return null;
+  if(p.get('apiKey')!==environment.firebase.apiKey)return null;
+  const mode=p.get('mode');
+  if(mode!=='verifyEmail'&&mode!=='resetPassword')return null;
+  const code=p.get('oobCode');
+  if(!code||code.length>2048||!/^[a-zA-Z0-9_\-]+$/.test(code))return null;
+  return {mode,code};
+ }catch{return null}
+}
