@@ -26,7 +26,27 @@ export class AppComponent {
     const raw=peekAppLink(),target=raw?appLinkDestination(raw):null;
     if(!raw)return;
     if(!target){clearAppLink();return}
-    // Retain pending link until a verified Firebase sign-in completes.
+    if(target==='/verify-email'){
+      // The HTTPS return link is NOT proof. Fetch verified status from Firebase
+      // before ever granting an authenticated navigation.
+      clearAppLink();
+      const current=this.auth.currentUser();
+      if(!current){await this.router.navigateByUrl('/login');return}
+      try{
+        if(await this.auth.reloadVerified()){
+          await this.router.navigateByUrl('/tabs/overview',{replaceUrl:true});
+          return;
+        }
+      }catch{/* Verification can be checked again from the verification page. */}
+      await this.router.navigateByUrl('/verify-email');
+      return;
+    }
+    if(target==='/login'){
+      clearAppLink();
+      await this.router.navigateByUrl('/login');
+      return;
+    }
+    // Retain pending device-invitation link until a verified Firebase sign-in completes.
     if(!(await this.auth.ready())){
       await this.router.navigateByUrl('/login');
       return;

@@ -38,7 +38,9 @@ public class MainActivity extends BridgeActivity {
         if (uri == null || !"https".equalsIgnoreCase(uri.getScheme())
                 || !APP_LINK_HOST.equalsIgnoreCase(uri.getHost())) return;
         final String path = uri.getPath();
-        if (!"/open/invite".equals(path) && !"/open/transfer".equals(path)) return;
+        if (!"/open/invite".equals(path) && !"/open/transfer".equals(path)
+                && !"/open/email-verified".equals(path)
+                && !"/open/password-reset-complete".equals(path)) return;
         if (uri.toString().length() > 1024) return;
         if (uri.toString().equals(lastDeliveredAppLink)) return; // Prevent onCreate/onResume duplicates.
         lastDeliveredAppLink = uri.toString();

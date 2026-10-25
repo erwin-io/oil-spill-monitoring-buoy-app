@@ -14,6 +14,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let popupCalls = 0;
   let lastNativeToken;
   let reauthentication,updatedPassword;
+  const emails=[];
   const auth = { currentUser: null };
   const takeProfile = () => {
     if (!nextProfile) throw new Error('Profile response not configured');
@@ -63,14 +64,15 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       onAuthStateChanged: (_auth, callback) => { observer = callback; callback(auth.currentUser); return () => {}; },
       signInWithEmailAndPassword: async () => ({ user: auth.currentUser }),
       createUserWithEmailAndPassword: async () => ({ user: auth.currentUser }),
-      sendEmailVerification: async () => {},
-      sendPasswordResetEmail: async () => {},
+      sendEmailVerification: async (_user, settings) => {emails.push({type:'verification',settings});},
+      sendPasswordResetEmail: async (_auth,_email, settings) => {emails.push({type:'reset',settings});},
       EmailAuthProvider: {credential: (email,password)=>({email,password})},
       reauthenticateWithCredential: async (_user,credential)=>{reauthentication=credential;},
       updatePassword: async (_user,password)=>{updatedPassword=password;},
       signOut: async () => { auth.currentUser = null; observer(null); },
     },
     '../../environments/environment': { environment: { api: 'https://example.test/api/v1', firebase: {} } },
+    './firebase-email-actions': { firebaseEmailActionSettings:kind=>({url:'https://oil-spill-monitoring-buoy.firebaseapp.com/open/'+(kind==='verify'?'email-verified':'password-reset-complete'),handleCodeInApp:false,android:{packageName:'com.oilspillmonitoringbuoy.app',installApp:false}}) },
   };
   const source = readFileSync('src/app/core/auth.service.ts', 'utf8');
   vm.runInNewContext(ts.transpileModule(source, {
@@ -86,7 +88,8 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   const queueProfile = (profile) => { nextProfile = profile; };
   return { service, setUser, queueProfile,
     getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
-    getPasswordCalls: () => ({reauthentication,updatedPassword}) };
+    getPasswordCalls: () => ({reauthentication,updatedPassword}),
+    getEmailActions: () => emails };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -244,4 +247,24 @@ test('P2-13 avatar response from switched-out user cannot alter new account',asy
  release({uid:'account-A',avatarUrl:'https://res.cloudinary.com/demo/image/upload/v1/a'});
  await assert.rejects(stale,/Account changed during avatar upload/);
  assert.equal(service.profile(),null);
+});
+
+test('P2-15 registration, resend verification and password reset supply Firebase web-first Android return links',async()=>{
+ const {service,setUser,getEmailActions}=harness();
+ const firebaseUser={...user('firebase-new'),email:'new@example.test',reload:async()=>{}};
+ setUser(firebaseUser);
+ await service.register('new@example.test','SafeNewPassword123!');
+ await service.resendVerification();
+ await service.resetPassword('new@example.test');
+ const actions=getEmailActions();
+ assert.deepEqual(Array.from(actions,a=>a.type),['verification','verification','reset']);
+ for(const action of actions){
+  assert.equal(action.settings.handleCodeInApp,false);
+  assert.equal(action.settings.android.packageName,'com.oilspillmonitoringbuoy.app');
+  assert.equal(action.settings.android.installApp,false);
+  assert.ok(action.settings.url.startsWith('https://oil-spill-monitoring-buoy.firebaseapp.com/open/'));
+  assert.equal(action.settings.url.includes('oobCode='),false);
+ }
+ assert.match(actions[0].settings.url,/\/open\/email-verified$/);
+ assert.match(actions[2].settings.url,/\/open\/password-reset-complete$/);
 });

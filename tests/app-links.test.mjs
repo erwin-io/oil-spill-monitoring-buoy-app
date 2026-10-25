@@ -62,3 +62,19 @@ test('P2-15 Android only intercepts existing Firebase domain with verified HTTPS
  assert.equal(config.hosting.public,'hosting/public');
  assert.equal(config.hosting.rewrites[0].source,'/open/**');
 });
+
+test('P2-15 sensitive Firebase email-action codes NEVER pass into Android return links',()=>{
+ const {links}=load(),host='https://oil-spill-monitoring-buoy.firebaseapp.com';
+ assert.equal(links.appLinkDestination(host+'/open/email-verified'),'/verify-email');
+ assert.equal(links.appLinkDestination(host+'/open/password-reset-complete'),'/login');
+ for(const path of ['/open/email-verified','/open/password-reset-complete']){
+   for(const suffix of ['?oobCode=secret','?mode=verifyEmail','?email=user@example.com','#access_token=bad','?success=true']){
+     assert.equal(links.appLinkDestination(host+path+suffix),null);
+   }
+ }
+ assert.equal(links.appLinkDestination(host+'/__/auth/action?mode=verifyEmail&oobCode=secret'),null,
+    'Browser owns Firebase one-time action code; only completion is returned to mobile');
+ const native=readFileSync('android/app/src/main/java/com/oilspillmonitoringbuoy/app/MainActivity.java','utf8');
+ assert.match(native,/\/open\/email-verified/);
+ assert.match(native,/\/open\/password-reset-complete/);
+});
