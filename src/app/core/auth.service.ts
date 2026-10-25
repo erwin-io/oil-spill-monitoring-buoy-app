@@ -126,16 +126,42 @@ export class AuthService {
     return this.bootstrap();
   }
 
+  // Prefer the configured API provider only when that API instance confirms
+  // readiness. Old/non-deployed APIs return 404 and keep Firebase SDK emails.
+  // A send failure AFTER backend activation is never silently retried via
+  // Firebase, avoiding duplicate/mismatched secure action links.
+  private async useBackendEmail(): Promise<boolean> {
+    try {
+      const config=await firstValueFrom(this.http.get<{delivery:'resend'|'firebase'}>(
+        `${environment.api}/auth/email/config`));
+      return config?.delivery==='resend';
+    } catch {
+      return false;
+    }
+  }
+
   async register(email: string, password: string): Promise<User> {
     const result = await createUserWithEmailAndPassword(this.auth, email, password);
-    await sendEmailVerification(result.user,firebaseEmailActionSettings('verify'));
+    if(await this.useBackendEmail()){
+      const token=await result.user.getIdToken();
+      await firstValueFrom(this.http.post(`${environment.api}/auth/email/verification`,{},
+        {headers:{Authorization:`Bearer ${token}`}}));
+    }else{
+      await sendEmailVerification(result.user,firebaseEmailActionSettings('verify'));
+    }
     return result.user;
   }
 
   async resendVerification(): Promise<void> {
     const user = this.auth.currentUser;
     if (!user) throw new Error('Sign in required');
-    await sendEmailVerification(user,firebaseEmailActionSettings('verify'));
+    if(await this.useBackendEmail()){
+      const token=await user.getIdToken();
+      await firstValueFrom(this.http.post(`${environment.api}/auth/email/verification`,{},
+        {headers:{Authorization:`Bearer ${token}`}}));
+    }else{
+      await sendEmailVerification(user,firebaseEmailActionSettings('verify'));
+    }
   }
 
   async reloadVerified(): Promise<boolean> {
@@ -145,7 +171,12 @@ export class AuthService {
   }
 
   async resetPassword(email: string): Promise<void> {
-    await sendPasswordResetEmail(this.auth, email,firebaseEmailActionSettings('reset'));
+    if(await this.useBackendEmail()){
+      await firstValueFrom(this.http.post(`${environment.api}/auth/email/password-reset`,
+        {email:email.trim().toLowerCase()}));
+    }else{
+      await sendPasswordResetEmail(this.auth, email,firebaseEmailActionSettings('reset'));
+    }
   }
 
   async updateDisplayName(displayName: string): Promise<Profile> {
