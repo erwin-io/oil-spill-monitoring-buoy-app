@@ -47,6 +47,7 @@ export class ProfilePage {
 
   error = '';
   signingOut = false;
+  displayNameDraft='';savingName=false;nameFeedback='';
   currentPassword='';newPassword='';confirmPassword='';changingPassword=false;passwordFeedback='';
 
   constructor() {
@@ -59,6 +60,20 @@ export class ProfilePage {
   initials(name?: string): string {
     return (name ?? 'OS').trim().split(/\s+/).slice(0, 2)
       .map((part) => part[0]?.toUpperCase() ?? '').join('') || 'OS';
+  }
+
+  ionViewWillEnter():void {
+    this.displayNameDraft=this.auth.profile()?.displayName??'';
+    this.nameFeedback='';
+  }
+  async saveDisplayName():Promise<void> {
+    if(this.savingName)return;
+    const name=this.displayNameDraft.trim();
+    if(name.length<2||name.length>80){this.nameFeedback='Display name must be 2–80 characters';return}
+    this.savingName=true;this.nameFeedback='';
+    try{await this.auth.updateDisplayName(name);this.nameFeedback='Profile name saved.';}
+    catch(e){this.nameFeedback=(e as Error).message||'Unable to save profile'}
+    finally{this.savingName=false}
   }
 
   async changePassword():Promise<void>{
