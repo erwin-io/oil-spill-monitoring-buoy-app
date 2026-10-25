@@ -1,1 +1,17 @@
-<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Alerts inbox</ion-title></ion-toolbar></ion-header><ion-content><ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher><div class="page"><p class="hint">Open alerts: {{openCount}} · Unread open alerts: {{unreadCount}}</p><ion-select label="Status" label-placement="stacked" fill="outline" interface="alert" [interfaceOptions]="{ header: 'Status' }" [(ngModel)]="filter" (ionChange)="load()"><ion-select-option value="ALL">All</ion-select-option><ion-select-option value="OPEN">Open</ion-select-option><ion-select-option value="ACKNOWLEDGED">Acknowledged</ion-select-option><ion-select-option value="RESOLVED">Resolved</ion-select-option></ion-select><p *ngIf="loading">Loading alerts...</p><div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" (click)="load()">Retry loading</ion-button></div><div *ngFor="let a of shown" class="card tap" [routerLink]="['/tabs/alerts',a.id]"><div class="row"><strong>{{a.type}}</strong><span class="badge">{{a.severity}}</span></div><p>{{nameOf(a)}} ({{a.deviceId}}) · {{a.createdAt|date:'medium'}}</p><p class="hint">{{a.unread===true?'Unread · ':''}}{{a.status==='OPEN'?'Needs acknowledgement':a.status}}</p></div><div class="empty" *ngIf="!loading&&!shown.length">No alerts available.</div><ion-button *ngIf="cursor" expand="block" fill="outline" [disabled]="loading" (click)="more()">Load more alerts</ion-button></div></ion-content>
+<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Notifications</ion-title></ion-toolbar></ion-header>
+<ion-content>
+ <ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
+ <div class="page">
+  <p class="hint">Unread: {{unreadCount}} · Open incidents: {{openCount}}</p>
+  <ion-button expand="block" fill="outline" [disabled]="loading||marking||!unreadCount" (click)="markAll()">Mark All Read</ion-button>
+  <p *ngIf="loading">Loading notifications...</p>
+  <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" (click)="load()">Retry loading</ion-button></div>
+  <div *ngFor="let a of items" class="card tap" [routerLink]="['/tabs/alerts',a.id]">
+   <div class="row"><strong>{{a.type}}</strong><span class="badge">{{a.severity}}</span></div>
+   <p>{{nameOf(a)}} ({{a.deviceId}}) · {{a.createdAt|date:'medium'}}</p>
+   <p class="hint">{{a.unread===true?'Unread · ':''}}{{a.status}}</p>
+  </div>
+  <div class="empty" *ngIf="!loading&&!items.length">No notifications available.</div>
+  <ion-button *ngIf="cursor" expand="block" fill="outline" [disabled]="loading" (click)="more()">Load more</ion-button>
+ </div>
+</ion-content>
