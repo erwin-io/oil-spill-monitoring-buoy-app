@@ -89,17 +89,28 @@ export class PushService {
    if(gen===this.generation){this.initialized=false;/* App stays usable without push. */}
   }
  }
- async stop():Promise<void>{
+ async stop(requireServerRevocation=false):Promise<void>{
   ++this.generation;
   this.initialized=false;
   this.uid=undefined;
   await this.starting.catch(()=>undefined);
   await this.registrationTask.catch(()=>undefined);
   const token=this.token,session=this.session;
+  if(session&&requireServerRevocation){
+   try{await firstValueFrom(this.api.endPushSession(session.sessionId,session.sessionSecret));}
+   catch{
+    // Keep the in-memory session proof and authenticated Firebase account for retry.
+    // Never persist this secret to WebView storage and never claim remote logout succeeded.
+    if(this.nativePushAvailable)try{await PushNotifications.removeAllListeners()}catch{}
+    throw new Error('Cannot sign out securely while offline. Reconnect and retry to revoke notifications.');
+   }
+  }
   this.token=undefined;this.session=undefined;
-  if(token&&this.nativePushAvailable)try{await firstValueFrom(this.api.unregisterToken(token))}catch{ /* offline logout; server still checks session */ }
-  if(session)try{await firstValueFrom(this.api.endPushSession(session.sessionId,session.sessionSecret))}
-   catch{ /* Offline logout cannot immediately revoke server state. Replacing same installation invalidates it on next online sign-in. */ }
+  if(token&&this.nativePushAvailable)try{await firstValueFrom(this.api.unregisterToken(token))}catch{
+   // Revoked session prevents future FCM dispatch even if the token delete failed.
+  }
+  if(session&&!requireServerRevocation)try{await firstValueFrom(this.api.endPushSession(session.sessionId,session.sessionSecret))}
+   catch{ /* Account switch on reconnect replaces the old installation session. */ }
   if(this.nativePushAvailable)try{await PushNotifications.removeAllListeners()}catch{}
  }
 }
