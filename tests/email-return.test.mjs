@@ -24,7 +24,7 @@ function harness({target,current,verified}){
   './core/realtime.service':{RealtimeService},
   './core/push.service':{PushService},
   './core/app-links':{
-   peekAppLink:()=>pending,appLinkDestination:()=>target,
+   peekAppLink:()=>pending,appLinkDestination:()=>target,parseNativeEmailAction:()=>null,
    clearAppLink:()=>{cleared.push(pending);pending=null}
   },
   '@ionic/angular/standalone':{IonApp:class{},IonRouterOutlet:class{}}
