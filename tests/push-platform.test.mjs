@@ -116,6 +116,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
     '@angular/forms': { FormsModule: class {} },
     '@angular/core': {
       Component: () => (cls) => cls,
+      ViewChild: () => () => {},
       inject: (token) => {
         if (token === AuthService) return auth;
         if (token === RealtimeService) return realtime;
