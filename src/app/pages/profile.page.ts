@@ -117,10 +117,10 @@ export class ProfilePage {
     this.signingOut = true;
     this.error = '';
     try {
-      this.realtime.disconnect();
       // Explicit sign-out must first retire the server session. If offline, keep
       // the signed-in account and in-memory revocation proof for an online retry.
       await this.push.stop(true);
+      this.realtime.disconnect();
       await this.auth.logout();
       await this.router.navigateByUrl('/login', { replaceUrl: true });
     } catch (error) {
