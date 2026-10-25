@@ -7,8 +7,14 @@ export function appLinkDestination(raw:string):string|null{
  try{
   const url=new URL(raw);
   if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
-   (url.pathname!=='/open/invite'&&url.pathname!=='/open/transfer')||
    url.username||url.password||url.hash)return null;
+  // The Firebase-hosted action handler has already completed verification/reset.
+  // Never accept a status flag, action code or UID as evidence via this link.
+  if(url.pathname==='/open/email-verified'||url.pathname==='/open/password-reset-complete'){
+    if(url.search)return null;
+    return url.pathname==='/open/email-verified'?'/verify-email':'/login';
+  }
+  if(url.pathname!=='/open/invite'&&url.pathname!=='/open/transfer')return null;
   const ids=url.searchParams.getAll('deviceId');
   if(ids.length!==1||!(/^[A-Za-z0-9_-]{1,80}$/).test(ids[0]))return null;
   if(url.searchParams.toString()!==new URLSearchParams({deviceId:ids[0]}).toString())return null;
