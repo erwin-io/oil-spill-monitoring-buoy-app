@@ -15,6 +15,7 @@ import {environment} from '../../environments/environment';import {Device,Alert,
  health(id:string):Observable<Page<Health>>{return this.http.get<Page<Health>>(`${this.url}/devices/${encodeURIComponent(id)}/health`)}
  alerts(cursor?:string,status?:string):Observable<Page<Alert>>{const params:Record<string,string>={limit:'30'};if(cursor)params['cursor']=cursor;if(status)params['status']=status;return this.http.get<Page<Alert>>(`${this.url}/alerts`,{params})}
  alert(id:string):Observable<Alert>{return this.http.get<Alert>(`${this.url}/alerts/${encodeURIComponent(id)}`)}
+ markAllRead():Observable<{readAt:string;deviceCount:number}>{return this.http.post<{readAt:string;deviceCount:number}>(`${this.url}/notifications/read-all`,{})}
  markRead(id:string):Observable<{alertId:string;unread:boolean}>{return this.http.post<{alertId:string;unread:boolean}>(`${this.url}/alerts/${encodeURIComponent(id)}/read`,{})}
  acknowledge(id:string):Observable<unknown>{return this.http.patch(`${this.url}/alerts/${encodeURIComponent(id)}/acknowledge`,{})}
  config(id:string):Observable<Config>{return this.http.get<Config>(`${this.url}/devices/${encodeURIComponent(id)}/config`)}
