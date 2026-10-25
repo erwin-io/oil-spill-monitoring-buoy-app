@@ -1,0 +1,39 @@
+/* Auth-action-only spacing; fields, button, toolbar, flat cards and font
+ * deliberately inherit the shared BlueGuard Login/Register design system. */
+.wrap {
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+}
+
+.auth-action-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 22px 4px 18px;
+  text-align: center;
+  color: var(--ion-text-color);
+}
+.auth-action-state ion-spinner {
+  width: 38px;
+  height: 38px;
+  color: var(--ion-color-primary);
+}
+.auth-action-state ion-icon {
+  font-size: 52px;
+}
+.auth-action-state p {
+  margin: 0;
+  line-height: 1.55;
+  font-size: 14px;
+}
+.auth-action-state .auth-action-heading {
+  font-size: 18px;
+  font-weight: 600;
+}
+.auth-action-hint {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--app-muted, #64748b);
+}

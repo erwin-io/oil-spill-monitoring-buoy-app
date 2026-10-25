@@ -1,116 +1,194 @@
-import {Component,OnDestroy,OnInit,inject} from '@angular/core';
+import {Component, OnDestroy, OnInit, inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
+import {Platform} from '@ionic/angular';
+import {addIcons} from 'ionicons';
+import {arrowBack, checkmarkCircle} from 'ionicons/icons';
+import type {Subscription} from 'rxjs';
 import {
- IonButton,IonCard,IonCardContent,IonCardHeader,IonCardSubtitle,IonCardTitle,
- IonContent,IonHeader,IonInput,IonInputPasswordToggle,IonNote,IonSpinner,
- IonTitle,IonToolbar
+ IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle,
+ IonCardTitle, IonContent, IonHeader, IonIcon, IonInput, IonInputPasswordToggle,
+ IonNote, IonSpinner, IonTitle, IonToolbar
 } from '@ionic/angular/standalone';
 import {AuthService} from '../core/auth.service';
 
-// Strictly native Firebase email action UI. The code never enters a route,
-// native logs, a Web URL, HTML markup, analytics or persistent storage.
+// Firebase action codes are staged by the verified Android App Link handler,
+// held only in AuthService memory, and never put into the route or template.
 @Component({
  standalone:true,
  imports:[
-  FormsModule,IonButton,IonCard,IonCardContent,IonCardHeader,IonCardSubtitle,
-  IonCardTitle,IonContent,IonHeader,IonInput,IonInputPasswordToggle,
-  IonNote,IonSpinner,IonTitle,IonToolbar
+  FormsModule, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader,
+  IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonInput,
+  IonInputPasswordToggle, IonNote, IonSpinner, IonTitle, IonToolbar
  ],
  template:`
-  <ion-header><ion-toolbar><ion-title>BlueGuard Account Security</ion-title></ion-toolbar></ion-header>
-  <ion-content class="ion-padding">
-   <ion-card>
-    <ion-card-header>
-     <ion-card-title>{{mode==='resetPassword'?'Reset your password':'Verify your email'}}</ion-card-title>
-     <ion-card-subtitle>Secure Firebase Authentication · BlueGuard Buoy</ion-card-subtitle>
-    </ion-card-header>
-    <ion-card-content>
-     @if(loading){<ion-spinner></ion-spinner><p>Checking the one-time email link…</p>}
-     @if(error){<ion-note color="danger">{{error}}</ion-note>}
-     @if(success){
-      <p>{{mode==='resetPassword'?'Password updated. Sign in with your new password.':'Email verified. You can now sign in to BlueGuard Buoy.'}}</p>
-      <ion-button expand="block" (click)="goLogin()">Continue to login</ion-button>
-     } @else if(ready&&!loading) {
-      @if(mode==='resetPassword'){
-       <p>Choose a new password. Your current password is never requested.</p>
-       <ion-input label="New password" labelPlacement="stacked" type="password"
-        autocomplete="new-password" [(ngModel)]="nextPassword" [disabled]="busy">
-        <ion-input-password-toggle slot="end"></ion-input-password-toggle>
-       </ion-input>
-       <ion-input label="Confirm new password" labelPlacement="stacked" type="password"
-        autocomplete="new-password" [(ngModel)]="confirmPassword" [disabled]="busy">
-        <ion-input-password-toggle slot="end"></ion-input-password-toggle>
-       </ion-input>
-       <ion-button expand="block" (click)="submit()" [disabled]="busy || !nextPassword || !confirmPassword">
-        @if(busy){<ion-spinner></ion-spinner>} @else {Reset password}
-       </ion-button>
-      } @else {
-       <p>Confirm the email address for your BlueGuard Buoy account.</p>
-       <ion-button expand="block" (click)="submit()" [disabled]="busy">
-        @if(busy){<ion-spinner></ion-spinner>} @else {Verify email}
-       </ion-button>
-      }
-     }
-     @if(!loading&&!busy&&!ready&&!success) {
-      <ion-button expand="block" (click)="goLogin()">Back to login</ion-button>
-     }
-    </ion-card-content>
-   </ion-card>
+  <ion-header class="no-shadow">
+    <ion-toolbar color="primary">
+      <ion-buttons slot="start">
+        <ion-button type="button" fill="clear" color="light"
+          aria-label="Back to sign in" (click)="goLogin()">
+          <ion-icon slot="icon-only" name="arrow-back" aria-hidden="true"></ion-icon>
+        </ion-button>
+      </ion-buttons>
+      <ion-title>{{mode==='verifyEmail'?'Verify email':'Reset password'}}</ion-title>
+    </ion-toolbar>
+  </ion-header>
+
+  <ion-content class="ion-padding page">
+    <div class="wrap">
+      <ion-card class="card no-shadow">
+        <ion-card-header>
+          <ion-card-title>{{mode==='verifyEmail'?'Verify your email':'Reset your password'}}</ion-card-title>
+          <ion-card-subtitle>
+            @if(mode==='verifyEmail'){
+              Securely confirming your BlueGuard Buoy email with Firebase.
+            } @else {
+              Choose a new BlueGuard Buoy password. Your current password is never requested.
+            }
+          </ion-card-subtitle>
+        </ion-card-header>
+        <ion-card-content>
+          @if(loading){
+            <div class="auth-action-state" role="status" aria-live="polite">
+              <ion-spinner name="crescent" aria-label="Processing email link"></ion-spinner>
+              <p>{{progressMessage}}</p>
+            </div>
+          } @else if(success){
+            <div class="auth-action-state" role="status" aria-live="polite">
+              <ion-icon name="checkmark-circle" color="success" aria-hidden="true"></ion-icon>
+              <p class="auth-action-heading">
+                {{mode==='verifyEmail'?'Email verified successfully':'Password updated'}}
+              </p>
+              <p>{{mode==='verifyEmail'
+                ?'Your email is verified. Use the back arrow or your device Back button to return to sign in.'
+                :'Your password has been updated. Use Back to sign in with your new password.'}}</p>
+            </div>
+          } @else if(error && !ready){
+            <ion-note class="form-error" color="danger" role="alert">{{error}}</ion-note>
+            <p class="auth-action-hint">Return to sign in and request a fresh email link.</p>
+          } @else if(ready && mode==='resetPassword'){
+            <form class="fieldset" (ngSubmit)="submit()" novalidate>
+              <ion-input name="nextPassword" [(ngModel)]="nextPassword"
+                label="New password" labelPlacement="stacked" type="password"
+                fill="outline" placeholder="Create a new password"
+                autocomplete="new-password" helperText="At least 8 characters"
+                [disabled]="busy" required minlength="8" maxlength="128">
+                <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+              </ion-input>
+
+              <ion-input name="confirmPassword" [(ngModel)]="confirmPassword"
+                label="Confirm new password" labelPlacement="stacked" type="password"
+                fill="outline" placeholder="Re-enter your new password"
+                autocomplete="new-password" [disabled]="busy" required>
+                <ion-input-password-toggle slot="end"></ion-input-password-toggle>
+              </ion-input>
+              @if(error){
+                <ion-note class="form-error" color="danger" role="alert">{{error}}</ion-note>
+              }
+              <ion-button class="regular" type="submit" expand="block"
+                [disabled]="busy || !nextPassword || !confirmPassword">
+                @if(busy){
+                  <ion-spinner name="dots" aria-label="Resetting password"></ion-spinner>
+                } @else { Reset password }
+              </ion-button>
+            </form>
+          }
+        </ion-card-content>
+      </ion-card>
+    </div>
   </ion-content>
  `,
- styleUrls:['./login.page.scss'],
+ styleUrls:['./login.page.scss','./native-email-action.page.scss'],
 })
 export class NativeEmailActionPage implements OnInit,OnDestroy{
  private readonly auth=inject(AuthService);
  private readonly router=inject(Router);
+ private readonly platform=inject(Platform);
+ private backSubscription?:Subscription;
+ private closed=false;
  mode:'resetPassword'|'verifyEmail'='resetPassword';
  nextPassword='';
  confirmPassword='';
- ready=false;loading=true;busy=false;success=false;error='';
- private finished=false;
+ ready=false;
+ loading=true;
+ busy=false;
+ success=false;
+ error='';
+ progressMessage='Checking the one-time email link…';
+
+ constructor(){addIcons({arrowBack,checkmarkCircle});}
 
  async ngOnInit():Promise<void>{
+  // Override Ionic's default Android history pop: this is an external
+  // email-action entry and Back must always dismiss to the Login screen.
+  this.backSubscription=this.platform.backButton.subscribeWithPriority(100,()=>{
+   void this.goLogin();
+  });
   try{
    const action=await this.auth.inspectNativeEmailAction();
+   if(this.closed)return;
    this.mode=action.mode;
-   this.ready=true;
-  }catch(e){this.error=(e as Error).message||'Request a new email link.'}
-  finally{this.loading=false}
+   if(action.mode==='verifyEmail'){
+    // No secondary 'Verify' button. Firebase verifies immediately after
+    // Gmail opens the verified BlueGuard Android deep link.
+    this.progressMessage='Verifying your email…';
+    await this.auth.finishNativeVerification();
+    if(this.closed)return;
+    this.success=true;
+    this.ready=false;
+   }else{
+    this.ready=true;
+   }
+  }catch(e){
+   if(this.closed)return;
+   this.ready=false;
+   this.error=(e as Error).message||'This link cannot be completed. Request a new one.';
+  }finally{
+   if(!this.closed)this.loading=false;
+  }
  }
 
  async submit():Promise<void>{
-  if(this.busy||!this.ready||this.success)return;
+  if(this.closed || this.busy || !this.ready || this.success || this.mode!=='resetPassword')return;
   this.error='';
-  if(this.mode==='resetPassword'){
-   if(this.nextPassword.length<8||this.nextPassword.length>128){
-    this.error='Choose a password between 8 and 128 characters.';return;
-   }
-   if(this.nextPassword!==this.confirmPassword){
-    this.error='Passwords do not match.';return;
-   }
+  if(this.nextPassword.length<8 || this.nextPassword.length>128){
+   this.error='Choose a password between 8 and 128 characters.';
+   return;
+  }
+  if(this.nextPassword!==this.confirmPassword){
+   this.error='Passwords do not match.';
+   return;
   }
   this.busy=true;
   try{
-   if(this.mode==='resetPassword'){
-    await this.auth.finishNativePasswordReset(this.nextPassword);
-   }else{
-    // Verified Firebase account status alone grants no Owner/Viewer access.
-    await this.auth.finishNativeVerification();
-   }
-   this.finished=true;this.success=true;this.ready=false;
+   await this.auth.finishNativePasswordReset(this.nextPassword);
+   if(this.closed)return;
+   this.success=true;
+   this.ready=false;
   }catch{
-   this.error='Unable to complete this email action. Check your connection or request a fresh link.';
+   if(!this.closed)this.error='Unable to reset your password. Request a fresh link if this one has expired.';
   }finally{
-   this.nextPassword='';this.confirmPassword='';this.busy=false;
+   this.nextPassword='';
+   this.confirmPassword='';
+   this.busy=false;
   }
  }
+
  async goLogin():Promise<void>{
+  if(this.closed)return;
+  this.closed=true;
   this.auth.clearNativeEmailAction();
+  this.nextPassword='';
+  this.confirmPassword='';
+  // replaceUrl prevents hardware Back returning to a used action screen.
   await this.router.navigateByUrl('/login',{replaceUrl:true});
  }
+
  ngOnDestroy():void{
-  this.nextPassword='';this.confirmPassword='';
-  if(!this.finished)this.auth.clearNativeEmailAction();
+  this.closed=true;
+  this.backSubscription?.unsubscribe();
+  this.auth.clearNativeEmailAction();
+  this.nextPassword='';
+  this.confirmPassword='';
  }
 }
