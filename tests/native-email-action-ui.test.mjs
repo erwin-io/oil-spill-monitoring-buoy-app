@@ -18,7 +18,7 @@ function harness({mode='verifyEmail',inspect,verify,reset}={}){
  };
  const router={navigateByUrl:async(path,options)=>{routes.push({path,options});return true}};
  const platform={backButton:{subscribeWithPriority:(priority,cb)=>{
-   assert.equal(priority,100);
+   assert.equal(priority,1000);
    back=cb;
    return {unsubscribe:()=>{unsubscribed=true}};
  }}};
@@ -85,6 +85,7 @@ test('P2-15 verify email starts automatically and shows loading → success with
  assert.equal(h.routes[0].path,'/login');
  assert.equal(h.routes[0].options.replaceUrl,true);
  assert.equal(h.calls.filter(x=>x==='clear').length,1);
+ h.page.ionViewWillLeave();
  h.page.ngOnDestroy();
  assert.equal(h.didUnsubscribe(),true);
 });
@@ -130,4 +131,16 @@ test('P2-15 failure and exit during in-flight verify never show success or enabl
  bad.back();
  await Promise.resolve();
  assert.equal(bad.routes[0].path,'/login');
+});
+
+test('P2-15 native email action releases hardware Back when view is hidden and restores it on return',async()=>{
+ const h=harness({mode:'resetPassword'});
+ await h.page.ngOnInit();
+ h.page.ionViewWillLeave();
+ assert.equal(h.didUnsubscribe(),true);
+ h.page.ionViewWillEnter();
+ h.back();
+ await Promise.resolve();
+ assert.deepEqual(h.routes.map(x=>x.path),['/login']);
+ assert.equal(h.routes[0].options.replaceUrl,true);
 });

@@ -37,10 +37,10 @@ function harness({target,current,verified}){
  const app=new exports.AppComponent();
  return {app,routes,cleared};
 }
-test('verification return calls Firebase server state before opening protected tabs',async()=>{
+test('legacy browser verification return is never accepted as proof or treated as Firebase native action',async()=>{
  const good=harness({target:'/verify-email',current:{uid:'a'},verified:true});
  await good.app.openPendingLink();
- assert.deepEqual(good.routes,['/tabs/overview']);
+ assert.deepEqual(good.routes,['/verify-email']);
  assert.equal(good.cleared.length,1);
  const unverified=harness({target:'/verify-email',current:{uid:'a'},verified:false});
  await unverified.app.openPendingLink();

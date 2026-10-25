@@ -74,12 +74,16 @@ test('Registration requires matching confirmation before Firebase registration',
   assert.ok(template.includes('formControlName="confirmPassword"'));
 });
 
-test('All auth flows use the common Ionic card design', () => {
-  for (const name of ['login', 'register', 'forgot', 'verify']) {
+test('Auth forms are flat; verification waiting deliberately uses a centered illustration instead of a card', () => {
+  for (const name of ['login', 'register', 'forgot']) {
     const html = read('src/app/pages/' + name + '.page.html');
     assert.ok(html.includes('ion-card'));
     assert.ok(html.includes('no-shadow'));
   }
+  const waiting = read('src/app/pages/verify.page.html');
+  assert.ok(waiting.includes('verify-wait-layout'));
+  assert.ok(waiting.includes('no-shadow'));
+  assert.ok(!waiting.includes('ion-card'));
   const stylesheet = read('src/styles.scss');
   assert.ok(stylesheet.includes('ion-button.regular'));
   assert.ok(stylesheet.includes('ion-input, ion-textarea, ion-select'));

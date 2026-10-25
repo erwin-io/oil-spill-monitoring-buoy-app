@@ -117,13 +117,23 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
  progressMessage='Checking the one-time email link…';
 
  constructor(){addIcons({arrowBack,checkmarkCircle});}
+ private installBackHandler():void{
+  if(this.backSubscription || this.closed)return;
+  this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{
+   void this.goLogin();
+  });
+ }
+ // Angular Ionic router outlets cache views; never intercept on Login.
+ ionViewWillEnter():void{this.installBackHandler();}
+ ionViewWillLeave():void{
+  this.backSubscription?.unsubscribe();
+  this.backSubscription=undefined;
+ }
 
  async ngOnInit():Promise<void>{
   // Override Ionic's default Android history pop: this is an external
   // email-action entry and Back must always dismiss to the Login screen.
-  this.backSubscription=this.platform.backButton.subscribeWithPriority(100,()=>{
-   void this.goLogin();
-  });
+  this.installBackHandler();
   try{
    const action=await this.auth.inspectNativeEmailAction();
    if(this.closed)return;
@@ -177,6 +187,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
  async goLogin():Promise<void>{
   if(this.closed)return;
   this.closed=true;
+  this.ionViewWillLeave();
   this.auth.clearNativeEmailAction();
   this.nextPassword='';
   this.confirmPassword='';
@@ -186,7 +197,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
 
  ngOnDestroy():void{
   this.closed=true;
-  this.backSubscription?.unsubscribe();
+  this.ionViewWillLeave();
   this.auth.clearNativeEmailAction();
   this.nextPassword='';
   this.confirmPassword='';

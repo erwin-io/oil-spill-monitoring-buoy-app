@@ -1,0 +1,62 @@
+/* Verification waiting is an auth surface, not an authenticated view.
+   Center the email illustration + resend action together in the viewport. */
+.verify-wait-page {
+  --background: #fff;
+  --padding-bottom: max(16px, env(safe-area-inset-bottom, 0px));
+}
+.verify-wait-layout {
+  min-height: 100%;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 4px;
+}
+.verify-wait-group {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.verify-wait-illustration {
+  width: 180px;
+  height: 160px;
+  flex: 0 0 auto;
+  margin: 0 auto 8px;
+}
+.verify-wait-illustration svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.verify-wait-group h1 {
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--ion-text-color);
+  margin: 0 0 10px;
+}
+.verify-wait-description {
+  margin: 0 0 24px;
+  color: var(--app-muted, #64748b);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.verify-resend-button {
+  width: 100%;
+  --box-shadow: none;
+  margin: 0;
+}
+.verify-wait-message {
+  margin-top: 15px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+@media (max-height: 550px) {
+  .verify-wait-layout { align-items: flex-start; padding: 12px 4px; }
+  .verify-wait-illustration { width: 120px; height: 106px; }
+}

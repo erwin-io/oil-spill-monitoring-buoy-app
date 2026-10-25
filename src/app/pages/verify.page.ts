@@ -1,78 +1,89 @@
-import { Component, inject } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, inject, OnDestroy } from '@angular/core';
+import { Router } from '@angular/router';
+import { Platform } from '@ionic/angular';
+import { addIcons } from 'ionicons';
+import { arrowBack } from 'ionicons/icons';
+import type { Subscription } from 'rxjs';
 import {
   IonButton,
-  IonCard,
-  IonCardContent,
-  IonCardHeader,
-  IonCardSubtitle,
-  IonCardTitle,
+  IonButtons,
   IonContent,
   IonHeader,
+  IonIcon,
   IonNote,
-  IonRouterLink,
   IonSpinner,
   IonTitle,
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth.service';
-import { getPostLoginTarget } from '../core/app-links';
 
 @Component({
   standalone: true,
   imports: [
-    RouterLink,
-    IonRouterLink,
     IonButton,
-    IonCard,
-    IonCardContent,
-    IonCardHeader,
-    IonCardSubtitle,
-    IonCardTitle,
+    IonButtons,
     IonContent,
     IonHeader,
+    IonIcon,
     IonNote,
     IonSpinner,
     IonTitle,
     IonToolbar,
   ],
   templateUrl: './verify.page.html',
-  styleUrls: ['./login.page.scss'],
+  styleUrls: ['./login.page.scss','./verify.page.scss'],
 })
-export class VerifyPage {
+export class VerifyPage implements OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly platform = inject(Platform);
+  private backSubscription?: Subscription;
+  private closing = false;
   message = '';
   busy = false;
 
+  constructor() { addIcons({arrowBack}); }
+
+  // Ionic caches the auth pages. Keep the hardware-Back subscription active
+  // only for the currently visible verification-waiting page.
+  ionViewWillEnter(): void {
+    this.closing = false;
+    if(this.backSubscription)return;
+    this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{
+      void this.goLogin();
+    });
+  }
+
+  ionViewWillLeave(): void {
+    this.backSubscription?.unsubscribe();
+    this.backSubscription=undefined;
+  }
+
+  async goLogin(): Promise<void> {
+    if(this.closing)return;
+    this.closing=true;
+    this.ionViewWillLeave();
+    await this.router.navigateByUrl('/login',{replaceUrl:true});
+  }
+
   async resend(): Promise<void> {
-    if (this.busy) return;
+    if (this.busy || this.closing) return;
     this.busy = true;
     this.message = '';
     try {
+      // This page NEVER calls Firebase action apply/check. Verification is
+      // performed only when Gmail opens /open/auth-action in BlueGuard.
       await this.auth.resendVerification();
-      this.message = 'Verification email sent. Check your inbox and spam folder.';
+      if(!this.closing)this.message = 'Verification email sent. Check your inbox and spam folder.';
     } catch (error) {
-      this.message = (error as Error).message;
+      if(!this.closing)this.message = (error as Error).message || 'Unable to resend verification email.';
     } finally {
       this.busy = false;
     }
   }
 
-  async check(): Promise<void> {
-    if (this.busy) return;
-    this.busy = true;
-    this.message = '';
-    try {
-      if (await this.auth.reloadVerified()) {
-        await this.router.navigateByUrl(getPostLoginTarget(), { replaceUrl: true });
-      } else {
-        this.message = 'Email is not yet verified, or your account could not be initialized.';
-      }
-    } catch (error) {
-      this.message = (error as Error).message;
-    } finally {
-      this.busy = false;
-    }
+  ngOnDestroy(): void {
+    this.closing=true;
+    this.ionViewWillLeave();
   }
 }
