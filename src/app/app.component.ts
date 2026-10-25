@@ -14,4 +14,24 @@ import { PushService } from "./core/push.service";
 export class AppComponent {
   private realtime = inject(RealtimeService);
   private push = inject(PushService);
+  private readonly auth = inject(AuthService);
+  private readonly router = inject(Router);
+  constructor(){
+    if(typeof window==='undefined')return;
+    window.addEventListener('blueguard:app-link',()=>{void this.openPendingLink()});
+    // Read the native cold-start link stored before Angular was initialized.
+    queueMicrotask(()=>{void this.openPendingLink()});
+  }
+  private async openPendingLink():Promise<void>{
+    const raw=peekAppLink(),target=raw?appLinkDestination(raw):null;
+    if(!raw)return;
+    if(!target){clearAppLink();return}
+    // Retain pending link until a verified Firebase sign-in completes.
+    if(!(await this.auth.ready())){
+      await this.router.navigateByUrl('/login');
+      return;
+    }
+    clearAppLink();
+    await this.router.navigateByUrl(target);
+  }
 }
