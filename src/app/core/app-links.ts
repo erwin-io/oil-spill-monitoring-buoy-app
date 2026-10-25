@@ -11,7 +11,7 @@ export function appLinkDestination(raw:string):string|null{
    url.username||url.password||url.hash)return null;
   const ids=url.searchParams.getAll('deviceId');
   if(ids.length!==1||!(/^[A-Za-z0-9_-]{1,80}$/).test(ids[0]))return null;
-  if([...url.searchParams.keys()].some(key=>key!=='deviceId'))return null;
+  if(url.searchParams.toString()!==new URLSearchParams({deviceId:ids[0]}).toString())return null;
   return '/tabs/buoys'; // Lists pending offers; never routes to an unauthorized buoy.
  }catch{return null}
 }
