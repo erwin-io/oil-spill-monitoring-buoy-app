@@ -1,9 +1,27 @@
-import {inject,Injectable} from '@angular/core';import {HttpClient} from '@angular/common/http';import {Observable} from 'rxjs';
+import {inject,Injectable} from '@angular/core';import {HttpClient} from '@angular/common/http';import {Observable,from,firstValueFrom} from 'rxjs';
 import {environment} from '../../environments/environment';import {Device,Alert,Health,Measurement,Config,Page,Profile} from './models';
 @Injectable({providedIn:'root'})export class ApiService{
  private http=inject(HttpClient);private url=environment.api;
  me():Observable<Profile>{return this.http.get<Profile>(`${this.url}/auth/me`)}
- devices():Observable<{items:Device[]}>{return this.http.get<{items:Device[]}>(`${this.url}/devices`)}
+ devicesPage(cursor?:string):Observable<{items:Device[];nextCursor:string|null}>{
+  const params:Record<string,string>={limit:'100'};
+  if(cursor)params['cursor']=cursor;
+  return this.http.get<{items:Device[];nextCursor:string|null}>(`${this.url}/devices`,{params});
+ }
+ devices():Observable<{items:Device[]}>{
+  return from((async()=>{
+   const items:Device[]=[],seen=new Set<string>();
+   let cursor:string|undefined;
+   for(let pageNo=0;pageNo<500;pageNo++){
+    const page=await firstValueFrom(this.devicesPage(cursor));
+    items.push(...page.items);
+    if(!page.nextCursor)return {items};
+    if(seen.has(page.nextCursor))throw new Error('Device pagination cursor repeated');
+    seen.add(page.nextCursor);cursor=page.nextCursor;
+   }
+   throw new Error('Device listing exceeded pagination safety bound');
+  })());
+ }
  device(id:string):Observable<Device>{return this.http.get<Device>(`${this.url}/devices/${encodeURIComponent(id)}`)}
  requestClaim(id:string,claimCode:string):Observable<{deviceId:string;challengeId:string;state:'PENDING'}>{return this.http.post<{deviceId:string;challengeId:string;state:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/claims`,{claimCode})}
  claimStatus(id:string,challengeId:string):Observable<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>{return this.http.get<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/claims/${encodeURIComponent(challengeId)}`)}
