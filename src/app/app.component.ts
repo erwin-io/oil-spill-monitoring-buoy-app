@@ -1,7 +1,7 @@
 import { Component, inject } from "@angular/core";
 import { Router } from "@angular/router";
 import { AuthService } from "./core/auth.service";
-import { appLinkDestination,clearAppLink,peekAppLink } from "./core/app-links";
+import { appLinkDestination,clearAppLink,peekAppLink,parseNativeEmailAction } from "./core/app-links";
 import { IonApp, IonRouterOutlet } from "@ionic/angular/standalone";
 import { RealtimeService } from "./core/realtime.service";
 import { PushService } from "./core/push.service";
@@ -23,8 +23,18 @@ export class AppComponent {
     queueMicrotask(()=>{void this.openPendingLink()});
   }
   private async openPendingLink():Promise<void>{
-    const raw=peekAppLink(),target=raw?appLinkDestination(raw):null;
+    const raw=peekAppLink();
     if(!raw)return;
+    const action=parseNativeEmailAction(raw);
+    if(action){
+      // Clear the raw bearer URL BEFORE routing, and put the code only into
+      // volatile AuthService memory. Navigation and history have NO code.
+      clearAppLink();
+      this.auth.stageNativeEmailAction(action);
+      await this.router.navigateByUrl('/email-action',{replaceUrl:true});
+      return;
+    }
+    const target=appLinkDestination(raw);
     if(!target){clearAppLink();return}
     if(target==='/verify-email'){
       // The HTTPS return link is NOT proof. Fetch verified status from Firebase
