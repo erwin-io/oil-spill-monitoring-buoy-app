@@ -16,6 +16,7 @@ import {
   IonToolbar,
 } from '@ionic/angular/standalone';
 import { AuthService } from '../core/auth.service';
+import { getPostLoginTarget } from '../core/app-links';
 
 @Component({
   standalone: true,
@@ -64,7 +65,7 @@ export class VerifyPage {
     this.message = '';
     try {
       if (await this.auth.reloadVerified()) {
-        await this.router.navigateByUrl('/tabs/overview', { replaceUrl: true });
+        await this.router.navigateByUrl(getPostLoginTarget(), { replaceUrl: true });
       } else {
         this.message = 'Email is not yet verified, or your account could not be initialized.';
       }
