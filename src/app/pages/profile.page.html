@@ -47,7 +47,7 @@
  </ion-toolbar></ion-header>
  <ion-content class="ion-padding">
   <div class="crop-editor">
-   <canvas #cropCanvas width="512" height="512" aria-label="Square crop preview"></canvas>
+   <canvas id="blueguard-crop-canvas" #cropCanvas width="512" height="512" aria-label="Square crop preview"></canvas>
    <label class="photo-file-label">Choose a photo
     <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose profile image" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
    </label>

@@ -1,5 +1,5 @@
 import {CommonModule} from '@angular/common';
-import {Component,ElementRef,OnDestroy,ViewChild,inject} from '@angular/core';
+import {Component,OnDestroy,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
 import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
@@ -16,7 +16,6 @@ export class ProfilePage implements OnDestroy {
  private readonly realtime=inject(RealtimeService);
  private readonly push=inject(PushService);
  private readonly router=inject(Router);
- @ViewChild('cropCanvas') cropCanvas?:ElementRef<HTMLCanvasElement>;
  error='';signingOut=false;confirmSignOut=false;
  editingPhoto=false;savingAvatar=false;avatarFeedback='';
  photoSrc='';photoZoom=1;photoX=0;photoY=0;
@@ -59,7 +58,7 @@ export class ProfilePage implements OnDestroy {
   image.src=this.photoUrl;
  }
  drawPreview():void{
-  const canvas=this.cropCanvas?.nativeElement;
+  const canvas=(document.getElementById('blueguard-crop-canvas') as HTMLCanvasElement | null);
   const img=this.photoImage;
   if(!canvas||!img||!img.complete||!img.naturalWidth||!img.naturalHeight)return;
   const size=canvas.width;
@@ -77,7 +76,7 @@ export class ProfilePage implements OnDestroy {
  async saveAvatar():Promise<void>{
   if(this.savingAvatar||!this.photoImage?.naturalWidth)return;
   this.drawPreview();
-  const canvas=this.cropCanvas?.nativeElement;
+  const canvas=(document.getElementById('blueguard-crop-canvas') as HTMLCanvasElement | null);
   if(!canvas){this.avatarFeedback='Choose a photo first.';return}
   this.savingAvatar=true;this.avatarFeedback='';
   try{

@@ -158,26 +158,25 @@ test('SEEFIX search toolbar and separation from classification filter', () => {
   assert.ok(ts.includes('onSearch(value: string | null | undefined)'));
 });
 
-test('Profile hides role and keeps log out sticky inside content', () => {
-  const html=read('src/app/pages/profile.page.html');
-  const css=read('src/app/pages/profile.page.scss');
-  assert.ok(!html.includes('<ion-label>Role</ion-label>'));
-  assert.ok(!html.includes('{{ p.role | titlecase }} account'));
-  assert.ok(html.includes('profile-layout'));
-  assert.ok(html.includes('profile-actions'));
+test('Profile matches SEEFIX-style settings and keeps sign out sticky in scroll area',()=>{
+  const html=read('src/app/pages/profile.page.html'),css=read('src/app/pages/profile.page.scss');
+  assert.ok(html.includes('<ion-label>Role</ion-label>'));
+  assert.ok(html.includes('Edit display name'));
+  assert.ok(html.includes('Change password'));
+  assert.ok(!html.includes('Current password'));
+  assert.ok(!html.includes('Confirm new password'));
+  assert.ok(html.includes('profile-layout')&&html.includes('profile-actions'));
   assert.ok(html.indexOf('profile-actions')<html.indexOf('</ion-content>'));
-  assert.match(css, /position:\s*sticky/);
-  assert.match(css, /bottom:\s*0/);
-  assert.match(css, /margin-top:\s*auto/);
+  assert.match(css,/position:\s*sticky/);
+  assert.match(css,/bottom:\s*0/);
+  assert.match(css,/margin-top:\s*auto/);
 });
-
-test('P2-14 password change requires Firebase reauthentication and confirmation without affecting Google Sign-In',()=>{
- const auth=read('src/app/core/auth.service.ts'),profile=read('src/app/pages/profile.page.ts'),html=read('src/app/pages/profile.page.html');
- assert.ok(auth.includes('reauthenticateWithCredential'));
- assert.ok(auth.includes('updatePassword'));
- assert.ok(auth.includes('EmailAuthProvider.credential'));
+test('Profile password settings request email reset while native Firebase retains password confirmation',()=>{
+ const settings=read('src/app/pages/profile-password.page.ts');
+ const auth=read('src/app/core/auth.service.ts');
+ const native=read('src/app/pages/native-email-action.page.ts');
+ assert.ok(settings.includes('this.auth.resetPassword(email)'));
+ assert.ok(auth.includes('confirmPasswordReset'));
+ assert.ok(native.includes('this.nextPassword!==this.confirmPassword'));
  assert.ok(auth.includes('FirebaseAuthentication.signInWithGoogle'));
- assert.ok(profile.includes('this.newPassword!==this.confirmPassword'));
- assert.ok(html.includes('Current password'));
- assert.ok(html.includes('Confirm new password'));
 });

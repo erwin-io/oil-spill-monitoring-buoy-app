@@ -7,7 +7,7 @@ template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-button
 <div class="verify-wait-illustration" aria-hidden="true"><svg viewBox="0 0 180 160" width="180" height="160"><circle cx="90" cy="80" r="73" fill="#eaf3ff"/><rect x="42" y="49" width="96" height="71" rx="8" fill="#fff" stroke="#0058db" stroke-width="4"/><path d="M44 57 L90 91 L136 57" fill="none" stroke="#0058db" stroke-width="4"/><circle cx="134" cy="44" r="21" fill="#0cbb89"/><path d="M125 44 L132 51 L144 37" fill="none" stroke="#fff" stroke-width="4"/></svg></div>
 <h1>{{sent?'Check your inbox':'Change password'}}</h1>
 <p class="verify-wait-description">{{sent?'If eligible, a reset email has been sent. Open Gmail and choose your new password securely inside BlueGuard Buoy.':'For your security, we will send a one-time password reset link to your verified account email. No current password required.'}}</p>
-<ion-button expand="block" class="regular verify-resend-button" fill="outline" [disabled]="busy" (click)="send()">@if(busy){<ion-spinner name="dots"></ion-spinner>}@else{{{sent?'Resend reset email':'Send password reset link'}}}</ion-button>
+<ion-button expand="block" class="regular verify-resend-button" fill="outline" [disabled]="busy" (click)="send()">@if(busy){<ion-spinner name="dots"></ion-spinner>}@else { {{sent?'Resend reset email':'Send password reset link'}} }</ion-button>
 @if(message){<ion-note class="verify-wait-message" role="status">{{message}}</ion-note>}
 </section></main></ion-content>`,styleUrls:['./login.page.scss','./verify.page.scss']})
 export class ProfilePasswordPage{
