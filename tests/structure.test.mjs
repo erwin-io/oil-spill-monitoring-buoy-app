@@ -166,3 +166,14 @@ test('Profile hides role and keeps log out sticky inside content', () => {
   assert.match(css, /bottom:\s*0/);
   assert.match(css, /margin-top:\s*auto/);
 });
+
+test('P2-14 password change requires Firebase reauthentication and confirmation without affecting Google Sign-In',()=>{
+ const auth=read('src/app/core/auth.service.ts'),profile=read('src/app/pages/profile.page.ts'),html=read('src/app/pages/profile.page.html');
+ assert.ok(auth.includes('reauthenticateWithCredential'));
+ assert.ok(auth.includes('updatePassword'));
+ assert.ok(auth.includes('EmailAuthProvider.credential'));
+ assert.ok(auth.includes('FirebaseAuthentication.signInWithGoogle'));
+ assert.ok(profile.includes('this.newPassword!==this.confirmPassword'));
+ assert.ok(html.includes('Current password'));
+ assert.ok(html.includes('Confirm new password'));
+});
