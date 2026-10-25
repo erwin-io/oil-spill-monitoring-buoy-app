@@ -20,6 +20,17 @@ import {environment} from '../../environments/environment';import {Device,Alert,
  acknowledge(id:string):Observable<unknown>{return this.http.patch(`${this.url}/alerts/${encodeURIComponent(id)}/acknowledge`,{})}
  config(id:string):Observable<Config>{return this.http.get<Config>(`${this.url}/devices/${encodeURIComponent(id)}/config`)}
  updateConfig(id:string,c:Config):Observable<Config>{return this.http.put<Config>(`${this.url}/devices/${encodeURIComponent(id)}/config`,c)}
- registerToken(token:string):Observable<unknown>{return this.http.post(`${this.url}/notifications/register-device`,{token,platform:'android',provider:'FCM'})}
+ startPushSession(installationId:string):Observable<{sessionId:string;sessionSecret:string;expiresAt:string}>{
+  return this.http.post<{sessionId:string;sessionSecret:string;expiresAt:string}>(`${this.url}/notifications/sessions`,{installationId})
+ }
+ refreshPushSession(sessionId:string,sessionSecret:string):Observable<{expiresAt:string}>{
+  return this.http.post<{expiresAt:string}>(`${this.url}/notifications/sessions/${encodeURIComponent(sessionId)}/refresh`,{sessionSecret})
+ }
+ endPushSession(sessionId:string,sessionSecret:string):Observable<{revoked:boolean}>{
+  return this.http.request<{revoked:boolean}>('DELETE',`${this.url}/notifications/sessions/${encodeURIComponent(sessionId)}`,{body:{sessionSecret}})
+ }
+ registerToken(token:string,sessionId:string,sessionSecret:string):Observable<unknown>{
+  return this.http.post(`${this.url}/notifications/register-device`,{token,platform:'android',provider:'FCM',sessionId,sessionSecret})
+ }
  unregisterToken(token:string):Observable<unknown>{return this.http.request('DELETE',`${this.url}/notifications/unregister-device`,{body:{token,platform:'android',provider:'FCM'}})}
 }
