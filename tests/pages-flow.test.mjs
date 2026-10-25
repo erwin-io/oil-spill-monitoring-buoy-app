@@ -143,7 +143,7 @@ test('buoy list labels online, offline, not-yet-seen and disabled status correct
  assert.equal(page.onlineLabel({id:'A',status:'ACTIVE',lastSeenAt:'2001-01-01T00:00:00Z'}),'Offline');
 });
 
-test('alert inbox resolves buoy name, filters server-side, paginates without duplicate records',async()=>{
+test('personal Notifications inbox stays unfiltered and paginates without duplicate records',async()=>{
  const cursors=[];const {page}=mount('alerts',{api:{
   alerts:(cursor,status)=>{
    cursors.push([cursor,status]);
@@ -152,7 +152,6 @@ test('alert inbox resolves buoy name, filters server-side, paginates without dup
   },
   devices:()=>Promise.resolve({items:[{id:'B1',name:'Buoy One'}]})
  }});
- page.filter='OPEN';
  await page.ionViewWillEnter();
  assert.equal(page.nameOf(page.items[0]),'Buoy One');
  assert.equal(page.items[0].unread,true);
@@ -161,10 +160,21 @@ test('alert inbox resolves buoy name, filters server-side, paginates without dup
  assert.deepEqual(Array.from(page.items,x=>x.id),['a1','a2','a3']);
  assert.equal(page.cursor,null);
  assert.equal(cursors.length,2);
- assert.equal(cursors[0][1],'OPEN');
+ assert.equal(cursors[0][1],undefined);
  assert.equal(cursors[1][0],'a2');
 });
 
+test('Mark All Read invokes personal receipt API without acknowledging incidents',async()=>{
+ let marked=0,ack=0;
+ const {page}=mount('alerts',{api:{
+  alerts:()=>Promise.resolve({items:[{id:'a1',deviceId:'B1',unread:marked===0}],nextCursor:null,unreadCount:marked===0?1:0}),
+  devices:()=>Promise.resolve({items:[]}),
+  markAllRead:()=>{marked++;return Promise.resolve({readAt:new Date().toISOString(),deviceCount:1})},
+  acknowledge:()=>{ack++;return Promise.resolve({})},
+ }});
+ await page.ionViewWillEnter();await page.markAll();
+ assert.equal(marked,1);assert.equal(ack,0);assert.equal(page.unreadCount,0);
+});
 test('buoy detail uses truthful last-known cleaning telemetry and tolerates absent health',async()=>{
  const api={
   device:()=>Promise.resolve({id:'B1',name:'Test buoy'}),
