@@ -15,12 +15,11 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let lastNativeToken;
   let reauthentication,updatedPassword;
   const auth = { currentUser: null };
-  const http = { post: () => {
+  const takeProfile = () => {
     if (!nextProfile) throw new Error('Profile response not configured');
-    const p = nextProfile;
-    nextProfile = undefined;
-    return p;
-  } };
+    const p = nextProfile;nextProfile = undefined;return p;
+  };
+  const http = {post:takeProfile, patch:takeProfile};
   const signal = (initial) => {
     let state = initial;
     const value = () => state;
@@ -198,4 +197,20 @@ test('P2-14 password change demands current credentials, validates next password
  assert.equal(getPasswordCalls().updatedPassword,'new-password-123');
  setUser({...user('google-user'),email:'google@example.test',providerData:[{providerId:'google.com'}]});
  await assert.rejects(service.changePassword('unused','new-password-123'),/Google/);
+});
+
+test('P2-13 own display name updates the authenticated profile without mixing accounts', async () => {
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ queueProfile(Promise.resolve({...profile('account-A'),displayName:'BlueGuard A'}));
+ assert.equal((await service.updateDisplayName('BlueGuard A')).displayName,'BlueGuard A');
+ assert.equal(service.profile().displayName,'BlueGuard A');
+ let resolveLate;
+ queueProfile(new Promise(resolve=>{resolveLate=resolve}));
+ const stale=service.updateDisplayName('Old Account');
+ await Promise.resolve();
+ setUser(user('account-B'));
+ resolveLate({...profile('account-A'),displayName:'Old Account'});
+ await assert.rejects(stale,/Account changed during profile update/);
+ assert.equal(service.profile(),null);
 });
