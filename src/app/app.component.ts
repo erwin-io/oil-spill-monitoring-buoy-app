@@ -1,4 +1,7 @@
 import { Component, inject } from "@angular/core";
+import { Router } from "@angular/router";
+import { AuthService } from "./core/auth.service";
+import { appLinkDestination,clearAppLink,peekAppLink } from "./core/app-links";
 import { IonApp, IonRouterOutlet } from "@ionic/angular/standalone";
 import { RealtimeService } from "./core/realtime.service";
 import { PushService } from "./core/push.service";
