@@ -37,18 +37,13 @@ export class AppComponent {
     const target=appLinkDestination(raw);
     if(!target){clearAppLink();return}
     if(target==='/verify-email'){
-      // The HTTPS return link is NOT proof. Fetch verified status from Firebase
-      // before ever granting an authenticated navigation.
+      // Legacy token-free Firebase browser-return links cannot verify an
+      // account or bypass the native-only Gmail→App Firebase action route.
       clearAppLink();
-      const current=this.auth.currentUser();
-      if(!current){await this.router.navigateByUrl('/login');return}
-      try{
-        if(await this.auth.reloadVerified()){
-          await this.router.navigateByUrl('/tabs/overview',{replaceUrl:true});
-          return;
-        }
-      }catch{/* Verification can be checked again from the verification page. */}
-      await this.router.navigateByUrl('/verify-email');
+      await this.router.navigateByUrl(
+        this.auth.currentUser()?'/verify-email':'/login',
+        {replaceUrl:true}
+      );
       return;
     }
     if(target==='/login'){
