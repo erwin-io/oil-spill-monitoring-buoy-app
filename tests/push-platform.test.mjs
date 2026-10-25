@@ -150,8 +150,8 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
   });
   const page = new exports.ProfilePage();
   await page.logout();
-  assert.deepEqual(calls, { disconnect: 1, push: 1, logout: 1, redirect: 1 });
-  assert.equal(page.error, '');
+  assert.deepEqual(calls, { disconnect: 0, push: 1, logout: 0, redirect: 0 });
+  assert.match(page.error,/plugin unavailable/);
   assert.equal(page.signingOut, false);
 });
 
