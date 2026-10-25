@@ -202,3 +202,20 @@ test('old FCM notification callbacks cannot navigate after sign-out', async () =
   await oldAction({ notification: { data: { alertId: 'old-alert' } } });
   assert.equal(service.token, undefined);
 });
+
+test('P2-12 offline logout retains revocation proof for retry, then clears it after server confirmation',async()=>{
+ let offline=true;
+ const {service,calls}=pushHarness({native:true,endSession:()=>{
+  if(offline)return Promise.reject(new Error('Network unavailable'));
+  return Promise.resolve({revoked:true});
+ }});
+ await service.start();
+ assert.equal(service.session?.sessionId,'session-one');
+ await assert.rejects(service.stop(true),/Cannot sign out securely while offline/);
+ assert.equal(service.session?.sessionId,'session-one','session credentials must remain in memory for retry');
+ assert.equal(calls.sessionEnd,1);
+ offline=false;
+ await service.stop(true);
+ assert.equal(calls.sessionEnd,2);
+ assert.equal(service.session,undefined);
+});
