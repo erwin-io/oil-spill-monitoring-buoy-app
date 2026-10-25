@@ -16,6 +16,11 @@ export const routes: Routes = [
       import("./pages/verify.page").then((m) => m.VerifyPage),
   },
   {
+    path: "email-action",
+    loadComponent: () =>
+      import("./pages/native-email-action.page").then((m) => m.NativeEmailActionPage),
+  },
+  {
     path: "forgot-password",
     loadComponent: () =>
       import("./pages/forgot.page").then((m) => m.ForgotPage),
