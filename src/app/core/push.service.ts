@@ -92,7 +92,7 @@ export class PushService {
   await this.registrationTask.catch(()=>undefined);
   const token=this.token,session=this.session;
   this.token=undefined;this.session=undefined;
-  if(token)try{await firstValueFrom(this.api.unregisterToken(token))}catch{ /* offline logout; server still checks session */ }
+  if(token&&this.nativePushAvailable)try{await firstValueFrom(this.api.unregisterToken(token))}catch{ /* offline logout; server still checks session */ }
   if(session)try{await firstValueFrom(this.api.endPushSession(session.sessionId,session.sessionSecret))}
    catch{ /* Offline logout cannot immediately revoke server state. Replacing same installation invalidates it on next online sign-in. */ }
   if(this.nativePushAvailable)try{await PushNotifications.removeAllListeners()}catch{}
