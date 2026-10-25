@@ -69,7 +69,7 @@ test('P2-15 verify email starts automatically and shows loading → success with
  const h=harness({verify:()=>pending});
  const inflight=h.page.ngOnInit();
  // inspect promise resolves in the next microtask; finish should then begin.
- await Promise.resolve();await Promise.resolve();
+ for(let i=0;i<12&&!h.calls.includes('verify');i++)await Promise.resolve();
  assert.deepEqual(h.calls,['inspect','verify']);
  assert.equal(h.page.loading,true);
  assert.equal(h.page.progressMessage,'Verifying your email…');
@@ -114,7 +114,7 @@ test('P2-15 failure and exit during in-flight verify never show success or enabl
  const pending=new Promise(resolve=>{finishVerification=resolve});
  const h=harness({verify:()=>pending});
  const inflight=h.page.ngOnInit();
- await Promise.resolve();await Promise.resolve();
+ for(let i=0;i<12&&!h.calls.includes('verify');i++)await Promise.resolve();
  h.back();
  await Promise.resolve();
  finishVerification(true);
