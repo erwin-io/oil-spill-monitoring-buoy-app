@@ -16,6 +16,9 @@ import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
+  EmailAuthProvider,
+  reauthenticateWithCredential,
+  updatePassword,
   signOut,
 } from 'firebase/auth';
 import { environment } from '../../environments/environment';
@@ -142,6 +145,66 @@ export class AuthService {
 
   async resetPassword(email: string): Promise<void> {
     await sendPasswordResetEmail(this.auth, email);
+  }
+
+  async updateDisplayName(displayName: string): Promise<Profile> {
+    const user=this.auth.currentUser;
+    if(!user||!user.emailVerified)throw new Error('Verified sign-in required');
+    const generation=this.sessionGeneration;
+    const token=await user.getIdToken();
+    const profile=await firstValueFrom(this.http.patch<Profile>(
+      `${environment.api}/auth/me`,{displayName},
+      {headers:{Authorization:`Bearer ${token}`}},
+    ));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid||profile.uid!==user.uid)
+      throw new Error('Account changed during profile update');
+    this.profile.set(profile);
+    return profile;
+  }
+
+
+  async uploadAvatar(file: Blob): Promise<Profile> {
+    if (file.size < 12 || file.size > 2*1024*1024 || !['image/jpeg','image/png','image/webp'].includes(file.type))
+      throw new Error('Choose a JPG, PNG, or WebP image up to 2 MB.');
+    const user=this.auth.currentUser;
+    if (!user?.emailVerified) throw new Error('Verified sign-in required');
+    const generation=this.sessionGeneration;
+    const token=await user.getIdToken();
+    const response=await firstValueFrom(this.http.put<Pick<Profile,'uid'|'avatarUrl'>>(
+      `${environment.api}/auth/avatar`,file,
+      {headers:{Authorization:`Bearer ${token}`,'Content-Type':file.type}},
+    ));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid||response.uid!==user.uid)
+      throw new Error('Account changed during avatar upload');
+    const updated={...this.profile(),...response} as Profile;
+    this.profile.set(updated);return updated;
+  }
+
+  async removeAvatar(): Promise<Profile> {
+    const user=this.auth.currentUser;
+    if (!user?.emailVerified) throw new Error('Verified sign-in required');
+    const generation=this.sessionGeneration;
+    const token=await user.getIdToken();
+    const response=await firstValueFrom(this.http.delete<Pick<Profile,'uid'|'avatarUrl'>>(
+      `${environment.api}/auth/avatar`,{headers:{Authorization:`Bearer ${token}`}},
+    ));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid||response.uid!==user.uid)
+      throw new Error('Account changed during avatar removal');
+    const updated={...this.profile(),...response} as Profile;
+    this.profile.set(updated);return updated;
+  }
+
+  async changePassword(currentPassword: string, nextPassword: string): Promise<void> {
+    const user=this.auth.currentUser;
+    if(!user?.email||!user.emailVerified)throw new Error('Sign in with a verified email first');
+    if(!user.providerData.some(p=>p.providerId==='password'))throw new Error('This account signs in with Google; password changes are not available.');
+    if(nextPassword.length<8||nextPassword.length>128)throw new Error('New password must contain 8–128 characters');
+    if(currentPassword===nextPassword)throw new Error('Choose a different new password');
+    const generation=this.sessionGeneration;
+    await reauthenticateWithCredential(user,EmailAuthProvider.credential(user.email,currentPassword));
+    if(generation!==this.sessionGeneration||this.auth.currentUser?.uid!==user.uid)
+      throw new Error('Account changed during password reauthentication');
+    await updatePassword(user,nextPassword);
   }
 
   async logout(): Promise<void> {

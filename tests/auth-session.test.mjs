@@ -13,13 +13,13 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let nativeOptions;
   let popupCalls = 0;
   let lastNativeToken;
+  let reauthentication,updatedPassword;
   const auth = { currentUser: null };
-  const http = { post: () => {
+  const takeProfile = () => {
     if (!nextProfile) throw new Error('Profile response not configured');
-    const p = nextProfile;
-    nextProfile = undefined;
-    return p;
-  } };
+    const p = nextProfile;nextProfile = undefined;return p;
+  };
+  const http = {post:takeProfile, patch:takeProfile, put:takeProfile, delete:takeProfile};
   const signal = (initial) => {
     let state = initial;
     const value = () => state;
@@ -65,6 +65,9 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       createUserWithEmailAndPassword: async () => ({ user: auth.currentUser }),
       sendEmailVerification: async () => {},
       sendPasswordResetEmail: async () => {},
+      EmailAuthProvider: {credential: (email,password)=>({email,password})},
+      reauthenticateWithCredential: async (_user,credential)=>{reauthentication=credential;},
+      updatePassword: async (_user,password)=>{updatedPassword=password;},
       signOut: async () => { auth.currentUser = null; observer(null); },
     },
     '../../environments/environment': { environment: { api: 'https://example.test/api/v1', firebase: {} } },
@@ -82,7 +85,8 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   const setUser = (user) => { auth.currentUser = user; observer(user); };
   const queueProfile = (profile) => { nextProfile = profile; };
   return { service, setUser, queueProfile,
-    getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}) };
+    getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
+    getPasswordCalls: () => ({reauthentication,updatedPassword}) };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
@@ -180,4 +184,64 @@ test('Google login cannot accept a profile for a different Firebase user', async
   queueProfile(Promise.resolve(profile('old-account')));
   await assert.rejects(service.signInWithGoogle(),/Profile identity mismatch/);
   assert.equal(service.profile(),null);
+});
+
+test('P2-14 password change demands current credentials, validates next password, preserves Google identity',async()=>{
+ const {service,setUser,getPasswordCalls}=harness();
+ setUser({...user('password-user'),email:'person@example.test',providerData:[{providerId:'password'}]});
+ await assert.rejects(service.changePassword('old','tiny'),/8–128/);
+ await assert.rejects(service.changePassword('same-password','same-password'),/different/);
+ await service.changePassword('old-password','new-password-123');
+ assert.equal(getPasswordCalls().reauthentication.email,'person@example.test');
+ assert.equal(getPasswordCalls().reauthentication.password,'old-password');
+ assert.equal(getPasswordCalls().updatedPassword,'new-password-123');
+ setUser({...user('google-user'),email:'google@example.test',providerData:[{providerId:'google.com'}]});
+ await assert.rejects(service.changePassword('unused','new-password-123'),/Google/);
+});
+
+test('P2-13 own display name updates the authenticated profile without mixing accounts', async () => {
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ queueProfile(Promise.resolve({...profile('account-A'),displayName:'BlueGuard A'}));
+ assert.equal((await service.updateDisplayName('BlueGuard A')).displayName,'BlueGuard A');
+ assert.equal(service.profile().displayName,'BlueGuard A');
+ let resolveLate;
+ queueProfile(new Promise(resolve=>{resolveLate=resolve}));
+ const stale=service.updateDisplayName('Old Account');
+ await Promise.resolve();
+ setUser(user('account-B'));
+ resolveLate({...profile('account-A'),displayName:'Old Account'});
+ await assert.rejects(stale,/Account changed during profile update/);
+ assert.equal(service.profile(),null);
+});
+
+test('P2-13 signed avatar proxy updates only the active account and preserves profile authorization',async()=>{
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ queueProfile(Promise.resolve(profile('account-A')));
+ await service.bootstrap();
+ const file=new Blob([new Uint8Array(64)],{type:'image/png'});
+ queueProfile(Promise.resolve({uid:'account-A',avatarUrl:'https://res.cloudinary.com/blueguard/image/upload/v1/a'}));
+ const updated=await service.uploadAvatar(file);
+ assert.equal(updated.uid,'account-A');
+ assert.equal(updated.role,'VIEWER');
+ assert.equal(updated.avatarUrl,'https://res.cloudinary.com/blueguard/image/upload/v1/a');
+ queueProfile(Promise.resolve({uid:'account-A',avatarUrl:null}));
+ assert.equal((await service.removeAvatar()).avatarUrl,null);
+ assert.equal(service.profile().role,'VIEWER');
+ await assert.rejects(service.uploadAvatar(new Blob([new Uint8Array(30)],{type:'image/svg+xml'})),/Choose a JPG/);
+ await assert.rejects(service.uploadAvatar(new Blob([new Uint8Array(2*1024*1024+1)],{type:'image/png'})),/Choose a JPG/);
+});
+test('P2-13 avatar response from switched-out user cannot alter new account',async()=>{
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ let release;
+ queueProfile(new Promise(resolve=>{release=resolve}));
+ const file=new Blob([new Uint8Array(64)],{type:'image/webp'});
+ const stale=service.uploadAvatar(file);
+ await Promise.resolve();
+ setUser(user('account-B'));
+ release({uid:'account-A',avatarUrl:'https://res.cloudinary.com/demo/image/upload/v1/a'});
+ await assert.rejects(stale,/Account changed during avatar upload/);
+ assert.equal(service.profile(),null);
 });

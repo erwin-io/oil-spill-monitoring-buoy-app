@@ -36,6 +36,11 @@ export const routes: Routes = [
           import("./pages/devices.page").then((m) => m.DevicesPage),
       },
       {
+        path: "add-device",
+        loadComponent: () =>
+          import("./pages/add-device.page").then((m) => m.AddDevicePage),
+      },
+      {
         path: "buoys/:id",
         loadComponent: () =>
           import("./pages/device-detail.page").then((m) => m.DeviceDetailPage),

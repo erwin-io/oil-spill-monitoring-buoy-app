@@ -10,7 +10,8 @@
       <ion-list>
         <ion-item lines="none" class="identity">
           <ion-avatar slot="start" aria-hidden="true">
-            <div class="initials">{{ initials(p.displayName) }}</div>
+            <img *ngIf="p.avatarUrl; else avatarInitials" [src]="p.avatarUrl" alt="" />
+            <ng-template #avatarInitials><div class="initials">{{ initials(p.displayName) }}</div></ng-template>
           </ion-avatar>
           <ion-label>
             <h2>{{ p.displayName }}</h2>
@@ -19,6 +20,20 @@
         </ion-item>
       </ion-list>
 
+      <div class="card">
+        <h3>Profile photo</h3>
+        <p class="hint">JPG, PNG, or WebP, maximum 2 MB. Files are uploaded through an authenticated, server-signed service.</p>
+        <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Select profile photo" [disabled]="savingAvatar" (change)="selectAvatar($event)" />
+        <ion-button expand="block" fill="outline" color="medium" [disabled]="savingAvatar || !p.avatarUrl" (click)="removeAvatar()">Remove photo</ion-button>
+        <p *ngIf="avatarFeedback" role="status">{{ avatarFeedback }}</p>
+      </div>
+      <div class="card">
+        <h3>Display name</h3>
+        <p class="hint">Your display name is visible on your own account profile.</p>
+        <ion-input label="Name" label-placement="stacked" [maxlength]="80" [(ngModel)]="displayNameDraft"></ion-input>
+        <ion-button expand="block" fill="outline" [disabled]="savingName || displayNameDraft.trim().length<2 || displayNameDraft.trim().length>80" (click)="saveDisplayName()">Save name</ion-button>
+        <p *ngIf="nameFeedback" role="status">{{nameFeedback}}</p>
+      </div>
       <ion-list inset="true">
         <ion-list-header><ion-label>Account</ion-label></ion-list-header>
         <ion-item>
@@ -36,18 +51,13 @@
             </ion-badge>
           </ng-template>
         </ion-item>
-        <ion-item lines="none">
-          <ion-icon slot="start" name="hardware-chip-outline" aria-hidden="true"></ion-icon>
-          <ion-label>Assigned buoys</ion-label>
-          <ion-note slot="end">{{ p.role === 'ADMIN' ? 'All' : p.allowedDeviceIds.length }}</ion-note>
-        </ion-item>
       </ion-list>
 
       <ion-list inset="true">
         <ion-list-header><ion-label>About</ion-label></ion-list-header>
         <ion-item>
           <ion-icon slot="start" name="information-circle-outline" aria-hidden="true"></ion-icon>
-          <ion-label>Oil Spill Monitoring Buoy</ion-label>
+          <ion-label>BlueGuard Buoy</ion-label>
           <ion-note slot="end">Version 0.1.0</ion-note>
         </ion-item>
         <ion-item lines="none">
@@ -67,4 +77,15 @@
       </div>
     </ng-container>
   </div>
+<div class="page">
+ <div class="card">
+  <h3>Change password</h3>
+  <p class="hint">Email/password accounts must enter their current password. Google-only accounts can manage their password with Google.</p>
+  <ion-input label="Current password" label-placement="stacked" type="password" autocomplete="current-password" [(ngModel)]="currentPassword"></ion-input>
+  <ion-input label="New password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="newPassword"></ion-input>
+  <ion-input label="Confirm new password" label-placement="stacked" type="password" autocomplete="new-password" [(ngModel)]="confirmPassword"></ion-input>
+  <ion-button expand="block" fill="outline" [disabled]="changingPassword||!currentPassword||!newPassword||!confirmPassword" (click)="changePassword()">Update password</ion-button>
+  <p *ngIf="passwordFeedback" role="status">{{passwordFeedback}}</p>
+ </div>
+</div>
 </ion-content>

@@ -15,12 +15,15 @@ function transpile(path) {
   }).outputText;
 }
 
-function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken } = {}) {
-  const calls = { remove: 0, unregister: 0, request: 0, register: 0 };
+function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken, endSession } = {}) {
+  const calls = { remove: 0, unregister: 0, request: 0, register: 0,sessionStart:0,sessionEnd:0,sessionRefresh:0 };
   const listeners = {};
   const api = {
     registerToken: (token) => { calls.register++; return registerToken ? registerToken(token) : Promise.resolve(); },
     unregisterToken: () => { calls.unregister++; return Promise.resolve(); },
+    startPushSession: () => {calls.sessionStart++;return Promise.resolve({sessionId:'session-one',sessionSecret:'test-push-secret',expiresAt:'2099-01-01T00:00:00Z'})},
+    refreshPushSession: () => {calls.sessionRefresh++;return Promise.resolve({expiresAt:'2099-01-01T00:00:00Z'})},
+    endPushSession: () => {calls.sessionEnd++;return endSession ? endSession() : Promise.resolve({revoked:true})},
   };
   const router = { navigate: () => Promise.resolve(true) };
   const PushNotifications = {
@@ -33,15 +36,18 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
     },
   };
   class ApiService {}
+  class AuthService {}
+  const auth={currentUser:()=>({uid:'test-user',emailVerified:true})};
   class Router {}
   const exports = {};
   const modules = {
-    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : router },
+    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : token === AuthService ? auth : router },
     '@angular/router': { Router },
     '@capacitor/core': { Capacitor: { isNativePlatform: () => native, isPluginAvailable: () => pluginAvailable } },
     '@capacitor/push-notifications': { PushNotifications },
     'rxjs': { firstValueFrom: async (promise) => promise },
     './api.service': { ApiService },
+    './auth.service': { AuthService },
   };
   vm.runInNewContext(transpile('src/app/core/push.service.ts'), {
     exports,
@@ -50,6 +56,8 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
       return modules[name];
     },
     console,
+    crypto:{randomUUID:()=> '12345678-1234-1234-1234-123456789012'},
+    localStorage:{getItem:()=>null,setItem:()=>{}},
   });
   return { service: new exports.PushService(), calls, listeners };
 }
@@ -87,7 +95,7 @@ test('native listener cleanup errors are contained', async () => {
   assert.equal(calls.remove, 1);
 });
 
-test('ProfilePage signs out even when push cleanup rejects', async () => {
+test('ProfilePage blocks sign-out when server push revocation rejects', async () => {
   const calls = { disconnect: 0, push: 0, logout: 0, redirect: 0 };
   const auth = { logout: async () => { calls.logout++; }, profile: () => null };
   const realtime = { disconnect: () => { calls.disconnect++; } };
@@ -100,11 +108,12 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
   const exports = {};
   const ionic = Object.fromEntries(
     ['IonAvatar', 'IonBadge', 'IonButton', 'IonContent', 'IonHeader', 'IonIcon',
-     'IonItem', 'IonLabel', 'IonList', 'IonListHeader', 'IonNote', 'IonTitle', 'IonToolbar'
+     'IonInput', 'IonItem', 'IonLabel', 'IonList', 'IonListHeader', 'IonNote', 'IonTitle', 'IonToolbar'
     ].map((n) => [n, class {}]),
   );
   const modules = {
     '@angular/common': { CommonModule: class {} },
+    '@angular/forms': { FormsModule: class {} },
     '@angular/core': {
       Component: () => (cls) => cls,
       inject: (token) => {
@@ -141,8 +150,8 @@ test('ProfilePage signs out even when push cleanup rejects', async () => {
   });
   const page = new exports.ProfilePage();
   await page.logout();
-  assert.deepEqual(calls, { disconnect: 1, push: 1, logout: 1, redirect: 1 });
-  assert.equal(page.error, '');
+  assert.deepEqual(calls, { disconnect: 0, push: 1, logout: 0, redirect: 0 });
+  assert.match(page.error,/plugin unavailable/);
   assert.equal(page.signingOut, false);
 });
 
@@ -178,7 +187,7 @@ test('logout waits for an in-flight registration and revokes late token', async 
   release();
   await stopping;
   assert.equal(calls.register, 1);
-  assert.equal(calls.unregister, 1, 'server-side late token registration must be revoked');
+  assert.equal(calls.sessionEnd, 1, 'revoked installation session suppresses late FCM registration');
   assert.equal(service.token, undefined);
   listeners.registration({ value: 'callback-after-logout' });
   await service.registrationTask;
@@ -192,4 +201,21 @@ test('old FCM notification callbacks cannot navigate after sign-out', async () =
   await service.stop();
   await oldAction({ notification: { data: { alertId: 'old-alert' } } });
   assert.equal(service.token, undefined);
+});
+
+test('P2-12 offline logout retains revocation proof for retry, then clears it after server confirmation',async()=>{
+ let offline=true;
+ const {service,calls}=pushHarness({native:true,endSession:()=>{
+  if(offline)return Promise.reject(new Error('Network unavailable'));
+  return Promise.resolve({revoked:true});
+ }});
+ await service.start();
+ assert.equal(service.session?.sessionId,'session-one');
+ await assert.rejects(service.stop(true),/Cannot sign out securely while offline/);
+ assert.equal(service.session?.sessionId,'session-one','session credentials must remain in memory for retry');
+ assert.equal(calls.sessionEnd,1);
+ offline=false;
+ await service.stop(true);
+ assert.equal(calls.sessionEnd,2);
+ assert.equal(service.session,undefined);
 });

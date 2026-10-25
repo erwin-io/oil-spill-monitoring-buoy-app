@@ -100,14 +100,14 @@ test('SEEFIX-matched 2px/10px global controls, no-shadow auth, blue toolbars', (
   }
 });
 
-test('native status filters use the same outlined Ionic alert-select pattern', () => {
-  for (const name of ['devices', 'alerts']) {
-    const html = read('src/app/pages/' + name + '.page.html');
-    assert.ok(html.includes('ion-select'));
-    assert.ok(html.includes('fill="outline"'));
-    assert.ok(html.includes('interface="alert"'));
-    assert.ok(html.includes('interfaceOptions'));
-  }
+test('buoy list retains outlined native filter while personal Notifications has no status filters', () => {
+ const devices=read('src/app/pages/devices.page.html');
+ for(const needle of ['ion-select','fill="outline"','interface="alert"','interfaceOptions'])
+  assert.ok(devices.includes(needle));
+ const inbox=read('src/app/pages/alerts.page.html');
+ assert.ok(!inbox.includes('ion-select'), 'P2-DEC-003 requires no inbox filters');
+ assert.ok(inbox.includes('Mark All Read'));
+ assert.ok(inbox.includes('<ion-title>Notifications</ion-title>'));
 });
 
 test('Login has one branded welcome section, compact form and scroll-safe mobile layout', () => {
@@ -116,11 +116,11 @@ test('Login has one branded welcome section, compact form and scroll-safe mobile
   const style = read('src/app/pages/login.page.scss');
   assert.ok(login.includes('<main class="login-layout">'));
   assert.ok(login.includes('class="brand-mark"'));
-  assert.ok(login.includes('<p class="brand-eyebrow">Oil Spill Monitoring Buoy</p>'));
+  assert.ok(login.includes('<p class="brand-eyebrow">BlueGuard Buoy</p>'));
   assert.ok(login.includes('<h1>Welcome back</h1>'));
   assert.ok(login.includes('Sign in to monitor coastal waters and follow buoy alerts.'));
   assert.ok(login.indexOf('class="brand"') < login.indexOf('<ion-card class="card no-shadow">'));
-  assert.equal(login.includes('<ion-card-title>Oil Spill Monitoring Buoy</ion-card-title>'), false,
+  assert.equal(login.includes('<ion-card-title>BlueGuard Buoy</ion-card-title>'), false,
     'Product branding must not be repeated above the form');
   assert.equal(register.includes('class="brand-mark"'), false);
   assert.match(style, /\.login-layout\s*\{/);
@@ -136,9 +136,9 @@ test('Only the correct product name appears in user-facing mobile source', () =>
     'src/app/pages/dashboard.page.html', 'src/app/pages/profile.page.html',
     'src/index.html', 'capacitor.config.ts'];
   for(const path of files) assert.ok(!/BlueWatch/i.test(read(path)), path);
-  assert.ok(read('src/app/pages/login.page.html').includes('Oil Spill Monitoring Buoy'));
+  assert.ok(read('src/app/pages/login.page.html').includes('BlueGuard Buoy'));
   assert.ok(read('src/app/pages/dashboard.page.html').includes('<ion-title>Overview</ion-title>'));
-  assert.ok(read('capacitor.config.ts').includes('appName: "Oil Spill Monitoring Buoy"'));
+  assert.ok(read('capacitor.config.ts').includes('appName: "BlueGuard Buoy"'));
 });
 
 test('SEEFIX search toolbar and separation from classification filter', () => {
@@ -165,4 +165,15 @@ test('Profile hides role and keeps log out sticky inside content', () => {
   assert.match(css, /position:\s*sticky/);
   assert.match(css, /bottom:\s*0/);
   assert.match(css, /margin-top:\s*auto/);
+});
+
+test('P2-14 password change requires Firebase reauthentication and confirmation without affecting Google Sign-In',()=>{
+ const auth=read('src/app/core/auth.service.ts'),profile=read('src/app/pages/profile.page.ts'),html=read('src/app/pages/profile.page.html');
+ assert.ok(auth.includes('reauthenticateWithCredential'));
+ assert.ok(auth.includes('updatePassword'));
+ assert.ok(auth.includes('EmailAuthProvider.credential'));
+ assert.ok(auth.includes('FirebaseAuthentication.signInWithGoogle'));
+ assert.ok(profile.includes('this.newPassword!==this.confirmPassword'));
+ assert.ok(html.includes('Current password'));
+ assert.ok(html.includes('Confirm new password'));
 });

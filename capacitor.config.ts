@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 const config: CapacitorConfig = {
   appId: "com.oilspillmonitoringbuoy.app",
-  appName: "Oil Spill Monitoring Buoy",
+  appName: "BlueGuard Buoy",
   webDir: "www",
   plugins: {
     // The native SDK only presents Google account selection; the WebView's

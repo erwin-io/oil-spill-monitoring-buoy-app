@@ -1,7 +1,7 @@
 export type Role='VIEWER'|'OPERATOR'|'ADMIN';
 export type Class='NORMAL'|'PETROLEUM'|'INTERFERENCE'|'INCONCLUSIVE';
-export interface Profile{uid:string;role:Role;status:string;email:string;displayName:string;allowedDeviceIds:string[]}
-export interface Device{ id:string;deviceId?:string;name:string;status:string;latestClassification?:Class;confidence?:number;batteryPercent?:number;signalStrengthDbm?:number;totalFluorescence?:number;cellStatus?:string;lastSeenAt?:string;lastMeasurementAt?:string;latestMeasurementId?:string;firmwareVersion?:string;modelVersion?:string }
+export interface Profile{uid:string;role:Role;status:string;email:string;displayName:string;avatarUrl?:string|null;allowedDeviceIds:string[]}
+export interface Device{ id:string;deviceId?:string;name:string;status:string;access?:'OWNER'|'VIEWER'|'LEGACY_ADMIN'|'LEGACY_VIEWER';latestClassification?:Class;confidence?:number;batteryPercent?:number;signalStrengthDbm?:number;totalFluorescence?:number;cellStatus?:string;lastSeenAt?:string;lastMeasurementAt?:string;latestMeasurementId?:string;firmwareVersion?:string;modelVersion?:string }
 export interface Measurement {id:string;deviceId:string;measurementId:string;measuredAt:string;receivedAt:string;classification:Class;confidence:number;totalFluorescence:number;batteryPercent?:number;signalStrengthDbm?:number;spectral:{f415:number;f445:number;f480:number;f515:number;f555:number;f590:number};qualityFlags?:string[]}
 export interface Health { id:string;measuredAt:string;batteryPercent?:number;batteryVoltage?:number;charging?:boolean;signalStrengthDbm?:number;storage?:string;sensor?:string;samplePump?:string;washPump?:string;valve?:string;cellStatus?:string;pendingUploads?:number;errorCodes?:string[] }
 export interface Alert {id:string;deviceId:string;deviceName?:string;unread?:boolean;type:string;severity:string;status:string;createdAt:string;acknowledgedBy?:string;acknowledgedAt?:string;measurementId?:string}
