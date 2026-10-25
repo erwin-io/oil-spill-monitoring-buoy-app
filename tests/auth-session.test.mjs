@@ -14,13 +14,24 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   let popupCalls = 0;
   let lastNativeToken;
   let reauthentication,updatedPassword;
-  const emails=[];
+  const emails=[],backendEmails=[];
+  let emailDelivery='firebase';
   const auth = { currentUser: null };
   const takeProfile = () => {
     if (!nextProfile) throw new Error('Profile response not configured');
     const p = nextProfile;nextProfile = undefined;return p;
   };
-  const http = {post:takeProfile, patch:takeProfile, put:takeProfile, delete:takeProfile};
+  const http = {
+    get:async()=>({delivery:emailDelivery}),
+    post:(url,body,options)=>{
+      if(url.includes('/auth/email/')){
+        backendEmails.push({url,body,options});
+        return Promise.resolve({accepted:true});
+      }
+      return takeProfile();
+    },
+    patch:takeProfile, put:takeProfile, delete:takeProfile
+  };
   const signal = (initial) => {
     let state = initial;
     const value = () => state;
@@ -89,7 +100,8 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
   return { service, setUser, queueProfile,
     getGoogleCalls: () => ({nativeCalls,nativeOptions,popupCalls,lastNativeToken}),
     getPasswordCalls: () => ({reauthentication,updatedPassword}),
-    getEmailActions: () => emails };
+    getEmailActions: () => emails,
+    setEmailDelivery:mode=>{emailDelivery=mode;},getBackendEmails:()=>backendEmails };
 }
 
 const user = (uid) => ({ uid, emailVerified: true, getIdToken: async () => 'test-token-' + uid });
