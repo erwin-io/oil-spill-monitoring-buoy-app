@@ -1,4 +1,4 @@
-import {Component,inject} from '@angular/core';
+import {Component,OnDestroy,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
@@ -15,10 +15,11 @@ import {addIcons} from 'ionicons';
 import {closeOutline} from 'ionicons/icons';
 
 @Component({selector:'app-add-device',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonInput,IonItem,IonButtons,IonIcon],templateUrl:'./add-device.page.html',styleUrls:['./add-device.page.scss']})
-export class AddDevicePage{
+export class AddDevicePage implements OnDestroy{
  readonly modal=inject(AddDeviceModalService);
  constructor(){addIcons({closeOutline});}
- close():void{this.modal.close();}
+ close():void{this.ionViewWillLeave();this.modal.close();}
+ ngOnDestroy():void{this.ionViewWillLeave();}
  private api=inject(ApiService);private auth=inject(AuthService);private router=inject(Router);
  deviceId='';claimCode='';challengeId='';state:''|'PENDING'|'EXPIRED'|'CONFIRMED'='';busy=false;error='';
  private timer?:ReturnType<typeof setTimeout>;private claimantUid='';
