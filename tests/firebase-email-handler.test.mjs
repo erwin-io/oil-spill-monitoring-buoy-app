@@ -49,6 +49,7 @@ test('P2-15 reset form rejects weak/mismatched password without exposing it to t
 });
 test('P2-15 Hosting and page are wired without overriding Firebase reserved authentication paths',()=>{
  const cfg=JSON.parse(readFileSync('firebase.json','utf8'));
+ assert.equal(cfg.hosting.appAssociation,'NONE', 'Serve custom App Links certificate association, not Firebase AUTO generation');
  const rewrites=cfg.hosting.rewrites;
  // A literal verified-link association route must precede the broader /open/** fallback,
  // while the existing Firebase action handler must remain configured.
