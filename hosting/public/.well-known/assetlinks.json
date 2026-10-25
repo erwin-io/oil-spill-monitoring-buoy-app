@@ -1,0 +1,15 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.oilspillmonitoringbuoy.app",
+      "sha256_cert_fingerprints": [
+        "D1:49:C1:2B:81:C9:C8:D1:EF:69:7E:E3:E3:66:05:33:D3:75:9F:97:B7:E6:CA:96:36:2B:9E:51:AC:2C:4E:64",
+        "52:3E:07:8F:91:B7:64:1C:85:C5:7A:A6:69:D6:6A:A0:B4:AA:40:A0:A0:26:44:9E:F0:22:6B:8F:17:E9:BC:3D"
+      ]
+    }
+  }
+]

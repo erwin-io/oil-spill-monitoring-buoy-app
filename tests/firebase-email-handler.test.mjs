@@ -62,7 +62,11 @@ test('P2-15 Hosting and page are wired without overriding Firebase reserved auth
  assert.ok(rewrites.findIndex(v=>v.source==='/.well-known/assetlinks.json')<
    rewrites.findIndex(v=>v.source==='/open/**'));
  assert.ok(!rewrites.some(v=>v.source.startsWith('/__/auth')));
- const associations=JSON.parse(readFileSync('hosting/public/assetlinks.json','utf8'));
+ const associationSource=readFileSync('hosting/public/assetlinks.json','utf8');
+ const canonicalAssociation=readFileSync('hosting/public/.well-known/assetlinks.json','utf8');
+ assert.deepEqual(JSON.parse(canonicalAssociation),JSON.parse(associationSource),
+   'Public .well-known association must match both signed BlueGuard releases');
+ const associations=JSON.parse(associationSource);
  assert.ok(associations.some(a=>
    a.relation.includes('delegate_permission/common.handle_all_urls')&&
    a.target.namespace==='android_app'&&
