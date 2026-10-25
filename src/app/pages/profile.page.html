@@ -21,6 +21,13 @@
       </ion-list>
 
       <div class="card">
+        <h3>Profile photo</h3>
+        <p class="hint">JPG, PNG, or WebP, maximum 2 MB. Files are uploaded through an authenticated, server-signed service.</p>
+        <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Select profile photo" [disabled]="savingAvatar" (change)="selectAvatar($event)" />
+        <ion-button expand="block" fill="outline" color="medium" [disabled]="savingAvatar || !p.avatarUrl" (click)="removeAvatar()">Remove photo</ion-button>
+        <p *ngIf="avatarFeedback" role="status">{{ avatarFeedback }}</p>
+      </div>
+      <div class="card">
         <h3>Display name</h3>
         <p class="hint">Your display name is visible on your own account profile.</p>
         <ion-input label="Name" label-placement="stacked" [maxlength]="80" [(ngModel)]="displayNameDraft"></ion-input>
