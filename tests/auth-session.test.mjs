@@ -19,7 +19,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
     if (!nextProfile) throw new Error('Profile response not configured');
     const p = nextProfile;nextProfile = undefined;return p;
   };
-  const http = {post:takeProfile, patch:takeProfile};
+  const http = {post:takeProfile, patch:takeProfile, put:takeProfile, delete:takeProfile};
   const signal = (initial) => {
     let state = initial;
     const value = () => state;
@@ -212,5 +212,36 @@ test('P2-13 own display name updates the authenticated profile without mixing ac
  setUser(user('account-B'));
  resolveLate({...profile('account-A'),displayName:'Old Account'});
  await assert.rejects(stale,/Account changed during profile update/);
+ assert.equal(service.profile(),null);
+});
+
+test('P2-13 signed avatar proxy updates only the active account and preserves profile authorization',async()=>{
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ queueProfile(Promise.resolve(profile('account-A')));
+ await service.bootstrap();
+ const file=new Blob([new Uint8Array(64)],{type:'image/png'});
+ queueProfile(Promise.resolve({uid:'account-A',avatarUrl:'https://res.cloudinary.com/blueguard/image/upload/v1/a'}));
+ const updated=await service.uploadAvatar(file);
+ assert.equal(updated.uid,'account-A');
+ assert.equal(updated.role,'VIEWER');
+ assert.equal(updated.avatarUrl,'https://res.cloudinary.com/blueguard/image/upload/v1/a');
+ queueProfile(Promise.resolve({uid:'account-A',avatarUrl:null}));
+ assert.equal((await service.removeAvatar()).avatarUrl,null);
+ assert.equal(service.profile().role,'VIEWER');
+ await assert.rejects(service.uploadAvatar(new Blob([new Uint8Array(30)],{type:'image/svg+xml'})),/Choose a JPG/);
+ await assert.rejects(service.uploadAvatar(new Blob([new Uint8Array(2*1024*1024+1)],{type:'image/png'})),/Choose a JPG/);
+});
+test('P2-13 avatar response from switched-out user cannot alter new account',async()=>{
+ const {service,setUser,queueProfile}=harness();
+ setUser(user('account-A'));
+ let release;
+ queueProfile(new Promise(resolve=>{release=resolve}));
+ const file=new Blob([new Uint8Array(64)],{type:'image/webp'});
+ const stale=service.uploadAvatar(file);
+ await Promise.resolve();
+ setUser(user('account-B'));
+ release({uid:'account-A',avatarUrl:'https://res.cloudinary.com/demo/image/upload/v1/a'});
+ await assert.rejects(stale,/Account changed during avatar upload/);
  assert.equal(service.profile(),null);
 });
