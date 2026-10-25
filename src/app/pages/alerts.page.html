@@ -11,7 +11,10 @@
    <p>{{nameOf(a)}} ({{a.deviceId}}) · {{a.createdAt|date:'medium'}}</p>
    <p class="hint">{{a.unread===true?'Unread · ':''}}{{a.status}}</p>
   </div>
-  <div class="empty" *ngIf="!loading&&!items.length">No notifications available.</div>
+  <div class="blueguard-empty-layout" *ngIf="!loading&&!items.length&&!error" role="status">
+    <app-empty-state kind="alerts" title="You're all caught up"
+      description="Oil spill alerts and important buoy notifications will appear here."></app-empty-state>
+  </div>
   <ion-button *ngIf="cursor" expand="block" fill="outline" [disabled]="loading" (click)="more()">Load more</ion-button>
  </div>
 </ion-content>

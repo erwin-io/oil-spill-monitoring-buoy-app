@@ -1,1 +1,4 @@
 .card p{margin:6px 0;font-size:.86rem}
+
+.blueguard-empty-layout{min-height:calc(100dvh - 280px);display:flex;align-items:center;justify-content:center;padding:18px 4px 20px;box-sizing:border-box}
+@media(max-height:600px){.blueguard-empty-layout{min-height:250px}}

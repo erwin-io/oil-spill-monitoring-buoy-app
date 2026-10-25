@@ -1,4 +1,5 @@
 import {uiError} from '../core/ui-error';
+import {EmptyStateComponent} from './empty-state.component';
 import {Component,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
@@ -7,7 +8,7 @@ import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefre
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
 import {Alert} from '../core/models';
-@Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent],
+@Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,EmptyStateComponent],
  templateUrl:'./alerts.page.html',styleUrls:['./alerts.page.scss']})
 export class AlertsPage{
  private api=inject(ApiService);private auth=inject(AuthService);
