@@ -29,10 +29,28 @@ export class RealtimeService {
   // disabled, unavailable or disconnected. An initial REST load is owned by
   // the calling page before connect().
   beginFallback();
-  if(!environment.pusher.key)return;
-  try{
-   this.client=new Pusher(environment.pusher.key,{
-    cluster:environment.pusher.cluster,
+  const attach=async()=>{
+   let key=environment.pusher.key,cluster=environment.pusher.cluster;
+   if(!key){
+    try{
+     const token=await this.auth.token();
+     const response=await fetch(environment.api+'/realtime/config',{
+      headers:{Authorization:'Bearer '+token},cache:'no-store'
+     });
+     if(!response.ok)return;
+     const config:unknown=await response.json();
+     if(!config||typeof config!=='object')return;
+     const value=config as Record<string,unknown>;
+     if(value['enabled']!==true||typeof value['key']!=='string'||
+        !/^[A-Za-z0-9_-]{5,120}$/.test(value['key'])||
+        typeof value['cluster']!=='string'||!/^[a-z0-9-]{2,20}$/.test(value['cluster']))return;
+     key=value['key'];cluster=value['cluster'];
+    }catch{return}
+   }
+   if(generation!==this.generation)return;
+   try{
+   this.client=new Pusher(key,{
+    cluster,
     channelAuthorization:{
      transport:'ajax',
      endpoint:`${environment.api}/realtime/auth`,
@@ -73,6 +91,8 @@ export class RealtimeService {
    console.warn('Realtime unavailable; continuing REST refresh:',error);
    beginFallback();
   }
+  };
+  void attach();
  }
 
  disconnect():void {
