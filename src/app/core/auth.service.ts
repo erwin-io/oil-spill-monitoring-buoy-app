@@ -143,7 +143,7 @@ export class AuthService {
       const customProvider=config?.delivery==='smtp'||config?.delivery==='resend';
       // An older API that cannot deliver native links must not prevent
       // account recovery. Use the Firebase SDK template path instead.
-      if(customProvider && config.nativeActionLinks===true)return true;
+      if(customProvider && (!Capacitor.isNativePlatform() || config.nativeActionLinks===true))return true;
     }catch{
       // Firebase SDK delivery is independent of Express SMTP readiness.
     }
