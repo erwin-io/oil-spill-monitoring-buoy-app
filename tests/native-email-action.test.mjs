@@ -44,6 +44,36 @@ test('P2 native Firebase email action: only verified-project HTTPS reset/verify 
   valid.replace('FAKE_ONE_TIME_CODE','x'.repeat(2050)),
  ])assert.equal(links.parseNativeEmailAction(raw),null,raw.slice(0,120));
 });
+test('P2 legacy Firebase Gmail template returns to BlueGuard for reset and verification',()=>{
+ const {links}=appLinksHarness();
+ const host='https://'+HOST;
+ const continueUrl=host+'/__/auth/links?link='+encodeURIComponent(host+'/open/password-reset-complete');
+ for(const mode of ['resetPassword','verifyEmail']){
+  const url=host+'/__/auth/action?mode='+mode+'&oobCode=FAKE_ONE_TIME_CODE&apiKey='+KEY+
+   '&continueUrl='+encodeURIComponent(continueUrl)+'&lang=en';
+  const action=links.parseNativeEmailAction(url);
+  assert.equal(action.mode,mode);
+  assert.equal(action.code,'FAKE_ONE_TIME_CODE');
+  assert.equal(links.appLinkDestination(url),null);
+  const tampered=[
+   url.replace(KEY,'WRONG_KEY'),
+   url.replace(HOST,'evil.example'),
+   url.replace('https:','http:'),
+   url+'&oobCode=DUPLICATE',
+   url+'&redirect=https://evil.example',
+   url.replace('mode='+mode,'mode=recoverEmail'),
+   url.replace('FAKE_ONE_TIME_CODE','bad%0Acode'),
+   url.replace(encodeURIComponent(continueUrl),encodeURIComponent('https://evil.example/steal')),
+   url+'&lang=fr',
+   url+'#x'
+  ];
+  for(const attempt of tampered)assert.equal(links.parseNativeEmailAction(attempt),null,attempt.slice(0,140));
+ }
+ const manifest=readFileSync('android/app/src/main/AndroidManifest.xml','utf8');
+ const bridge=readFileSync('android/app/src/main/java/com/oilspillmonitoringbuoy/app/MainActivity.java','utf8');
+ assert.ok(manifest.includes('android:path="/__/auth/action"'));
+ assert.ok(bridge.includes('"/__/auth/action".equals(path)'));
+});
 test('P2 native Firebase email action: Android bridge forwards exactly approved path and no web handler is required',()=>{
  const manifest=readFileSync('android/app/src/main/AndroidManifest.xml','utf8');
  const native=readFileSync('android/app/src/main/java/com/oilspillmonitoringbuoy/app/MainActivity.java','utf8');
