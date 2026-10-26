@@ -12,6 +12,7 @@
  * It DOES NOT replace a human check of notifications and rendered screens.
  */
 import { spawnSync } from 'node:child_process';
+import { selectAndroidDevice } from './android-device-selection.mjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -34,6 +35,9 @@ const packageId='com.oilspillmonitoringbuoy.app';
 const steps=[];
 let failure;
 const dryRun=flags.has('--dry-run');
+let selectedDevice=null;
+let androidBuildAttempted=false;
+let deviceLaunchAttempted=false;
 
 function run(name,cmd,args=[],cwd=root){
  console.log(`\n=== ${name} ===`);
@@ -60,6 +64,12 @@ function output(cmd,args){
 console.log('Oil Spill Monitoring Buoy: AUTOMATED LOCAL MOBILE ACCEPTANCE');
 console.log('Cloud dataset: unchanged; no live synthetic telemetry is created.');
 try{
+ // Preflight must complete BEFORE npm install, tests, Angular or Gradle builds.
+ if(flags.has('--android')&&flags.has('--install')&&!dryRun){
+  selectedDevice=await selectAndroidDevice();
+  check('Selected Android device is ready',!!selectedDevice?.serial,
+    'No Android device selected. Aborted before build/install.');
+ }
  if(!flags.has('--skip-install'))run('Locked dependencies','npm',['ci','--no-audit','--no-fund']);
  run('Node service, contracts and fixture tests','npm',['test']);
  run('Angular production compilation','npm',['run','check']);
@@ -84,23 +94,26 @@ try{
   }
   run('Capacitor Android synchronization','npx',['cap','sync','android']);
   const gradle=win?'gradlew.bat':'./gradlew';
+  androidBuildAttempted=true;
   run('Native Android debug APK',''+gradle,[':app:assembleDebug','--no-daemon'],join(root,'android'));
   const apk=join(root,'android/app/build/outputs/apk/debug/app-debug.apk');
   if(!dryRun)check('Debug APK generated',existsSync(apk),'Gradle did not produce app-debug.apk');
   if(flags.has('--install')){
    if(dryRun){
-    console.log('[PLAN] adb devices, install -r, launch, pidof, optional screenshot');
+    console.log('[PLAN] Choose ready Android device before build; adb -s <serial> install -r, launch, pidof, optional screenshot');
    }else{
-    const devices=output('adb',['devices']).split(/\r?\n/).filter(x=>/\tdevice$/.test(x));
-    check('Exactly one authorized Android device',devices.length===1,
-      'Connect one unlocked USB-debugging Android phone (adb devices)');
-    run('Install debug APK','adb',['install','-r',apk]);
-    run('Launch Android app','adb',['shell','monkey','-p',packageId,'-c','android.intent.category.LAUNCHER','1']);
-    const pid=output('adb',['shell','pidof',packageId]).trim();
+    const serial=selectedDevice?.serial;
+    check('Selected Android device is still online',
+      !!serial&&output('adb',['-s',serial,'get-state']).trim()==='device',
+      'The selected device disconnected before installation. No APK installed.');
+    run('Install debug APK','adb',['-s',serial,'install','-r',apk]);
+    deviceLaunchAttempted=true;
+    run('Launch Android app','adb',['-s',serial,'shell','monkey','-p',packageId,'-c','android.intent.category.LAUNCHER','1']);
+    const pid=output('adb',['-s',serial,'shell','pidof',packageId]).trim();
     check('Android app process alive after launch',/^\d+(\s+\d+)*$/.test(pid),
       'App exited on launch; inspect Android Studio Logcat manually');
     if(flags.has('--screenshot')){
-     const screenshot=spawnSync('adb',['exec-out','screencap','-p'],{encoding:null,maxBuffer:12*1024*1024});
+     const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{encoding:null,maxBuffer:12*1024*1024});
      check('ADB screenshot captured',screenshot.status===0&&screenshot.stdout?.length>500,
       'Unable to capture Android screenshot');
      mkdirSync(outputDir,{recursive:true});
@@ -118,8 +131,10 @@ finally{
    suite:'Mobile local automated acceptance',
    timestamp:new Date().toISOString(),
    result:failure?'FAIL':'PASS',
-   androidBuildAttempted:flags.has('--android'),
-   deviceLaunchAttempted:flags.has('--install'),
+   androidBuildAttempted,
+   deviceLaunchAttempted,
+   selectedAndroidSerial:selectedDevice?.serial??null,
+   selectedAndroidSource:selectedDevice?.source??null,
    liveFirestoreMutated:false,
    fcmDeliveryProven:false,
    pusherLiveDeliveryProven:false,

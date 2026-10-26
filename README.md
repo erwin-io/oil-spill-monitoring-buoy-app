@@ -44,3 +44,36 @@ Angular emits web assets directly into `www`; Capacitor is configured with `webD
 ## Validation policy
 
 `npm test` is a set of source-structure checks, not Firebase integration or Android tests. `npm run build` verifies Angular compilation. A GitHub Actions workflow runs `npm ci`, `npm test`, and `npm run check`; integration tests with configured Firebase/FCM/Pusher and on-device validation remain separate gates.
+
+## Device-aware Android verification (Windows)
+
+Run `npm run verify:local` to validate the app without a phone: this runs
+Node tests, the Angular production check and the Angular web build. It never
+installs an APK, selects an Android device or deploys Firebase/Vercel.
+
+Run `npm run verify:android` in **interactive PowerShell** to run the same
+checks plus Capacitor sync, a native debug APK build, device installation,
+and launch smoke test. The script performs a device preflight *before* any
+install, tests or build work:
+
+- One online/authorized device in `adb devices -l`: selects it automatically
+  (a real Samsung or a running Android emulator).
+- More than one online device: asks which device to target; each subsequent
+  ADB call uses `adb -s <chosen-serial>` to avoid affecting the wrong phone.
+- No online devices: enumerates configured Android Virtual Devices using
+  `emulator -list-avds`, asks you to choose one, launches the selected AVD,
+  and waits for it to finish booting (up to 180 seconds).
+- No configured AVDs, cancelled prompt, no interactive console, or failed
+  emulator boot: aborts **before** dependencies are installed or a build begins.
+  Offline and unauthorized devices are shown but are not eligible.
+
+Prerequisites: Android SDK emulator tools and `adb` must be installed;
+`ANDROID_HOME` or `ANDROID_SDK_ROOT` may point to the SDK directory. For
+real-device testing, connect your phone and enable USB debugging.
+
+`npm run verify:android -- --screenshot` also saves a private launch screenshot
+in `.test-output/android-launch.png`. The locally signed debug APK may use a
+different signing identity from an existing release APK; if Android reports
+`INSTALL_FAILED_UPDATE_INCOMPATIBLE`, do not uninstall the release app without
+planning for app data/keystore consequences. GitHub CI only compiles its own
+debug APK and does not install your locally configured Firebase app.
