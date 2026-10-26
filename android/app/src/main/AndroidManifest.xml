@@ -28,6 +28,16 @@
                 <data android:scheme="https" android:host="oil-spill-monitoring-buoy.firebaseapp.com"
                     android:pathPrefix="/open/" />
             </intent-filter>
+            <!-- The Firebase default template URL must also open inside BlueGuard.
+                 Firebase verifies its one-time action code, not the deep link itself. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="oil-spill-monitoring-buoy.firebaseapp.com"
+                    android:path="/__/auth/action" />
+            </intent-filter>
         </activity>
 
         <provider
