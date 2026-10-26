@@ -43,6 +43,8 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
   const modules = {
     '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : token === AuthService ? auth : router },
     '@angular/router': { Router },
+    '@ionic/angular/standalone': {ToastController:class{}},
+    './notification-destination': {notificationDestination: d=>d?.alertId ? ['/tabs/alerts',d.alertId] : d?.deviceId ? ['/tabs/buoys',d.deviceId] : ['/tabs/alerts']},
     '@capacitor/core': { Capacitor: { isNativePlatform: () => native, isPluginAvailable: () => pluginAvailable } },
     '@capacitor/push-notifications': { PushNotifications },
     'rxjs': { firstValueFrom: async (promise) => promise },
