@@ -16,7 +16,7 @@ function transpile(path) {
 }
 
 function pushHarness({ native, pluginAvailable = true, removalFails = false, registerToken, endSession } = {}) {
-  const calls = { remove: 0, unregister: 0, request: 0, register: 0,sessionStart:0,sessionEnd:0,sessionRefresh:0 };
+  const calls = { remove: 0, unregister: 0, request: 0, register: 0,sessionStart:0,sessionEnd:0,sessionRefresh:0,toastCreated:0,toastPresented:0,toastDismissed:0,navigations:[] };
   const listeners = {};
   const api = {
     registerToken: (token) => { calls.register++; return registerToken ? registerToken(token) : Promise.resolve(); },
@@ -25,7 +25,8 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
     refreshPushSession: () => {calls.sessionRefresh++;return Promise.resolve({expiresAt:'2099-01-01T00:00:00Z'})},
     endPushSession: () => {calls.sessionEnd++;return endSession ? endSession() : Promise.resolve({revoked:true})},
   };
-  const router = { navigate: () => Promise.resolve(true) };
+  const router = {navigate:route=>{calls.navigations.push(Array.from(route));return Promise.resolve(true);}};
+  const toastController={create:async options=>{calls.toastCreated++;calls.lastToast=options;return {present:async()=>{calls.toastPresented++;},dismiss:async()=>{calls.toastDismissed++;}};}};
   const PushNotifications = {
     requestPermissions: async () => { calls.request++; return { receive: 'granted' }; },
     addListener: async (name, callback) => { listeners[name] = callback; return { remove: async () => {} }; },
@@ -39,11 +40,12 @@ function pushHarness({ native, pluginAvailable = true, removalFails = false, reg
   class AuthService {}
   const auth={currentUser:()=>({uid:'test-user',emailVerified:true})};
   class Router {}
+  class ToastController {}
   const exports = {};
   const modules = {
-    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : token === AuthService ? auth : router },
+    '@angular/core': { Injectable: () => (cls) => cls, inject: (token) => token === ApiService ? api : token === AuthService ? auth : token === ToastController ? toastController : router },
     '@angular/router': { Router },
-    '@ionic/angular/standalone': {ToastController:class{}},
+    '@ionic/angular/standalone': {ToastController},
     './notification-destination': {notificationDestination: d=>d?.alertId ? ['/tabs/alerts',d.alertId] : d?.deviceId ? ['/tabs/buoys',d.deviceId] : ['/tabs/alerts']},
     '@capacitor/core': { Capacitor: { isNativePlatform: () => native, isPluginAvailable: () => pluginAvailable } },
     '@capacitor/push-notifications': { PushNotifications },
