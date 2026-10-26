@@ -50,8 +50,10 @@ export function parseNativeEmailAction(raw:string):NativeEmailAction|null{
   // Firebase app-first templates wrap the code URL in a verified Hosting
   // /__/auth/links?link=... URL. Unwrap only a single exact trusted link.
   if(url.pathname==='/__/auth/links'){
+    let wrapperParamCount=0;
+    url.searchParams.forEach(()=>{wrapperParamCount++});
     if(url.searchParams.getAll('link').length!==1||
-       Array.from(url.searchParams.keys()).length!==1)return null;
+       wrapperParamCount!==1)return null;
     const wrapped=url.searchParams.get('link');
     if(!wrapped||wrapped.length>4096)return null;
     url=new URL(wrapped);
