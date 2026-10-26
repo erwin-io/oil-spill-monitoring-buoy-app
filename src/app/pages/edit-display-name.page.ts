@@ -3,7 +3,7 @@ import {FormsModule} from '@angular/forms';
 import {Router} from '@angular/router';
 import {IonButton,IonButtons,ModalController,IonContent,IonHeader,IonInput,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
 import {AuthService} from '../core/auth.service';
-@Component({standalone:true,imports:[FormsModule,IonBackButton,IonButton,IonButtons,IonContent,IonHeader,IonInput,IonNote,IonSpinner,IonTitle,IonToolbar],
+@Component({standalone:true,imports:[FormsModule,IonButton,IonButtons,IonContent,IonHeader,IonInput,IonNote,IonSpinner,IonTitle,IonToolbar],
 template:`<ion-header class="no-shadow"><ion-toolbar color="primary">
 <ion-buttons slot="start"><ion-button color="light" fill="clear" aria-label="Close Edit Display Name" (click)="close()">Close</ion-button></ion-buttons><ion-title>Edit display name</ion-title>
 </ion-toolbar></ion-header>

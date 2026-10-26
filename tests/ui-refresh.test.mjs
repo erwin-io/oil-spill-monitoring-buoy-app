@@ -29,8 +29,8 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  assert.match(profile,/clearSelectedAvatar/);
  assert.match(profile,/<ion-footer class="ion-no-border photo-save-footer"/);
  assert.match(profile,/Crop and save photo/);
- assert.match(profile,/routerLink="\/tabs\/profile\/edit-name"/);
- assert.match(profile,/routerLink="\/tabs\/profile\/password"/);
+ assert.match(profile,/openSettings\('name'\)/);
+ assert.match(profile,/openSettings\('password'\)/);
  assert.doesNotMatch(profile,/Current password|Confirm new password/);
  assert.doesNotMatch(profile,/Save display name/);
  assert.match(profile,/confirmSignOut=true/);
@@ -39,6 +39,8 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  assert.match(code,/canvas\.toBlob/);
  assert.match(code,/await this\.auth\.uploadAvatar\(blob\)/);
  assert.match(read('profile-password.page.ts'),/await this\.auth\.resetPassword\(email\)/);
+ assert.match(read('profile-password.page.ts'),/app-auth-busy-overlay/);
+ assert.match(read('profile.page.ts'),/this\.modals\.create/);
 });
 test('Empty illustrations and FAB/pairing modal preserve existing authorized device routes',()=>{
  const dashboard=read('dashboard.page.html'),buoys=read('devices.page.html'),alerts=read('alerts.page.html');

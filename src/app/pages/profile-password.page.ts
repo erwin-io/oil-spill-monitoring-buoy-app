@@ -3,7 +3,7 @@ import {IonButton,IonButtons,ModalController,IonContent,IonHeader,IonNote,IonSpi
 import {AuthService} from '../core/auth.service';
 import {Router} from '@angular/router';
 import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
-@Component({standalone:true,imports:[IonBackButton,IonButton,IonButtons,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar,AuthBusyOverlayComponent],
+@Component({standalone:true,imports:[IonButton,IonButtons,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar,AuthBusyOverlayComponent],
 template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-buttons slot="start"><ion-button color="light" fill="clear" aria-label="Close Change Password" (click)="close()">Close</ion-button></ion-buttons><ion-title>Change password</ion-title></ion-toolbar></ion-header>
 <ion-content class="ion-padding verify-wait-page"><main class="verify-wait-layout"><section class="verify-wait-group">
 <div class="verify-wait-illustration" aria-hidden="true"><svg viewBox="0 0 180 160" width="180" height="160"><circle cx="90" cy="80" r="73" fill="#eaf3ff"/><rect x="42" y="49" width="96" height="71" rx="8" fill="#fff" stroke="#0058db" stroke-width="4"/><path d="M44 57 L90 91 L136 57" fill="none" stroke="#0058db" stroke-width="4"/><circle cx="134" cy="44" r="21" fill="#0cbb89"/><path d="M125 44 L132 51 L144 37" fill="none" stroke="#fff" stroke-width="4"/></svg></div>

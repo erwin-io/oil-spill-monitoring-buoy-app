@@ -108,6 +108,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
   class AuthService {}
   class RealtimeService {}
   class PushService {}
+  class ModalController {}
   class Router {}
   const exports = {};
   const ionic = Object.fromEntries(
@@ -126,11 +127,12 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
         if (token === RealtimeService) return realtime;
         if (token === PushService) return push;
         if (token === Router) return router;
+        if (token === ModalController) return {create:async()=>({present:async()=>{},onDidDismiss:async()=>{}})};
         throw new Error('Unknown injection token');
       },
     },
     '@angular/router': { Router },
-    '@ionic/angular/standalone': ionic,
+    '@ionic/angular/standalone': {...ionic,ModalController},
     'ionicons': { addIcons: () => {} },
     'ionicons/icons': {
       alertCircleOutline: 'alert-circle-outline',

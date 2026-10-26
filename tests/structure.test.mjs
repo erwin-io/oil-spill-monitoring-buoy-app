@@ -110,7 +110,9 @@ test('buoy list retains outlined native filter while personal Notifications has 
   assert.ok(devices.includes(needle));
  const inbox=read('src/app/pages/alerts.page.html');
  assert.ok(!inbox.includes('ion-select'), 'P2-DEC-003 requires no inbox filters');
- assert.ok(inbox.includes('Mark All Read'));
+ assert.ok(inbox.includes('Mark all notifications as read'));
+ assert.ok(inbox.includes('name="checkmark-done-outline"'));
+ assert.ok(!inbox.includes('>Mark All Read</ion-button>'));
  assert.ok(inbox.includes('<ion-title>Notifications</ion-title>'));
 });
 
