@@ -2,14 +2,15 @@ import {CommonModule} from '@angular/common';
 import {Component,ElementRef,OnDestroy,ViewChild,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
-import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
+import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
 import {addIcons} from 'ionicons';
-import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline} from 'ionicons/icons';
+import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,refreshOutline} from 'ionicons/icons';
 import {AuthService} from '../core/auth.service';
 import {RealtimeService} from '../core/realtime.service';
 import {PushService} from '../core/push.service';
+import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
 @Component({standalone:true,
- imports:[CommonModule,FormsModule,RouterLink,IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar],
+ imports:[CommonModule,FormsModule,RouterLink,IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar,AuthBusyOverlayComponent],
  templateUrl:'./profile.page.html',styleUrls:['./profile.page.scss']})
 export class ProfilePage implements OnDestroy {
  readonly auth=inject(AuthService);
@@ -26,18 +27,25 @@ export class ProfilePage implements OnDestroy {
   {text:'No',role:'cancel'},
   {text:'Yes',role:'confirm',handler:()=>{void this.logout();}}
  ];
- constructor(){addIcons({alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline});}
+ constructor(){addIcons({alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,refreshOutline});}
  initials(name?:string):string{
   return (name??'BG').trim().split(/\s+/).slice(0,2)
    .map(part=>part[0]?.toUpperCase()??'').join('')||'BG';
  }
  openPhotoEditor():void{this.avatarFeedback='';this.editingPhoto=true;}
+ clearSelectedAvatar():void{
+  if(this.savingAvatar)return;
+  if(this.photoUrl)URL.revokeObjectURL(this.photoUrl);
+  this.photoUrl='';this.photoSrc='';this.photoImage=undefined;
+  this.photoZoom=1;this.photoX=0;this.photoY=0;this.avatarFeedback='';
+  const canvas=this.cropCanvas?.nativeElement;
+  canvas?.getContext('2d')?.clearRect(0,0,canvas.width,canvas.height);
+ }
+
  closePhotoEditor():void{
   if(this.savingAvatar)return;
   this.editingPhoto=false;
-  if(this.photoUrl)URL.revokeObjectURL(this.photoUrl);
-  this.photoUrl='';this.photoSrc='';this.photoImage=undefined;
-  this.photoZoom=1;this.photoX=0;this.photoY=0;
+  this.clearSelectedAvatar();
  }
  async selectAvatar(event:Event):Promise<void>{
   const input=event.target as HTMLInputElement;

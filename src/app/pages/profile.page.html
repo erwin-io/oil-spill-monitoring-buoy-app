@@ -42,26 +42,45 @@
 </div>
 <ion-modal [isOpen]="editingPhoto" (didDismiss)="closePhotoEditor()" [canDismiss]="!savingAvatar" cssClass="photo-editor-modal">
  <ng-template>
- <ion-header><ion-toolbar color="primary"><ion-title>Edit profile photo</ion-title>
+ <ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Edit photo</ion-title>
  <ion-button slot="end" type="button" color="light" fill="clear" [disabled]="savingAvatar" (click)="closePhotoEditor()">Cancel</ion-button>
  </ion-toolbar></ion-header>
- <ion-content class="ion-padding">
+ <ion-content class="photo-editor-content">
   <div class="crop-editor">
-   <canvas id="blueguard-crop-canvas" #cropCanvas width="512" height="512" aria-label="Square crop preview"></canvas>
-   <label class="photo-file-label">Choose a photo
-    <input type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose profile image" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
-   </label>
+   <p class="photo-editor-subtitle">Choose a photo or take one now. Move and zoom to frame your profile picture.</p>
+   <div class="photo-preview-wrap">
+    <canvas #cropCanvas width="512" height="512" aria-label="Circular photo crop preview"></canvas>
+    <div *ngIf="!photoSrc" class="photo-preview-empty" aria-hidden="true"><ion-icon name="camera-outline"></ion-icon><span>Your photo</span></div>
+    <button *ngIf="photoSrc" type="button" class="reset-photo" aria-label="Clear selected photo" title="Start over" [disabled]="savingAvatar" (click)="clearSelectedAvatar()"><ion-icon name="refresh-outline"></ion-icon></button>
+   </div>
+   <div class="photo-picker-actions">
+    <button type="button" class="photo-picker-button" [disabled]="savingAvatar" (click)="galleryInput.click()">
+     <span class="picker-icon"><ion-icon name="images-outline"></ion-icon></span>
+     <span>Gallery</span>
+    </button>
+    <button type="button" class="photo-picker-button" [disabled]="savingAvatar" (click)="cameraInput.click()">
+     <span class="picker-icon"><ion-icon name="camera-outline"></ion-icon></span>
+     <span>Camera</span>
+    </button>
+   </div>
+   <input #galleryInput class="photo-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose image from gallery" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
+   <input #cameraInput class="photo-file-input" type="file" accept="image/*" capture="environment" aria-label="Take photo with camera" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
    <div class="crop-controls" *ngIf="photoSrc">
     <label>Zoom <input type="range" min="1" max="3" step="0.05" [(ngModel)]="photoZoom" (ngModelChange)="drawPreview()" aria-label="Zoom photo"/></label>
     <label>Move horizontally <input type="range" min="-100" max="100" step="1" [(ngModel)]="photoX" (ngModelChange)="drawPreview()" aria-label="Move photo horizontally"/></label>
     <label>Move vertically <input type="range" min="-100" max="100" step="1" [(ngModel)]="photoY" (ngModelChange)="drawPreview()" aria-label="Move photo vertically"/></label>
    </div>
    <p *ngIf="avatarFeedback" role="alert" class="error">{{avatarFeedback}}</p>
-   <ion-button expand="block" [disabled]="savingAvatar||!photoImage?.naturalWidth" (click)="saveAvatar()">@if(savingAvatar){<ion-spinner name="dots"></ion-spinner>}@else{Crop and save photo}</ion-button>
-   <ion-button *ngIf="auth.profile()?.avatarUrl" expand="block" fill="clear" color="danger" [disabled]="savingAvatar" (click)="removeAvatar()">Remove current photo</ion-button>
+   <ion-button *ngIf="auth.profile()?.avatarUrl" fill="clear" color="danger" [disabled]="savingAvatar" (click)="removeAvatar()" class="remove-current-photo"><ion-icon name="trash-outline" slot="start"></ion-icon>Remove current profile photo</ion-button>
   </div>
  </ion-content>
+ <ion-footer class="ion-no-border photo-save-footer"><ion-toolbar>
+   <ion-button class="regular" expand="block" [disabled]="savingAvatar||!photoImage?.naturalWidth" (click)="saveAvatar()">
+    @if(savingAvatar){<ion-spinner name="dots"></ion-spinner>}@else{Crop and save photo}
+   </ion-button>
+ </ion-toolbar></ion-footer>
  </ng-template>
 </ion-modal>
 <ion-alert [isOpen]="confirmSignOut" header="Sign out?" message="Do you want to sign out of BlueGuard Buoy?" [buttons]="signOutButtons" (didDismiss)="confirmSignOut=false"></ion-alert>
 </ion-content>
+<app-auth-busy-overlay *ngIf="signingOut" label="Signing out" kind="logout"></app-auth-busy-overlay>

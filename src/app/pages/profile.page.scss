@@ -1,4 +1,4 @@
-/* SEEFIX-inspired account lists with a single photo editor trigger. */
+/* BlueGuard account page */
 .profile-layout{min-height:100%;display:flex;flex-direction:column}
 .identity{--padding-top:16px;--padding-bottom:20px}
 .avatar-trigger{border:0;background:transparent;position:relative;padding:0;margin-right:12px;cursor:pointer}
@@ -11,10 +11,27 @@ ion-item>ion-icon[slot=start]{margin-inline-end:16px}
 .profile-settings ion-item{--min-height:54px}
 .profile-actions{margin-top:auto;position:sticky;bottom:0;z-index:2;background:#fff;padding:16px max(16px,env(safe-area-inset-right,0px)) max(16px,env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .profile-actions .logout{margin:0;height:45px}
-.crop-editor{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:16px;align-items:stretch}
-.crop-editor canvas{display:block;width:min(75vw,320px);height:min(75vw,320px);border-radius:50%;align-self:center;background:#eaf3ff}
+.crop-editor{width:100%;max-width:440px;margin:0 auto;display:flex;flex-direction:column;gap:24px;align-items:stretch;padding:22px 20px 28px}
+.photo-editor-content{--background:#fff}
+.photo-editor-subtitle{margin:0 auto;color:#63758b;font-size:14px;line-height:1.6;text-align:center;max-width:350px}
+.photo-preview-wrap{position:relative;align-self:center;width:min(72vw,320px);height:min(72vw,320px);margin:8px auto}
+.photo-preview-wrap canvas{display:block;width:100%;height:100%;border-radius:50%;background:#ebf4ff;box-shadow:0 0 0 6px #f3f7ff}
+.photo-preview-empty{pointer-events:none;position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:#6a88b4;font-weight:600}
+.photo-preview-empty ion-icon{font-size:46px}
+.reset-photo{position:absolute;right:0;bottom:0;width:44px;height:44px;border-radius:50%;border:3px solid white;background:#e7f0ff;color:#0054e9;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px #1d426333}
+.reset-photo ion-icon{font-size:24px}
+.photo-picker-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.photo-picker-button{border:1.5px solid #dae5f6;border-radius:16px;background:#fff;color:#173653;min-height:110px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;font-size:15px;font-family:inherit;font-weight:650;cursor:pointer}
+.photo-picker-button:active{background:#e9f3ff}
+.photo-picker-button:focus-visible,.reset-photo:focus-visible{outline:3px solid #0054e9;outline-offset:2px}
+.photo-picker-button:disabled,.reset-photo:disabled{opacity:.55}
+.picker-icon{width:48px;height:48px;border-radius:50%;background:#eaf3ff;color:#0054e9;display:grid;place-items:center}
+.picker-icon ion-icon{font-size:26px}
+.photo-file-input{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}
 .crop-controls{display:flex;flex-direction:column;gap:14px}
-.crop-controls label{display:flex;flex-direction:column;gap:7px}
+.crop-controls label{display:flex;flex-direction:column;gap:7px;font-size:14px;font-weight:600;color:#263e58}
 .crop-controls input{width:100%;accent-color:var(--ion-color-primary)}
-.photo-file-label{display:flex;flex-direction:column;gap:8px;font-weight:600}
-.photo-file-label input{max-width:100%}
+.remove-current-photo{align-self:center;text-transform:none}
+.photo-save-footer{box-shadow:0 -5px 20px #1436590d;background:#fff}
+.photo-save-footer ion-toolbar{--background:#fff;--padding-top:12px;--padding-bottom:max(12px,env(safe-area-inset-bottom,0px));--padding-start:20px;--padding-end:20px}
+.photo-save-footer ion-button{margin:0}
