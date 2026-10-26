@@ -1,5 +1,6 @@
 import {test} from 'node:test';
 import {readFileSync} from 'node:fs';
+import {delimiter,join} from 'node:path';
 import assert from 'node:assert/strict';
 import {candidateJdks,chooseJdk21,gradleUsesJava21,isJava21Version,useJava21,gradleVersionForJavaCheck} from '../scripts/android-java-preflight.mjs';
 
@@ -27,7 +28,7 @@ test('Java preflight modifies only process-supplied environment',()=>{
  const jdk=useJava21(env,{candidates:['/jdk-17','/jdk-21'],validate:p=>p==='/jdk-21'});
  assert.equal(jdk,'/jdk-21');
  assert.equal(env.JAVA_HOME,'/jdk-21');
- assert.ok(env.PATH.startsWith('/jdk-21/bin'));
+ assert.equal(env.PATH.split(delimiter)[0],join('/jdk-21','bin'));
 });
 
 test('Gradle requires launcher Java 21 and rejects JDK-17 daemon overrides',()=>{
