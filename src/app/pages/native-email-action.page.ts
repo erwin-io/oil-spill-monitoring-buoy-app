@@ -123,7 +123,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
    componentProps:{label:'Verifying your email',kind:'verify'},
    cssClass:'blueguard-progress-modal',
    backdropDismiss:false,animated:false,
-   canDismiss:(_data,role)=>role==='complete'
+   canDismiss:async (_data,role)=>role==='complete'
   });
   this.verificationProgress=progress;
   if(!this.closed)await progress.present();

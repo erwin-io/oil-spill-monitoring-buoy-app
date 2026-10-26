@@ -5,6 +5,7 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 const read=name=>readFileSync('src/app/pages/'+name,'utf8');
+const flush=()=>new Promise(resolve=>setImmediate(resolve));
 const transpile=source=>ts.transpileModule(source,{
  compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}
 }).outputText;
@@ -69,7 +70,7 @@ test('Edit display name: hardware Back dismisses only top Ionic modal and unsubs
  const h=settingsHarness('edit-display-name.page.ts');
  h.page.ngOnInit();
  assert.equal(h.page.name,'Existing name');
- h.back();await Promise.resolve();await Promise.resolve();
+ h.back();await flush();
  assert.deepEqual(h.events.filter(x=>x.startsWith('dismiss:')),['dismiss:cancel']);
  assert.equal(h.routes.length,0,'Must not change background tab route');
  h.page.ngOnDestroy();
@@ -82,7 +83,7 @@ test('Edit display name blocks hardware Back while save in flight, then dismisse
  h.page.name='Updated Name';
  const pending=h.page.save();
  await Promise.resolve();
- h.back();await Promise.resolve();
+ h.back();await flush();
  assert.equal(h.events.some(x=>x==='dismiss:cancel'),false);
  h.releaseSave();await pending;
  assert.equal(h.events.includes('dismiss:saved'),true);
@@ -92,7 +93,7 @@ test('Edit display name blocks hardware Back while save in flight, then dismisse
 test('Change password: hardware Back dismisses top modal, not tab route',async()=>{
  const h=settingsHarness('profile-password.page.ts');
  h.page.ngOnInit();
- h.back();await Promise.resolve();await Promise.resolve();
+ h.back();await flush();
  assert.equal(h.events.includes('dismiss:cancel'),true);
  assert.equal(h.routes.length,0);
  h.page.ngOnDestroy();
@@ -104,11 +105,11 @@ test('Change password send blocks Back until reset request settles',async()=>{
  h.page.ngOnInit();
  const pending=h.page.send();await Promise.resolve();
  assert.equal(h.page.busy,true);
- h.back();await Promise.resolve();
+ h.back();await flush();
  assert.equal(h.events.includes('dismiss:cancel'),false);
  h.releaseSave();await pending;
  assert.equal(h.page.sent,true);
- h.back();await Promise.resolve();await Promise.resolve();
+ h.back();await flush();
  assert.equal(h.events.includes('dismiss:cancel'),true);
  h.page.ngOnDestroy();
 });
@@ -127,8 +128,8 @@ test('Sign out uses a nondismissable app-wide Ionic progress modal before revoki
   assert.equal(options.componentProps.kind,'logout');
   assert.equal(options.componentProps.label,'Signing out');
   assert.equal(options.backdropDismiss,false);
-  assert.equal(options.canDismiss(null,'backdrop'),false);
-  assert.equal(options.canDismiss(null,'complete'),true);
+  assert.equal(await options.canDismiss(null,'backdrop'),false);
+  assert.equal(await options.canDismiss(null,'complete'),true);
   return overlay;
  }};
  const dep=new Map([[AuthService,auth],[RealtimeService,realtime],[PushService,push],[Router,router],[ModalController,modals]]);

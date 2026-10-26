@@ -17,7 +17,7 @@ template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-button
 <ion-button expand="block" class="regular verify-resend-button" fill="outline" [disabled]="busy" (click)="send()">@if(busy){<ion-spinner name="dots"></ion-spinner>}@else { {{sent?'Resend reset email':'Send password reset link'}} }</ion-button>
 @if(message){<ion-note class="verify-wait-message" role="status">{{message}}</ion-note>}
 </section></main></ion-content>
-@if(busy){<app-auth-busy-overlay label="Sending password reset link" kind="default"></app-auth-busy-overlay>`,styleUrls:['./login.page.scss','./verify.page.scss']})
+@if(busy){<app-auth-busy-overlay label="Sending password reset link" kind="default"></app-auth-busy-overlay>}`,styleUrls:['./login.page.scss','./verify.page.scss']})
 export class ProfilePasswordPage implements OnInit,OnDestroy{
  private auth=inject(AuthService);
  private modals=inject(ModalController);

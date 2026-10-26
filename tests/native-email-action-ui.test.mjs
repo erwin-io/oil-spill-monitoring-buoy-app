@@ -82,8 +82,8 @@ test('P2-15 verify email starts automatically and shows loading → success with
  assert.equal(h.overlayCalls[0]?.action,'create');
  assert.equal(h.overlayCalls[0]?.options?.cssClass,'blueguard-progress-modal');
  assert.equal(h.overlayCalls[0]?.options?.backdropDismiss,false);
- assert.equal(h.overlayCalls[0]?.options?.canDismiss(null,'backdrop'),false);
- assert.equal(h.overlayCalls[0]?.options?.canDismiss(null,'complete'),true);
+ assert.equal(await h.overlayCalls[0]?.options?.canDismiss(null,'backdrop'),false);
+ assert.equal(await h.overlayCalls[0]?.options?.canDismiss(null,'complete'),true);
  assert.equal(h.overlayCalls[1]?.action,'present');
  finishVerification(true);
  await inflight;

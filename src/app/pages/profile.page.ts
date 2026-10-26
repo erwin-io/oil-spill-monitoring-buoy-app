@@ -133,7 +133,7 @@ export class ProfilePage implements OnDestroy {
     componentProps:{label:'Signing out',kind:'logout'},
     cssClass:'blueguard-progress-modal',
     backdropDismiss:false,animated:false,
-    canDismiss:(_data,role)=>role==='complete'
+    canDismiss:async (_data,role)=>role==='complete'
    });
    await progress.present();
    await this.push.stop(true);this.realtime.disconnect();
