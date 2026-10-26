@@ -74,6 +74,33 @@ test('P2 legacy Firebase Gmail template returns to BlueGuard for reset and verif
  assert.ok(manifest.includes('android:path="/__/auth/action"'));
  assert.ok(bridge.includes('"/__/auth/action".equals(path)'));
 });
+test('P2 Firebase Hosting app-first wrapped links extract only trusted project codes',()=>{
+ const {links}=appLinksHarness();
+ const host='https://'+HOST;
+ const inner=host+'/__/auth/action?mode=resetPassword&oobCode=FAKE_ONE_TIME_CODE&apiKey='+KEY+
+  '&continueUrl='+encodeURIComponent(host+'/open/password-reset-complete');
+ const wrapped=host+'/__/auth/links?link='+encodeURIComponent(inner);
+ const parsed=links.parseNativeEmailAction(wrapped);
+ assert.equal(parsed.mode,'resetPassword');
+ assert.equal(parsed.code,'FAKE_ONE_TIME_CODE');
+ assert.equal(links.appLinkDestination(wrapped),null);
+ for(const tampered of [
+  wrapped+'&link='+encodeURIComponent(inner),
+  wrapped+'&token=extra',
+  wrapped.replace(KEY,'OTHER_KEY'),
+  wrapped.replace(HOST,'evil.example'),
+  wrapped.replace('https:','http:'),
+  wrapped+'#fragment',
+  wrapped.replace(encodeURIComponent(inner),encodeURIComponent('https://evil.example/__/auth/action?mode=resetPassword&oobCode=FAKE_ONE_TIME_CODE&apiKey='+KEY)),
+  host+'/__/auth/links?link='+encodeURIComponent(host+'/open/invite?deviceId=claimed')
+ ])assert.equal(links.parseNativeEmailAction(tampered),null,tampered.slice(0,125));
+ const manifest=readFileSync('android/app/src/main/AndroidManifest.xml','utf8');
+ const native=readFileSync('android/app/src/main/java/com/oilspillmonitoringbuoy/app/MainActivity.java','utf8');
+ const settings=readFileSync('src/app/core/firebase-email-actions.ts','utf8');
+ assert.ok(manifest.includes('android:pathPrefix="/__/auth/links"'));
+ assert.ok(native.includes('"/__/auth/links".equals(path)'));
+ assert.ok(settings.includes('handleCodeInApp:true'));
+});
 test('P2 native Firebase email action: Android bridge forwards exactly approved path and no web handler is required',()=>{
  const manifest=readFileSync('android/app/src/main/AndroidManifest.xml','utf8');
  const native=readFileSync('android/app/src/main/java/com/oilspillmonitoringbuoy/app/MainActivity.java','utf8');
