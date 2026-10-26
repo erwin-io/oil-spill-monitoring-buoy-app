@@ -44,9 +44,21 @@ export type NativeEmailAction={mode:'verifyEmail'|'resetPassword';code:string};
 export function parseNativeEmailAction(raw:string):NativeEmailAction|null{
  if(!raw||raw.length>4096)return null;
  try{
-  const url=new URL(raw);
+  let url=new URL(raw);
   if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
       url.username||url.password||url.hash)return null;
+  // Firebase app-first templates wrap the code URL in a verified Hosting
+  // /__/auth/links?link=... URL. Unwrap only a single exact trusted link.
+  if(url.pathname==='/__/auth/links'){
+    if(url.searchParams.getAll('link').length!==1||
+       Array.from(url.searchParams.keys()).length!==1)return null;
+    const wrapped=url.searchParams.get('link');
+    if(!wrapped||wrapped.length>4096)return null;
+    url=new URL(wrapped);
+    if(url.pathname!=='/__/auth/action')return null;
+    if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
+       url.username||url.password||url.hash)return null;
+  }
   const nativeAction=url.pathname==='/open/auth-action';
   const firebaseTemplate=url.pathname==='/__/auth/action';
   if(!nativeAction&&!firebaseTemplate)return null;
