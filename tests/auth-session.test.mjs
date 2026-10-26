@@ -288,7 +288,7 @@ test('P2-15 registration, resend verification and password reset supply Firebase
  const actions=getEmailActions();
  assert.deepEqual(Array.from(actions,a=>a.type),['verification','verification','reset']);
  for(const action of actions){
-  assert.equal(action.settings.handleCodeInApp,false);
+  assert.equal(action.settings.handleCodeInApp,true);
   assert.equal(action.settings.android.packageName,'com.oilspillmonitoringbuoy.app');
   assert.equal(action.settings.android.installApp,false);
   assert.ok(action.settings.url.startsWith('https://oil-spill-monitoring-buoy.firebaseapp.com/open/'));
