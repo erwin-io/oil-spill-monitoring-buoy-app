@@ -43,8 +43,10 @@ public class MainActivity extends BridgeActivity {
         if (!"/open/invite".equals(path) && !"/open/transfer".equals(path)
                 && !"/open/email-verified".equals(path)
                 && !"/open/password-reset-complete".equals(path)
-                && !"/open/auth-action".equals(path)) return;
-        if (uri.toString().length() > ("/open/auth-action".equals(path) ? 4096 : 1024)) return;
+                && !"/open/auth-action".equals(path)
+                && !"/__/auth/action".equals(path)) return;
+        final boolean emailAction = "/open/auth-action".equals(path) || "/__/auth/action".equals(path);
+        if (uri.toString().length() > (emailAction ? 4096 : 1024)) return;
         if (uri.toString().equals(lastDeliveredAppLink)) return; // Prevent onCreate/onResume duplicates.
         lastDeliveredAppLink = uri.toString();
         final String value = JSONObject.quote(uri.toString());
