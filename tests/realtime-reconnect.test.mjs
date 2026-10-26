@@ -4,7 +4,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 import ts from 'typescript';
 
-function harness(key='public-key'){
+function harness(key='public-key',remoteConfig={enabled:false}){
  const timers=new Map();
  const instances=[];
  let timerId=0;
@@ -55,6 +55,7 @@ function harness(key='public-key'){
   setInterval:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms});return id;},
   clearInterval:(id)=>{timers.delete(id);},
   console,
+  fetch:async()=>({ok:true,json:async()=>remoteConfig}),
  });
  const service=new exports.RealtimeService();
  return {service,instances,timers,tick:()=>{for(const {fn} of [...timers.values()])fn();}};
@@ -116,4 +117,21 @@ test('reconnect with newly assigned device IDs replaces old subscriptions',()=>{
  assert.equal(updated,0);
  service.disconnect();
  assert.equal(timers.size,0);
+});
+
+test('missing bundled key loads authenticated public runtime Pusher config before opening private channels',async()=>{
+ const {service,instances}=harness('',{enabled:true,key:'public-client-123',cluster:'ap1'});
+ service.connect(['buoy-1'],()=>{});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(instances.length,1);
+ assert.equal(instances[0].channels.has('private-device-buoy-1'),true);
+ service.disconnect();
+});
+test('disabled server public config leaves REST fallback active',async()=>{
+ const {service,instances,timers}=harness('',{enabled:false});
+ service.connect(['buoy-1'],()=>{});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(instances.length,0);
+ assert.equal(timers.size,1);
+ service.disconnect();
 });
