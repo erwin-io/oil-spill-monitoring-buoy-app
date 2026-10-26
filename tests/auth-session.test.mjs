@@ -100,7 +100,7 @@ function harness({native = false, pluginAvailable = true, nativeGoogleToken = 'v
       signOut: async () => { auth.currentUser = null; observer(null); },
     },
     '../../environments/environment': { environment: { api: 'https://example.test/api/v1', firebase: {} } },
-    './firebase-email-actions': { firebaseEmailActionSettings:kind=>({url:'https://oil-spill-monitoring-buoy.firebaseapp.com/open/'+(kind==='verify'?'email-verified':'password-reset-complete'),handleCodeInApp:false,android:{packageName:'com.oilspillmonitoringbuoy.app',installApp:false}}) },
+    './firebase-email-actions': { firebaseEmailActionSettings:kind=>({url:'https://oil-spill-monitoring-buoy.firebaseapp.com/open/'+(kind==='verify'?'email-verified':'password-reset-complete'),handleCodeInApp:true,android:{packageName:'com.oilspillmonitoringbuoy.app',installApp:false}}) },
   };
   const source = readFileSync('src/app/core/auth.service.ts', 'utf8');
   vm.runInNewContext(ts.transpileModule(source, {
@@ -278,7 +278,7 @@ test('P2-13 avatar response from switched-out user cannot alter new account',asy
  assert.equal(service.profile(),null);
 });
 
-test('P2-15 registration, resend verification and password reset supply Firebase web-first Android return links',async()=>{
+test('P2-15 registration, resend verification and password reset supply app-first Firebase Hosting links',async()=>{
  const {service,setUser,getEmailActions}=harness();
  const firebaseUser={...user('firebase-new'),email:'new@example.test',reload:async()=>{}};
  setUser(firebaseUser);
