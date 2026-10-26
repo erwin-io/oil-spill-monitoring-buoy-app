@@ -38,6 +38,15 @@
                     android:host="oil-spill-monitoring-buoy.firebaseapp.com"
                     android:path="/__/auth/action" />
             </intent-filter>
+            <!-- Firebase action links generated with handleCodeInApp=true. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="https"
+                    android:host="oil-spill-monitoring-buoy.firebaseapp.com"
+                    android:pathPrefix="/__/auth/links" />
+            </intent-filter>
         </activity>
 
         <provider
