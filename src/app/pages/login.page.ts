@@ -48,8 +48,32 @@ export class LoginPage {
   private readonly router = inject(Router);
   private readonly platform=inject(Platform);
   private backSubscription?:Subscription;
-  ionViewWillEnter():void{this.backSubscription?.unsubscribe();this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{});}
-  ionViewWillLeave():void{this.backSubscription?.unsubscribe();this.backSubscription=undefined;}
+  private busyBackSubscription?:Subscription;
+  // The root Sign In screen already consumes Android Back while idle.
+  // Authentication gets a SECOND higher-priority subscription synchronously
+  // on tap, before Firebase/Google starts. This prevents Ionic/router Back
+  // from navigating away during the attempt even before the overlay renders.
+  ionViewWillEnter():void{
+    this.backSubscription?.unsubscribe();
+    this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{});
+  }
+  ionViewWillLeave():void{
+    this.backSubscription?.unsubscribe();
+    this.backSubscription=undefined;
+    this.releaseBusyBackLock();
+  }
+  private startAuthAttempt(label:'Signing in'|'Connecting to Google'):void{
+    // No awaits or native bridge round-trips before acquiring the lock.
+    this.busy=true;
+    this.busyLabel=label;
+    this.error='';
+    this.busyBackSubscription?.unsubscribe();
+    this.busyBackSubscription=this.platform.backButton.subscribeWithPriority(10000,()=>{});
+  }
+  private releaseBusyBackLock():void{
+    this.busyBackSubscription?.unsubscribe();
+    this.busyBackSubscription=undefined;
+  }
 
   readonly form = inject(NonNullableFormBuilder).group({
     email: ['', [Validators.required, Validators.email]],
@@ -62,9 +86,7 @@ export class LoginPage {
 
   async googleLogin(): Promise<void> {
     if (this.busy) return;
-    this.busyLabel='Connecting to Google';
-    this.busy = true;
-    this.error = '';
+    this.startAuthAttempt('Connecting to Google');
     try {
       await this.auth.signInWithGoogle();
       this.form.controls.password.reset();
@@ -82,17 +104,16 @@ export class LoginPage {
       }
     } finally {
       this.busy = false;
+      this.releaseBusyBackLock();
     }
   }
 
   async login(): Promise<void> {
     if (this.busy) return;
-    this.busyLabel='Signing in';
     this.form.markAllAsTouched();
     if (this.form.invalid) return;
 
-    this.busy = true;
-    this.error = '';
+    this.startAuthAttempt('Signing in');
     const { email, password } = this.form.getRawValue();
     try {
       await this.auth.signIn(email.trim().toLowerCase(), password);
@@ -110,6 +131,7 @@ export class LoginPage {
       }
     } finally {
       this.busy = false;
+      this.releaseBusyBackLock();
     }
   }
 }
