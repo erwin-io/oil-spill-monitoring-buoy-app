@@ -224,3 +224,29 @@ test('P2-12 offline logout retains revocation proof for retry, then clears it af
  assert.equal(calls.sessionEnd,2);
  assert.equal(service.session,undefined);
 });
+
+test('Foreground notification shows actionable toast; sign-out dismisses and disables View',async()=>{
+ const {service,calls,listeners}=pushHarness({native:true});
+ await service.start();
+ listeners.pushNotificationReceived({title:'Alert',body:'Buoy status',data:{alertId:'alert_one'}});
+ await service.foregroundTask;
+ assert.equal(calls.toastCreated,1);
+ assert.equal(calls.toastPresented,1);
+ const view=calls.lastToast.buttons.find(x=>x.text==='View');
+ view.handler();
+ assert.deepEqual(calls.navigations,[['/tabs/alerts','alert_one']]);
+ await service.stop();
+ assert.equal(calls.toastDismissed,1);
+ view.handler();
+ assert.equal(calls.navigations.length,1);
+});
+test('Background notification tap navigates to buoy; stale callback blocked after sign-out',async()=>{
+ const {service,calls,listeners}=pushHarness({native:true});
+ await service.start();
+ const onTap=listeners.pushNotificationActionPerformed;
+ onTap({notification:{data:{deviceId:'buoy_one'}}});
+ assert.deepEqual(calls.navigations,[['/tabs/buoys','buoy_one']]);
+ await service.stop();
+ onTap({notification:{data:{alertId:'old'}}});
+ assert.equal(calls.navigations.length,1);
+});
