@@ -77,3 +77,9 @@ different signing identity from an existing release APK; if Android reports
 `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, do not uninstall the release app without
 planning for app data/keystore consequences. GitHub CI only compiles its own
 debug APK and does not install your locally configured Firebase app.
+
+## Android JDK 21 preflight
+
+`npm run verify:android` selects a verified local JDK 21 for its **own process** before running npm, Capacitor or Gradle. It checks `JAVA_HOME`, `JDK21_HOME`, `JAVA21_HOME` and installed JDKs under the Windows Program Files Java, Eclipse Adoptium and Microsoft directories. It prints the selected JDK and Gradle JVM. JDK selection is temporary: it never modifies the system-wide Java configuration, local signing keys, Gradle properties, Firebase settings or the installed APK.
+
+If Gradle still reports Java 17, inspect `android/gradle.properties` and `$env:USERPROFILE\.gradle\gradle.properties` for an `org.gradle.java.home` override or a Gradle Java toolchain override. Use `--stacktrace --info` on the failing Gradle Java task to identify its compiler if the Gradle runtime is Java 21.

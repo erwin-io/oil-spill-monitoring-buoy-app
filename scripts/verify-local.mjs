@@ -13,6 +13,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { selectAndroidDevice } from './android-device-selection.mjs';
+import {useJava21,gradleVersionForJavaCheck} from './android-java-preflight.mjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -69,6 +70,13 @@ try{
   selectedDevice=await selectAndroidDevice();
   check('Selected Android device is ready',!!selectedDevice?.serial,
     'No Android device selected. Aborted before build/install.');
+ }
+ if(flags.has('--android')&&!dryRun){
+  const javaHome=useJava21(process.env);
+  console.log('Using JDK 21 for Android build: '+javaHome);
+  const details=gradleVersionForJavaCheck({androidDir:join(root,'android'),env:process.env});
+  console.log(details.split('\n').filter(s=>/^(Launcher JVM:|Daemon JVM:|JVM:)/.test(s.trim())).join('\n'));
+  check('Gradle Java 21 preflight',true,'Gradle must run Java 21');
  }
  if(!flags.has('--skip-install'))run('Locked dependencies','npm',['ci','--no-audit','--no-fund']);
  run('Node service, contracts and fixture tests','npm',['test']);
