@@ -11,6 +11,7 @@ import {
  IonNote, IonSpinner, IonTitle, IonToolbar
 } from '@ionic/angular/standalone';
 import {AuthService} from '../core/auth.service';
+import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
 
 // Firebase action codes are staged by the verified Android App Link handler,
 // held only in AuthService memory, and never put into the route or template.
@@ -19,7 +20,7 @@ import {AuthService} from '../core/auth.service';
  imports:[
   FormsModule, IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader,
   IonCardSubtitle, IonCardTitle, IonContent, IonHeader, IonIcon, IonInput,
-  IonInputPasswordToggle, IonNote, IonSpinner, IonTitle, IonToolbar
+  IonInputPasswordToggle, IonNote, IonSpinner, IonTitle, IonToolbar, AuthBusyOverlayComponent
  ],
  template:`
   <ion-header class="no-shadow">
@@ -49,10 +50,7 @@ import {AuthService} from '../core/auth.service';
         </ion-card-header>
         <ion-card-content>
           @if(loading){
-            <div class="auth-action-state" role="status" aria-live="polite">
-              <ion-spinner name="crescent" aria-label="Processing email link"></ion-spinner>
-              <p>{{progressMessage}}</p>
-            </div>
+            <app-auth-busy-overlay [label]="progressMessage" kind="verify"></app-auth-busy-overlay>
           } @else if(success){
             <div class="auth-action-state" role="status" aria-live="polite">
               <ion-icon name="checkmark-circle" color="success" aria-hidden="true"></ion-icon>

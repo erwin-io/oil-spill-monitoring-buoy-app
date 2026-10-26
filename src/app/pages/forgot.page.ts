@@ -64,8 +64,17 @@ export class ForgotPage {
       this.sendingEmail=this.email.trim().toLowerCase();
       this.sent=true;
       this.message=resending?'If eligible, another reset email has been sent. Check your inbox.':'';
-    } catch {
-      this.message = 'Unable to submit the password reset request. Please try again.';
+    } catch (error) {
+      const message=(error as Error)?.message??'';
+      if(message.includes('BlueGuard email delivery is not ready')){
+        this.message='Password reset is currently unavailable: native email delivery is not configured on the server. Contact the BlueGuard administrator.';
+      }else if(/429|RATE_LIMITED/i.test(message)){
+        this.message='Too many requests. Please try again later.';
+      }else if(/network|failed to fetch|status 0|offline/i.test(message)){
+        this.message='Unable to connect to BlueGuard. Check your internet connection and try again.';
+      }else{
+        this.message='Could not submit the reset request. Please try again or contact the administrator.';
+      }
     } finally {
       this.busy = false;
     }

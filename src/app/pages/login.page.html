@@ -67,4 +67,4 @@
   </main>
 </ion-content>
 
-@if(busy){<app-auth-busy-overlay [label]="busyLabel"></app-auth-busy-overlay>}
+@if(busy){<app-auth-busy-overlay [label]="busyLabel" [kind]="busyLabel==='Connecting to Google'?'google':'default'"></app-auth-busy-overlay>}

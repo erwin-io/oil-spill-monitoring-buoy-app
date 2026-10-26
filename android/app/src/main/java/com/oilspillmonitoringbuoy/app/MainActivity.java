@@ -15,6 +15,7 @@ public class MainActivity extends BridgeActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerPlugin(BlueGuardStatusBarPlugin.class);
         super.onCreate(savedInstanceState);
         deliverAppLink(getIntent());
     }
