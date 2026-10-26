@@ -144,6 +144,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
     '../core/auth.service': { AuthService },
     '../core/realtime.service': { RealtimeService },
     '../core/push.service': { PushService },
+    './auth-busy-overlay.component': { AuthBusyOverlayComponent: class {} },
   };
   vm.runInNewContext(transpile('src/app/pages/profile.page.ts'), {
     exports,

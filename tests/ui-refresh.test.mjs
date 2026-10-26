@@ -20,7 +20,12 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  const profile=read('profile.page.html'),code=read('profile.page.ts');
  assert.match(profile,/class="avatar-trigger"/);
  assert.match(profile,/\(click\)="openPhotoEditor\(\)"/);
- assert.match(profile,/id="blueguard-crop-canvas"/);
+ assert.match(profile,/<canvas #cropCanvas width="512"/);
+ assert.match(profile,/Edit photo/);
+ assert.match(profile,/class="photo-picker-actions"/);
+ assert.match(profile,/capture="environment"/);
+ assert.match(profile,/clearSelectedAvatar/);
+ assert.match(profile,/<ion-footer class="ion-no-border photo-save-footer"/);
  assert.match(profile,/Crop and save photo/);
  assert.match(profile,/routerLink="\/tabs\/profile\/edit-name"/);
  assert.match(profile,/routerLink="\/tabs\/profile\/password"/);
@@ -44,8 +49,12 @@ test('Empty illustrations and FAB/pairing modal preserve existing authorized dev
  assert.match(alerts,/app-empty-state kind="alerts"/);
  assert.match(dashboard,/ion-fab-button aria-label="Add buoy"/);
  assert.match(buoys,/ion-fab-button aria-label="Add buoy"/);
- assert.match(tabs,/ion-modal \[isOpen\]="deviceModal\.opened\(\)"/);
- assert.match(tabTs,/translateY\(100%\)/);
+ assert.doesNotMatch(tabs,/ion-modal/,'Add Device must use Ionic controller, not tabs template modal');
+ const modalService=readFileSync('src/app/core/add-device-modal.service.ts','utf8');
+ assert.match(modalService,/this\.modals\.create/);
+ assert.match(modalService,/await modal\.present\(\)/);
+ assert.match(modalService,/await modal\.onDidDismiss\(\)/);
+ assert.doesNotMatch(tabTs,/enterAnimation|leaveAnimation/);
  assert.match(add,/parseProtectedQr/);
  assert.match(add,/this\.api\.requestClaim/);
  const routes=readFileSync('src/app/app.routes.ts','utf8');

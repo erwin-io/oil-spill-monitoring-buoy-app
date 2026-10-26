@@ -36,7 +36,8 @@ function harness({mode='verifyEmail',inspect,verify,reset}={}){
   '@ionic/angular/standalone':new Proxy({}, {get:()=>stubComponent}),
   'ionicons':{addIcons:()=>{}},
   'ionicons/icons':{arrowBack:{},checkmarkCircle:{}},
-  '../core/auth.service':{AuthService}
+  '../core/auth.service':{AuthService},
+  './auth-busy-overlay.component':{AuthBusyOverlayComponent:stubComponent}
  };
  vm.runInNewContext(code,{
   exports,require:name=>{if(!(name in modules))throw Error('Unknown import '+name);return modules[name]},
