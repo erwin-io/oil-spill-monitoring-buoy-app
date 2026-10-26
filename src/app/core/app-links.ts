@@ -44,19 +44,52 @@ export type NativeEmailAction={mode:'verifyEmail'|'resetPassword';code:string};
 export function parseNativeEmailAction(raw:string):NativeEmailAction|null{
  if(!raw||raw.length>4096)return null;
  try{
-  const url=new URL(raw);
+  let url=new URL(raw);
   if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
-      url.pathname!=='/open/auth-action'||url.username||url.password||url.hash)return null;
+      url.username||url.password||url.hash)return null;
+  // Firebase app-first templates wrap the code URL in a verified Hosting
+  // /__/auth/links?link=... URL. Unwrap only a single exact trusted link.
+  if(url.pathname==='/__/auth/links'){
+    let wrapperParamCount=0;
+    url.searchParams.forEach(()=>{wrapperParamCount++});
+    if(url.searchParams.getAll('link').length!==1||
+       wrapperParamCount!==1)return null;
+    const wrapped=url.searchParams.get('link');
+    if(!wrapped||wrapped.length>4096)return null;
+    url=new URL(wrapped);
+    if(url.pathname!=='/__/auth/action')return null;
+    if(url.protocol!=='https:'||url.host!==environment.firebase.authDomain||
+       url.username||url.password||url.hash)return null;
+  }
+  const nativeAction=url.pathname==='/open/auth-action';
+  const firebaseTemplate=url.pathname==='/__/auth/action';
+  if(!nativeAction&&!firebaseTemplate)return null;
   const p=url.searchParams;
-  let parameterCount=0;
-  p.forEach(()=>{parameterCount++});
-  if(parameterCount!==3||['mode','oobCode','apiKey'].some(k=>p.getAll(k).length!==1))
-    return null;
+  const required=['mode','oobCode','apiKey'];
+  const allowed=firebaseTemplate?[...required,'continueUrl','lang']:required;
+  let count=0,unexpected=false;
+  p.forEach((_,key)=>{count++;if(!allowed.includes(key))unexpected=true;});
+  if(unexpected||count<3||count>allowed.length||
+     required.some(key=>p.getAll(key).length!==1)||
+     allowed.some(key=>p.getAll(key).length>1))return null;
   if(p.get('apiKey')!==environment.firebase.apiKey)return null;
   const mode=p.get('mode');
   if(mode!=='verifyEmail'&&mode!=='resetPassword')return null;
   const code=p.get('oobCode');
-  if(!code||code.length>2048||!/^[a-zA-Z0-9_\-]+$/.test(code))return null;
+  if(!code||code.length>2048||!/^[A-Za-z0-9_-]+$/.test(code))return null;
+  // Firebase SDK template links include a continueUrl and optional lang.
+  // Never follow continueUrl or treat it as proof of account access.
+  const continueUrl=p.get('continueUrl');
+  if(continueUrl!==null){
+    if(!firebaseTemplate||continueUrl.length>1500)return null;
+    const next=new URL(continueUrl);
+    if(next.protocol!=='https:'||next.host!==environment.firebase.authDomain||
+       next.username||next.password||next.hash||
+       !['/__/auth/links','/open/email-verified','/open/password-reset-complete'].includes(next.pathname))return null;
+  }
+  const lang=p.get('lang');
+  if(lang!==null&&(!firebaseTemplate||!/^[a-z]{2,3}(?:-[A-Z]{2})?$/.test(lang)))return null;
+  // The one-time code is staged in volatile AuthService memory only.
   return {mode,code};
  }catch{return null}
 }

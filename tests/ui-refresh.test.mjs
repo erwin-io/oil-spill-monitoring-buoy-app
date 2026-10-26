@@ -41,6 +41,7 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  assert.match(read('profile-password.page.ts'),/await this\.auth\.resetPassword\(email\)/);
  assert.match(read('profile-password.page.ts'),/app-auth-busy-overlay/);
  assert.match(read('profile.page.ts'),/this\.modals\.create/);
+ assert.match(readFileSync('src/styles.scss','utf8'),/ion-modal\.blueguard-settings-modal\{\s*--width:100%;--height:100%/);
 });
 test('Empty illustrations and FAB/pairing modal preserve existing authorized device routes',()=>{
  const dashboard=read('dashboard.page.html'),buoys=read('devices.page.html'),alerts=read('alerts.page.html');

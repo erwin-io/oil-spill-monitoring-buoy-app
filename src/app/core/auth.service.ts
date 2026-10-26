@@ -130,10 +130,10 @@ export class AuthService {
     return this.bootstrap();
   }
 
-  // Android requires native-only Firebase Admin action links. Falling back
-  // to Firebase SDK email templates would instead open Google's browser
-  // verification page, violating the app-only Phase 2 contract. Fail closed
-  // when the deployed API is older, disabled or unreachable.
+  // Prefer the Firebase Admin SMTP/Resend provider when it explicitly advertises
+  // native action links. Otherwise use Firebase's standard email delivery:
+  // Android handles its verified HTTPS /__/auth/action link in-app, and
+  // Firebase still validates each single-use code.
   private async useBackendEmail(): Promise<boolean> {
     try {
       const config=await firstValueFrom(this.http.get<{
@@ -141,20 +141,11 @@ export class AuthService {
         nativeActionLinks?:boolean;
       }>(`${environment.api}/auth/email/config`));
       const customProvider=config?.delivery==='smtp'||config?.delivery==='resend';
-      if(Capacitor.isNativePlatform()){
-        if(customProvider && config.nativeActionLinks===true)return true;
-      }else{
-        // Web development retains the original Firebase SDK fallback.
-        return customProvider;
-      }
+      // An older API that cannot deliver native links must not prevent
+      // account recovery. Use the Firebase SDK template path instead.
+      if(customProvider && (!Capacitor.isNativePlatform() || config.nativeActionLinks===true))return true;
     }catch{
-      // No Firebase SDK email fallback on Android: it uses browser actions.
-    }
-    if(Capacitor.isNativePlatform()){
-      throw new Error(
-        'BlueGuard email delivery is not ready on the connected API. '+
-        'Activate the Firebase Admin native-email provider in the deployed API, then retry.'
-      );
+      // Firebase SDK delivery is independent of Express SMTP readiness.
     }
     return false;
   }
