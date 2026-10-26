@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { Capacitor } from '@capacitor/core';
 import { PushNotifications } from '@capacitor/push-notifications';
 import { firstValueFrom } from 'rxjs';
+import {ToastController} from '@ionic/angular/standalone';
+import {notificationDestination} from './notification-destination';
 import { ApiService } from './api.service';
 import { AuthService } from './auth.service';
 
@@ -12,6 +14,7 @@ export class PushService {
  private readonly api=inject(ApiService);
  private readonly auth=inject(AuthService);
  private readonly router=inject(Router);
+ private readonly toasts=inject(ToastController);
  private initialized=false;
  private generation=0;
  private uid?:string;
@@ -19,6 +22,8 @@ export class PushService {
  private session?:PushSession;
  private starting:Promise<void>=Promise.resolve();
  private registrationTask:Promise<void>=Promise.resolve();
+ private foregroundTask:Promise<void>=Promise.resolve();
+ private foregroundToast?:HTMLIonToastElement;
  private get nativePushAvailable():boolean{
   return Capacitor.isNativePlatform()&&Capacitor.isPluginAvailable('PushNotifications');
  }
@@ -78,10 +83,37 @@ export class PushService {
    if(gen!==this.generation)return;
    await PushNotifications.addListener('pushNotificationActionPerformed',event=>{
     if(gen!==this.generation||this.auth.currentUser()?.uid!==uid)return;
-    const data=event.notification.data,alertId=data?.['alertId'];
-    if(typeof alertId==='string'&&alertId)void this.router.navigate(['/tabs/alerts',alertId]);
-    else if(typeof data?.['deviceId']==='string'&&data['deviceId'])
-     void this.router.navigate(['/tabs/buoys',data['deviceId']]);
+    void this.router.navigate(notificationDestination(event.notification.data));
+   });
+   if(gen!==this.generation)return;
+   await PushNotifications.addListener('pushNotificationReceived',event=>{
+    if(gen!==this.generation||this.auth.currentUser()?.uid!==uid)return;
+    this.foregroundTask=this.foregroundTask.catch(()=>undefined).then(async()=>{
+     if(gen!==this.generation||this.auth.currentUser()?.uid!==uid)return;
+     const previous=this.foregroundToast;
+     this.foregroundToast=undefined;
+     if(previous)try{await previous.dismiss()}catch{}
+     if(gen!==this.generation||this.auth.currentUser()?.uid!==uid)return;
+     const destination=notificationDestination(event.data);
+     const title=typeof event.title==='string'?event.title.slice(0,90):'BlueGuard notification';
+     const body=typeof event.body==='string'?event.body.slice(0,180):'A buoy notification arrived.';
+     const toast=await this.toasts.create({
+      header:title,message:body,position:'top',duration:8000,
+      buttons:[
+       {text:'View',handler:()=>{
+        if(gen===this.generation&&this.auth.currentUser()?.uid===uid)
+         void this.router.navigate(destination);
+       }},
+       {text:'Dismiss',role:'cancel'}
+      ]
+     });
+     if(gen!==this.generation||this.auth.currentUser()?.uid!==uid){
+      try{await toast.dismiss()}catch{}
+      return;
+     }
+     this.foregroundToast=toast;
+     await toast.present();
+    });
    });
    if(gen!==this.generation)return;
    await PushNotifications.register();
@@ -95,6 +127,9 @@ export class PushService {
   this.uid=undefined;
   await this.starting.catch(()=>undefined);
   await this.registrationTask.catch(()=>undefined);
+  await this.foregroundTask.catch(()=>undefined);
+  const displayed=this.foregroundToast;this.foregroundToast=undefined;
+  if(displayed)try{await displayed.dismiss()}catch{}
   const token=this.token,session=this.session;
   if(session&&requireServerRevocation){
    try{await firstValueFrom(this.api.endPushSession(session.sessionId,session.sessionSecret));}
