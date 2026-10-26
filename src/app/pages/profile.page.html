@@ -51,7 +51,7 @@
    <div class="photo-preview-wrap">
     <canvas #cropCanvas width="512" height="512" aria-label="Circular photo crop preview"></canvas>
     <div *ngIf="!photoSrc" class="photo-preview-empty" aria-hidden="true"><ion-icon name="camera-outline"></ion-icon><span>Your photo</span></div>
-    <button *ngIf="photoSrc" type="button" class="reset-photo" aria-label="Clear selected photo" title="Start over" [disabled]="savingAvatar" (click)="clearSelectedAvatar()"><ion-icon name="refresh-outline"></ion-icon></button>
+    <button *ngIf="photoSrc" type="button" class="reset-photo" aria-label="Clear selected photo" title="Start over" [disabled]="savingAvatar" (click)="clearSelectedAvatar()"><ion-icon name="close-outline"></ion-icon></button>
    </div>
    <div class="photo-picker-actions">
     <button type="button" class="photo-picker-button" [disabled]="savingAvatar" (click)="galleryInput.click()">
@@ -64,7 +64,7 @@
     </button>
    </div>
    <input #galleryInput class="photo-file-input" type="file" accept="image/jpeg,image/png,image/webp" aria-label="Choose image from gallery" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
-   <input #cameraInput class="photo-file-input" type="file" accept="image/*" capture="environment" aria-label="Take photo with camera" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
+   <input #cameraInput class="photo-file-input" type="file" accept="image/*" capture="user" aria-label="Take photo with camera" [disabled]="savingAvatar" (change)="selectAvatar($event)"/>
    <div class="crop-controls" *ngIf="photoSrc">
     <label>Zoom <input type="range" min="1" max="3" step="0.05" [(ngModel)]="photoZoom" (ngModelChange)="drawPreview()" aria-label="Zoom photo"/></label>
     <label>Move horizontally <input type="range" min="-100" max="100" step="1" [(ngModel)]="photoX" (ngModelChange)="drawPreview()" aria-label="Move photo horizontally"/></label>

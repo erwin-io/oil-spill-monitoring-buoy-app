@@ -4,7 +4,7 @@ import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
 import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
 import {addIcons} from 'ionicons';
-import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,refreshOutline} from 'ionicons/icons';
+import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,closeOutline} from 'ionicons/icons';
 import {AuthService} from '../core/auth.service';
 import {RealtimeService} from '../core/realtime.service';
 import {PushService} from '../core/push.service';
@@ -27,7 +27,7 @@ export class ProfilePage implements OnDestroy {
   {text:'No',role:'cancel'},
   {text:'Yes',role:'confirm',handler:()=>{void this.logout();}}
  ];
- constructor(){addIcons({alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,refreshOutline});}
+ constructor(){addIcons({alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,closeOutline});}
  initials(name?:string):string{
   return (name??'BG').trim().split(/\s+/).slice(0,2)
    .map(part=>part[0]?.toUpperCase()??'').join('')||'BG';
@@ -52,8 +52,8 @@ export class ProfilePage implements OnDestroy {
   const file=input.files?.[0];
   input.value='';
   if(!file||this.savingAvatar)return;
-  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>2*1024*1024||file.size<12){
-   this.avatarFeedback='Select a JPG, PNG or WebP image up to 2 MB.';return;
+  if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>20*1024*1024||file.size<12){
+   this.avatarFeedback='Choose a JPG, PNG or WebP photo up to 20 MB. BlueGuard compresses the saved crop.';return;
   }
   this.avatarFeedback='';
   if(this.photoUrl)URL.revokeObjectURL(this.photoUrl);

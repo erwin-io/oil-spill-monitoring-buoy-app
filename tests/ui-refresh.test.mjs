@@ -23,7 +23,9 @@ test('Profile settings have separate screens, avatar click crop, and Yes-No sign
  assert.match(profile,/<canvas #cropCanvas width="512"/);
  assert.match(profile,/Edit photo/);
  assert.match(profile,/class="photo-picker-actions"/);
- assert.match(profile,/capture="environment"/);
+ assert.match(profile,/capture="user"/);
+ assert.match(profile,/aria-label="Clear selected photo"/);
+ assert.match(code,/file.size>20\*1024\*1024/);
  assert.match(profile,/clearSelectedAvatar/);
  assert.match(profile,/<ion-footer class="ion-no-border photo-save-footer"/);
  assert.match(profile,/Crop and save photo/);
