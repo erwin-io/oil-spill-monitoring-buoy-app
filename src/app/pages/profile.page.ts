@@ -2,7 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component,ElementRef,OnDestroy,ViewChild,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {Router,RouterLink} from '@angular/router';
-import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
+import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,IonIcon,IonItem,IonLabel,IonList,IonListHeader,IonModal,ModalController,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
 import {addIcons} from 'ionicons';
 import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,closeOutline} from 'ionicons/icons';
 import {AuthService} from '../core/auth.service';
@@ -17,6 +17,8 @@ export class ProfilePage implements OnDestroy {
  private readonly realtime=inject(RealtimeService);
  private readonly push=inject(PushService);
  private readonly router=inject(Router);
+ private readonly modals=inject(ModalController);
+ private openingSettings=false;
  error='';signingOut=false;confirmSignOut=false;
  editingPhoto=false;savingAvatar=false;avatarFeedback='';
  photoSrc='';photoZoom=1;photoX=0;photoY=0;
@@ -31,6 +33,20 @@ export class ProfilePage implements OnDestroy {
  initials(name?:string):string{
   return (name??'BG').trim().split(/\s+/).slice(0,2)
    .map(part=>part[0]?.toUpperCase()??'').join('')||'BG';
+ }
+ async openSettings(kind:'name'|'password'):Promise<void>{
+  if(this.openingSettings||this.signingOut)return;
+  this.openingSettings=true;
+  try{
+   const component=kind==='name'
+    ?(await import('./edit-display-name.page')).EditDisplayNamePage
+    :(await import('./profile-password.page')).ProfilePasswordPage;
+   const modal=await this.modals.create({component,cssClass:'blueguard-settings-modal',backdropDismiss:false});
+   await modal.present();
+   // No nested tab routes: all controls render above the tab bar.
+   await modal.onDidDismiss();
+  }catch(e){this.error='Unable to open account settings. Please try again.';}
+  finally{this.openingSettings=false;}
  }
  openPhotoEditor():void{this.avatarFeedback='';this.editingPhoto=true;}
  clearSelectedAvatar():void{

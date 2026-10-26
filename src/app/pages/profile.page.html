@@ -22,10 +22,10 @@
  </ion-list>
  <ion-list inset="true" class="profile-settings">
   <ion-list-header><ion-label>Settings</ion-label></ion-list-header>
-  <ion-item button detail="true" routerLink="/tabs/profile/edit-name">
+  <ion-item button detail="true" (click)="openSettings('name')">
    <ion-icon name="create-outline" slot="start" color="primary"></ion-icon><ion-label>Edit display name</ion-label>
   </ion-item>
-  <ion-item button detail="true" routerLink="/tabs/profile/password">
+  <ion-item button detail="true" (click)="openSettings('password')">
    <ion-icon name="lock-closed-outline" slot="start" color="primary"></ion-icon><ion-label>Change password</ion-label>
   </ion-item>
  </ion-list>

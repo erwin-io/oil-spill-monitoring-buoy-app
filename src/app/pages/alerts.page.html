@@ -1,9 +1,10 @@
-<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Notifications</ion-title></ion-toolbar></ion-header>
+<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-title>Notifications</ion-title>
+<ion-buttons slot="end"><ion-button color="light" fill="clear" aria-label="Mark all notifications as read" title="Mark all as read" [disabled]="loading||marking||!unreadCount" (click)="markAll()"><ion-icon slot="icon-only" name="checkmark-done-outline"></ion-icon></ion-button></ion-buttons>
+</ion-toolbar></ion-header>
 <ion-content>
  <ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
  <div class="page">
   <p class="hint">Unread: {{unreadCount}} · Open incidents: {{openCount}}</p>
-  <ion-button expand="block" fill="outline" [disabled]="loading||marking||!unreadCount" (click)="markAll()">Mark All Read</ion-button>
   <p *ngIf="loading">Loading notifications...</p>
   <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" (click)="load()">Retry loading</ion-button></div>
   <div *ngFor="let a of items" class="card tap" [routerLink]="['/tabs/alerts',a.id]">

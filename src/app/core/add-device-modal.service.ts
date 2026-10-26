@@ -33,6 +33,9 @@ export class AddDeviceModalService {
  }
 
  async close():Promise<void>{
-  await this.active?.dismiss(undefined,'cancel');
+  // Dismiss the presented modal directly, even if this service's previous
+  // instance lost the active reference during a tab lifecycle change.
+  const top=await this.modals.getTop();
+  if(top)await top.dismiss(undefined,'cancel');
  }
 }

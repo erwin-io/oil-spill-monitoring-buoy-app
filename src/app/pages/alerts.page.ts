@@ -4,13 +4,16 @@ import {Component,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
-import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent} from '@ionic/angular/standalone';
+import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonButtons,IonIcon} from '@ionic/angular/standalone';
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
 import {Alert} from '../core/models';
-@Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,EmptyStateComponent],
+import {addIcons} from 'ionicons';
+import {checkmarkDoneOutline} from 'ionicons/icons';
+@Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonButtons,IonIcon,EmptyStateComponent],
  templateUrl:'./alerts.page.html',styleUrls:['./alerts.page.scss']})
 export class AlertsPage{
+ constructor(){addIcons({checkmarkDoneOutline});}
  private api=inject(ApiService);private auth=inject(AuthService);
  items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;loading=true;marking=false;error='';
  deviceNames:Record<string,string>={};

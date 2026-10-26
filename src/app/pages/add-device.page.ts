@@ -5,7 +5,7 @@ import {Router,RouterLink} from '@angular/router';
 import {firstValueFrom} from 'rxjs';
 import {Capacitor} from '@capacitor/core';
 import {BarcodeScanner,BarcodeFormat} from '@capacitor-mlkit/barcode-scanning';
-import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonInput,IonItem,IonButtons,IonIcon} from '@ionic/angular/standalone';
+import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonInput,IonItem,IonButtons,IonIcon,ModalController} from '@ionic/angular/standalone';
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
 import {parseProtectedQr} from '../core/pairing-code';
@@ -17,8 +17,14 @@ import {closeOutline} from 'ionicons/icons';
 @Component({selector:'app-add-device',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonInput,IonItem,IonButtons,IonIcon],templateUrl:'./add-device.page.html',styleUrls:['./add-device.page.scss']})
 export class AddDevicePage implements OnDestroy{
  readonly modal=inject(AddDeviceModalService);
+ private readonly modalController=inject(ModalController);
  constructor(){addIcons({closeOutline});}
- close():void{this.ionViewWillLeave();this.modal.close();}
+ async close():Promise<void>{
+  const top=await this.modalController.getTop();
+  if(top){await top.dismiss(undefined,'cancel');return;}
+  this.ionViewWillLeave();
+  await this.router.navigateByUrl('/tabs/overview');
+ }
  ngOnDestroy():void{this.ionViewWillLeave();}
  private api=inject(ApiService);private auth=inject(AuthService);private router=inject(Router);
  deviceId='';claimCode='';challengeId='';state:''|'PENDING'|'EXPIRED'|'CONFIRMED'='';busy=false;error='';
@@ -62,7 +68,7 @@ export class AddDevicePage implements OnDestroy{
    if(this.auth.currentUser()?.uid!==this.claimantUid)return;
    this.state=result.state;
    if(result.state==='CONFIRMED'){
-    try{await this.auth.bootstrap();this.modal.close();await this.router.navigate(['/tabs/buoys',id])}
+    try{await this.auth.bootstrap();await this.modal.close();await this.router.navigate(['/tabs/buoys',id])}
     catch{this.error='Device claimed. Refresh My Buoys to load your new access.'}
     return;
    }
