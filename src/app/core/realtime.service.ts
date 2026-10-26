@@ -78,7 +78,7 @@ export class RealtimeService {
    }
    for(const id of new Set(deviceIds)){
     const channel=this.client.subscribe(`private-device-${id}`);
-    for(const event of ['measurement.created','health.updated','alert.created','alert.acknowledged']){
+    for(const event of ['measurement.created','health.updated','device.online','device.offline','alert.created','alert.acknowledged']){
      channel.bind(event,refresh);
     }
    }
