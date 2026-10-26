@@ -44,8 +44,10 @@ public class MainActivity extends BridgeActivity {
                 && !"/open/email-verified".equals(path)
                 && !"/open/password-reset-complete".equals(path)
                 && !"/open/auth-action".equals(path)
-                && !"/__/auth/action".equals(path)) return;
-        final boolean emailAction = "/open/auth-action".equals(path) || "/__/auth/action".equals(path);
+                && !"/__/auth/action".equals(path)
+                && !"/__/auth/links".equals(path)) return;
+        final boolean emailAction = "/open/auth-action".equals(path)
+                || "/__/auth/action".equals(path) || "/__/auth/links".equals(path);
         if (uri.toString().length() > (emailAction ? 4096 : 1024)) return;
         if (uri.toString().equals(lastDeliveredAppLink)) return; // Prevent onCreate/onResume duplicates.
         lastDeliveredAppLink = uri.toString();
