@@ -1,10 +1,15 @@
-import {Component,inject} from '@angular/core';
-import {IonButton,IonButtons,ModalController,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
+import {Component,OnInit,OnDestroy,inject} from '@angular/core';
+import {Platform} from '@ionic/angular';
+import type {Subscription} from 'rxjs';
+import {addIcons} from 'ionicons';
+import {arrowBack} from 'ionicons/icons';
+import {IonButton,IonButtons,IonIcon,ModalController,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar} from '@ionic/angular/standalone';
 import {AuthService} from '../core/auth.service';
 import {Router} from '@angular/router';
 import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
-@Component({standalone:true,imports:[IonButton,IonButtons,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar,AuthBusyOverlayComponent],
-template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-buttons slot="start"><ion-button color="light" fill="clear" aria-label="Close Change Password" (click)="close()">Close</ion-button></ion-buttons><ion-title>Change password</ion-title></ion-toolbar></ion-header>
+
+@Component({standalone:true,imports:[IonButton,IonButtons,IonIcon,IonContent,IonHeader,IonNote,IonSpinner,IonTitle,IonToolbar,AuthBusyOverlayComponent],
+template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-buttons slot="start"><ion-button type="button" color="light" fill="clear" aria-label="Back to Profile" [disabled]="busy" (click)="close()"><ion-icon name="arrow-back" slot="icon-only" aria-hidden="true"></ion-icon></ion-button></ion-buttons><ion-title>Change password</ion-title></ion-toolbar></ion-header>
 <ion-content class="ion-padding verify-wait-page"><main class="verify-wait-layout"><section class="verify-wait-group">
 <div class="verify-wait-illustration" aria-hidden="true"><svg viewBox="0 0 180 160" width="180" height="160"><circle cx="90" cy="80" r="73" fill="#eaf3ff"/><rect x="42" y="49" width="96" height="71" rx="8" fill="#fff" stroke="#0058db" stroke-width="4"/><path d="M44 57 L90 91 L136 57" fill="none" stroke="#0058db" stroke-width="4"/><circle cx="134" cy="44" r="21" fill="#0cbb89"/><path d="M125 44 L132 51 L144 37" fill="none" stroke="#fff" stroke-width="4"/></svg></div>
 <h1>{{sent?'Check your inbox':'Change password'}}</h1>
@@ -12,16 +17,25 @@ template:`<ion-header class="no-shadow"><ion-toolbar color="primary"><ion-button
 <ion-button expand="block" class="regular verify-resend-button" fill="outline" [disabled]="busy" (click)="send()">@if(busy){<ion-spinner name="dots"></ion-spinner>}@else { {{sent?'Resend reset email':'Send password reset link'}} }</ion-button>
 @if(message){<ion-note class="verify-wait-message" role="status">{{message}}</ion-note>}
 </section></main></ion-content>
-@if(busy){<app-auth-busy-overlay label="Sending password reset link" kind="default"></app-auth-busy-overlay>}`,styleUrls:['./login.page.scss','./verify.page.scss']})
-export class ProfilePasswordPage{
+@if(busy){<app-auth-busy-overlay label="Sending password reset link" kind="default"></app-auth-busy-overlay>`,styleUrls:['./login.page.scss','./verify.page.scss']})
+export class ProfilePasswordPage implements OnInit,OnDestroy{
  private auth=inject(AuthService);
  private modals=inject(ModalController);
  private router=inject(Router);
+ private platform=inject(Platform);
+ private backSubscription?:Subscription;
+ private closing=false;
+ constructor(){addIcons({arrowBack});}
+ ngOnInit():void{this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{void this.close();});}
+ ngOnDestroy():void{this.backSubscription?.unsubscribe();this.backSubscription=undefined;}
  async close():Promise<void>{
-  if(this.busy)return;
-  const top=await this.modals.getTop();
-  if(top)await top.dismiss(undefined,'cancel');
-  else await this.router.navigateByUrl('/tabs/profile',{replaceUrl:true});
+  if(this.busy||this.closing)return;
+  this.closing=true;
+  try{
+   const top=await this.modals.getTop();
+   if(top)await top.dismiss(undefined,'cancel');
+   else await this.router.navigateByUrl('/tabs/profile',{replaceUrl:true});
+  }finally{this.closing=false;}
  }
  busy=false;sent=false;message='';
  async send():Promise<void>{

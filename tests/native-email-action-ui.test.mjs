@@ -7,9 +7,9 @@ import ts from 'typescript';
 const source=readFileSync('src/app/pages/native-email-action.page.ts','utf8');
 const styles=readFileSync('src/app/pages/native-email-action.page.scss','utf8');
 function harness({mode='verifyEmail',inspect,verify,reset}={}){
- const routes=[],calls=[];
+ const routes=[],calls=[],overlayCalls=[];
  let back,unsubscribed=false;
- class AuthService{}class Router{}class Platform{}
+ class AuthService{}class Router{}class Platform{}class ModalController{}
  const auth={
   inspectNativeEmailAction:async()=>{calls.push('inspect');return inspect?inspect():{mode,email:'demo@example.test'}},
   finishNativeVerification:async()=>{calls.push('verify');return verify?verify():false},
@@ -22,7 +22,11 @@ function harness({mode='verifyEmail',inspect,verify,reset}={}){
    back=cb;
    return {unsubscribe:()=>{unsubscribed=true}};
  }}};
- const injections=new Map([[AuthService,auth],[Router,router],[Platform,platform]]);
+ const modalController={create:async options=>{
+  overlayCalls.push({action:'create',options});
+  return {present:async()=>{overlayCalls.push({action:'present'})},dismiss:async(_,role)=>{overlayCalls.push({action:'dismiss',role})}};
+ }};
+ const injections=new Map([[AuthService,auth],[Router,router],[Platform,platform],[ModalController,modalController]]);
  const exports={};
  const stubComponent=class{};
  const code=ts.transpileModule(source,{
@@ -33,7 +37,7 @@ function harness({mode='verifyEmail',inspect,verify,reset}={}){
   '@angular/forms':{FormsModule:stubComponent},
   '@angular/router':{Router},
   '@ionic/angular':{Platform},
-  '@ionic/angular/standalone':new Proxy({}, {get:()=>stubComponent}),
+  '@ionic/angular/standalone':new Proxy({ModalController}, {get:(target,key)=>target[key]??stubComponent}),
   'ionicons':{addIcons:()=>{}},
   'ionicons/icons':{arrowBack:{},checkmarkCircle:{}},
   '../core/auth.service':{AuthService},
@@ -43,7 +47,7 @@ function harness({mode='verifyEmail',inspect,verify,reset}={}){
   exports,require:name=>{if(!(name in modules))throw Error('Unknown import '+name);return modules[name]},
   console
  });
- return {page:new exports.NativeEmailActionPage(),auth,routes,calls,
+ return {page:new exports.NativeEmailActionPage(),auth,routes,calls,overlayCalls,
   back:()=>back?.(),didUnsubscribe:()=>unsubscribed};
 }
 test('P2-15 action UI matches Login/Register flat auth contract, with header back, outlined inputs and regular button',()=>{
@@ -75,11 +79,18 @@ test('P2-15 verify email starts automatically and shows loading → success with
  assert.equal(h.page.loading,true);
  assert.equal(h.page.progressMessage,'Verifying your email…');
  assert.equal(h.page.success,false);
+ assert.equal(h.overlayCalls[0]?.action,'create');
+ assert.equal(h.overlayCalls[0]?.options?.cssClass,'blueguard-progress-modal');
+ assert.equal(h.overlayCalls[0]?.options?.backdropDismiss,false);
+ assert.equal(h.overlayCalls[0]?.options?.canDismiss(null,'backdrop'),false);
+ assert.equal(h.overlayCalls[0]?.options?.canDismiss(null,'complete'),true);
+ assert.equal(h.overlayCalls[1]?.action,'present');
  finishVerification(true);
  await inflight;
  assert.equal(h.page.success,true);
  assert.equal(h.page.loading,false);
  assert.equal(h.page.ready,false);
+ assert.ok(h.overlayCalls.some(x=>x.action==='dismiss'&&x.role==='complete'));
  assert.equal(h.calls.includes('reset'),false);
  h.back();
  await Promise.resolve();
@@ -95,6 +106,7 @@ test('P2-15 reset uses the same auth view, validates confirmation, and both head
  await h.page.ngOnInit();
  assert.equal(h.page.ready,true);
  assert.equal(h.page.success,false);
+ assert.equal(h.overlayCalls.length,0,'Reset input does not present a verify overlay');
  h.page.nextPassword='SecurePassword2026!';
  h.page.confirmPassword='wrong';
  await h.page.submit();

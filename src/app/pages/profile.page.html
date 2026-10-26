@@ -83,4 +83,3 @@
 </ion-modal>
 <ion-alert [isOpen]="confirmSignOut" header="Sign out?" message="Do you want to sign out of BlueGuard Buoy?" [buttons]="signOutButtons" (didDismiss)="confirmSignOut=false"></ion-alert>
 </ion-content>
-<app-auth-busy-overlay *ngIf="signingOut" label="Signing out" kind="logout"></app-auth-busy-overlay>

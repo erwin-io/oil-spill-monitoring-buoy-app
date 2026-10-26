@@ -124,12 +124,26 @@ export class ProfilePage implements OnDestroy {
  async logout():Promise<void>{
   if(this.signingOut)return;
   this.confirmSignOut=false;this.signingOut=true;this.error='';
+  let progress:HTMLIonModalElement|undefined;
   try{
+   // Render above the router outlet AND the tab bar. A page-local fixed
+   // overlay cannot intercept interactions with the sibling ion-tab-bar.
+   progress=await this.modals.create({
+    component:AuthBusyOverlayComponent,
+    componentProps:{label:'Signing out',kind:'logout'},
+    cssClass:'blueguard-progress-modal',
+    backdropDismiss:false,animated:false,
+    canDismiss:(_data,role)=>role==='complete'
+   });
+   await progress.present();
    await this.push.stop(true);this.realtime.disconnect();
    await this.auth.logout();
    await this.router.navigateByUrl('/login',{replaceUrl:true});
   }catch(error){this.error=(error as Error).message||'Unable to sign out. Please try again.';}
-  finally{this.signingOut=false;}
+  finally{
+   try{await progress?.dismiss(undefined,'complete');}catch{}
+   this.signingOut=false;
+  }
  }
  ngOnDestroy():void{if(this.photoUrl)URL.revokeObjectURL(this.photoUrl);}
 }

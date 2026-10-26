@@ -1,0 +1,9 @@
+:host{display:flex;flex-direction:column;height:100%;background:#fff}
+.display-name-content{flex:1;--background:#fff}
+.display-name-save-footer{background:#fff;box-shadow:0 -5px 20px #1436590d}
+.display-name-save-footer ion-toolbar{
+  --background:#fff;--padding-top:12px;
+  --padding-bottom:max(12px,env(safe-area-inset-bottom,0px));
+  --padding-start:20px;--padding-end:20px;
+}
+.display-name-save-footer ion-button{margin:0}

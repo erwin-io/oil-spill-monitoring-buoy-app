@@ -8,7 +8,7 @@ import type {Subscription} from 'rxjs';
 import {
  IonButton, IonButtons, IonCard, IonCardContent, IonCardHeader, IonCardSubtitle,
  IonCardTitle, IonContent, IonHeader, IonIcon, IonInput, IonInputPasswordToggle,
- IonNote, IonSpinner, IonTitle, IonToolbar
+ IonNote, IonSpinner, IonTitle, IonToolbar, ModalController
 } from '@ionic/angular/standalone';
 import {AuthService} from '../core/auth.service';
 import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
@@ -102,6 +102,8 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
  private readonly auth=inject(AuthService);
  private readonly router=inject(Router);
  private readonly platform=inject(Platform);
+ private readonly modals=inject(ModalController);
+ private verificationProgress?:HTMLIonModalElement;
  private backSubscription?:Subscription;
  private closed=false;
  mode:'resetPassword'|'verifyEmail'='resetPassword';
@@ -115,6 +117,22 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
  progressMessage='Checking the one-time email link…';
 
  constructor(){addIcons({arrowBack,checkmarkCircle});}
+ private async showVerificationProgress():Promise<void>{
+  const progress=await this.modals.create({
+   component:AuthBusyOverlayComponent,
+   componentProps:{label:'Verifying your email',kind:'verify'},
+   cssClass:'blueguard-progress-modal',
+   backdropDismiss:false,animated:false,
+   canDismiss:(_data,role)=>role==='complete'
+  });
+  this.verificationProgress=progress;
+  if(!this.closed)await progress.present();
+ }
+ private async hideVerificationProgress():Promise<void>{
+  const progress=this.verificationProgress;
+  this.verificationProgress=undefined;
+  try{await progress?.dismiss(undefined,'complete');}catch{}
+ }
  private installBackHandler():void{
   if(this.backSubscription || this.closed)return;
   this.backSubscription=this.platform.backButton.subscribeWithPriority(1000,()=>{
@@ -140,6 +158,8 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
     // No secondary 'Verify' button. Firebase verifies immediately after
     // Gmail opens the verified BlueGuard Android deep link.
     this.progressMessage='Verifying your email…';
+    await this.showVerificationProgress();
+    if(this.closed)return;
     await this.auth.finishNativeVerification();
     if(this.closed)return;
     this.success=true;
@@ -152,6 +172,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
    this.ready=false;
    this.error=(e as Error).message||'This link cannot be completed. Request a new one.';
   }finally{
+   await this.hideVerificationProgress();
    if(!this.closed)this.loading=false;
   }
  }
@@ -189,6 +210,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
   if(this.closed)return;
   this.closed=true;
   this.ionViewWillLeave();
+  void this.hideVerificationProgress();
   this.auth.clearNativeEmailAction();
   this.nextPassword='';
   this.confirmPassword='';
@@ -199,6 +221,7 @@ export class NativeEmailActionPage implements OnInit,OnDestroy{
  ngOnDestroy():void{
   this.closed=true;
   this.ionViewWillLeave();
+  void this.hideVerificationProgress();
   this.auth.clearNativeEmailAction();
   this.nextPassword='';
   this.confirmPassword='';
