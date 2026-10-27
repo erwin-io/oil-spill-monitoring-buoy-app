@@ -40,8 +40,17 @@ export class PushService {
   const user=this.auth.currentUser();
   if(!user||!user.emailVerified)return;
   if(this.initialized&&this.uid===user.uid){
-   if(this.session)try{await firstValueFrom(this.api.refreshPushSession(this.session.sessionId,this.session.sessionSecret))}
-    catch{await this.stop();return this.start()}
+   // Overview tab switching must not renew an otherwise valid notification
+   // session. Keep the normal server-backed expiry/revocation contract and
+   // refresh only when less than five minutes remain.
+   if(this.session){
+    const expiresAt=Date.parse(this.session.expiresAt);
+    if(Number.isFinite(expiresAt)&&expiresAt>Date.now()+5*60*1000)return;
+    try{
+     const response=await firstValueFrom(this.api.refreshPushSession(this.session.sessionId,this.session.sessionSecret));
+     if(response?.expiresAt)this.session.expiresAt=response.expiresAt;
+    }catch{await this.stop();return this.start()}
+   }
    return;
   }
   if(this.initialized)await this.stop();
