@@ -20,6 +20,7 @@ export class DevicesPage{
  private api=inject(ApiService);private auth=inject(AuthService);
  private realtime=inject(RealtimeService);
  private active=false;
+ private renderedUid:string|null=null;
  items:Device[]=[];invitations:{deviceId:string;invitedAt:string}[]=[];transfers:{deviceId:string;requestId:string;expiresAt:string}[]=[];term='';filter='ALL';loading=true;loadedOnce=false;error='';accepting='';
  private inFlight=false;
  onSearch(value: string | null | undefined):void{this.term=value??''}
@@ -37,6 +38,10 @@ export class DevicesPage{
  }
  ionViewWillLeave(){this.active=false;this.realtime.disconnect()}
  async load(event?:any,forceFresh=false){
+  const uid=this.auth.profile()?.uid??null;
+  if(this.renderedUid!==uid){
+   this.renderedUid=uid;this.items=[];this.invitations=[];this.transfers=[];this.loadedOnce=false;
+  }
   if(this.inFlight){event?.target?.complete();return;}
   this.inFlight=true;this.loading=true;this.error='';
   try{
@@ -48,6 +53,7 @@ export class DevicesPage{
     Promise.resolve().then(()=>firstValueFrom(this.api.invitations(fresh))).catch(()=>({items:[]})),
     Promise.resolve().then(()=>firstValueFrom(this.api.incomingTransfers(fresh))).catch(()=>({items:[]}))
    ]);
+   if(uid!==this.auth.profile()?.uid)return;
    this.items=devices.items;
    this.invitations=invitations.items;
    this.transfers=transfers.items;
