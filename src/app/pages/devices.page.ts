@@ -11,12 +11,15 @@ import {firstValueFrom} from 'rxjs';
 import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon} from '@ionic/angular/standalone';
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
+import {RealtimeService} from '../core/realtime.service';
 import {Device} from '../core/models';
 @Component({standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonSearchbar,IonSelect,IonSelectOption,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon,EmptyStateComponent],templateUrl:'./devices.page.html',styleUrls:['./devices.page.scss']})
 export class DevicesPage{
  readonly addDeviceModal=inject(AddDeviceModalService);
  constructor(){addIcons({addOutline});}
  private api=inject(ApiService);private auth=inject(AuthService);
+ private realtime=inject(RealtimeService);
+ private active=false;
  items:Device[]=[];invitations:{deviceId:string;invitedAt:string}[]=[];transfers:{deviceId:string;requestId:string;expiresAt:string}[]=[];term='';filter='ALL';loading=true;error='';accepting='';
  onSearch(value: string | null | undefined):void{this.term=value??''}
  onlineLabel(d:Device):string{if(d.status==='DISABLED')return 'Disabled';if(!d.lastSeenAt)return 'Not yet online';const age=Date.now()-Date.parse(d.lastSeenAt);return Number.isFinite(age)&&age>=0&&age<60*60*1000?'Online':'Offline'}
@@ -24,11 +27,19 @@ export class DevicesPage{
  get owned(){return this.shown.filter(d=>d.access==='OWNER')}
  get shared(){return this.shown.filter(d=>d.access==='VIEWER')}
  get legacy(){return this.shown.filter(d=>d.access!=='OWNER'&&d.access!=='VIEWER')}
- async ionViewWillEnter(){await this.load()}
- async load(event?:any){this.loading=true;this.error='';this.items=[];this.invitations=[];this.transfers=[];try{
-  this.items=(await firstValueFrom(this.api.devices())).items;
-  try{this.invitations=(await firstValueFrom(this.api.invitations())).items}catch{this.invitations=[]}
-  try{this.transfers=(await firstValueFrom(this.api.incomingTransfers())).items}catch{this.transfers=[]}
+ async ionViewWillEnter(){
+  this.active=true;
+  await this.load();
+  if(this.active)this.realtime.connect(this.items.map(item=>item.id),()=>{
+   if(this.active&&!this.loading&&!this.accepting)void this.load(undefined,true);
+  });
+ }
+ ionViewWillLeave(){this.active=false;this.realtime.disconnect()}
+ async load(event?:any,forceFresh=false){this.loading=true;this.error='';this.items=[];this.invitations=[];this.transfers=[];try{
+  const fresh=forceFresh||Boolean(event);
+  this.items=(await firstValueFrom(this.api.devices(fresh))).items;
+  try{this.invitations=(await firstValueFrom(this.api.invitations(fresh))).items}catch{this.invitations=[]}
+  try{this.transfers=(await firstValueFrom(this.api.incomingTransfers(fresh))).items}catch{this.transfers=[]}
  }catch(e){this.error=uiError(e)}finally{this.loading=false;event?.target?.complete()}}
  async acceptOwnership(transfer:{deviceId:string;requestId:string}){
   if(this.accepting)return;this.accepting=transfer.deviceId;this.error='';

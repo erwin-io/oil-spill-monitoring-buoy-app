@@ -2,18 +2,22 @@ import {inject,Injectable} from '@angular/core';import {HttpClient} from '@angul
 import {environment} from '../../environments/environment';import {Device,Alert,Health,Measurement,Config,Page,Profile} from './models';
 @Injectable({providedIn:'root'})export class ApiService{
  private http=inject(HttpClient);private url=environment.api;
+ // Cache remains server-side; use this only for a Pusher event or manual refresh.
+ private freshHeaders(fresh:boolean):Record<string,string>|undefined{
+  return fresh?{'X-BlueGuard-Cache-Refresh':'true'}:undefined;
+ }
  me():Observable<Profile>{return this.http.get<Profile>(`${this.url}/auth/me`)}
- devicesPage(cursor?:string):Observable<{items:Device[];nextCursor:string|null}>{
+ devicesPage(cursor?:string,fresh=false):Observable<{items:Device[];nextCursor:string|null}>{
   const params:Record<string,string>={limit:'100'};
   if(cursor)params['cursor']=cursor;
-  return this.http.get<{items:Device[];nextCursor:string|null}>(`${this.url}/devices`,{params});
+  return this.http.get<{items:Device[];nextCursor:string|null}>(`${this.url}/devices`,{params,headers:this.freshHeaders(fresh)});
  }
- devices():Observable<{items:Device[]}>{
+ devices(fresh=false):Observable<{items:Device[]}>{
   return from((async()=>{
    const items:Device[]=[],seen=new Set<string>();
    let cursor:string|undefined;
    for(let pageNo=0;pageNo<500;pageNo++){
-    const page=await firstValueFrom(this.devicesPage(cursor));
+    const page=await firstValueFrom(this.devicesPage(cursor,fresh));
     items.push(...page.items);
     if(!page.nextCursor)return {items};
     if(seen.has(page.nextCursor))throw new Error('Device pagination cursor repeated');
@@ -25,17 +29,17 @@ import {environment} from '../../environments/environment';import {Device,Alert,
  device(id:string):Observable<Device>{return this.http.get<Device>(`${this.url}/devices/${encodeURIComponent(id)}`)}
  requestClaim(id:string,claimCode:string):Observable<{deviceId:string;challengeId:string;state:'PENDING'}>{return this.http.post<{deviceId:string;challengeId:string;state:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/claims`,{claimCode})}
  claimStatus(id:string,challengeId:string):Observable<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>{return this.http.get<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/claims/${encodeURIComponent(challengeId)}`)}
- incomingTransfers():Observable<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>{return this.http.get<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>(`${this.url}/transfers/incoming`)}
+ incomingTransfers(fresh=false):Observable<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>{return this.http.get<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>(`${this.url}/transfers/incoming`,{headers:this.freshHeaders(fresh)})}
  startTransfer(id:string,email:string):Observable<{deviceId:string;requestId:string;state:string;expiresAt:string}>{return this.http.post<{deviceId:string;requestId:string;state:string;expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/transfer`,{email})}
  cancelTransfer(id:string):Observable<unknown>{return this.http.delete(`${this.url}/devices/${encodeURIComponent(id)}/transfer`)}
  acceptTransfer(id:string,requestId:string):Observable<{access:'OWNER'}>{return this.http.post<{access:'OWNER'}>(`${this.url}/devices/${encodeURIComponent(id)}/transfer/accept`,{requestId})}
-  invitations():Observable<{items:{deviceId:string;invitedAt:string}[]}>{return this.http.get<{items:{deviceId:string;invitedAt:string}[]}>(`${this.url}/invitations`)}
+  invitations(fresh=false):Observable<{items:{deviceId:string;invitedAt:string}[]}>{return this.http.get<{items:{deviceId:string;invitedAt:string}[]}>(`${this.url}/invitations`,{headers:this.freshHeaders(fresh)})}
  acceptInvitation(id:string):Observable<{deviceId:string;access:'VIEWER'}>{return this.http.post<{deviceId:string;access:'VIEWER'}>(`${this.url}/devices/${encodeURIComponent(id)}/invitations/accept`,{})}
  inviteViewer(id:string,email:string):Observable<{deviceId:string;email:string;status:'PENDING'}>{return this.http.post<{deviceId:string;email:string;status:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/invitations`,{email})}
  history(id:string,cursor?:string,limit=30):Observable<Page<Measurement>>{const params:Record<string,string>={limit:String(limit)};if(cursor)params['cursor']=cursor;return this.http.get<Page<Measurement>>(`${this.url}/devices/${encodeURIComponent(id)}/measurements`,{params})}
  latest(id:string):Observable<Measurement>{return this.http.get<Measurement>(`${this.url}/devices/${encodeURIComponent(id)}/measurements/latest`)}
  health(id:string):Observable<Page<Health>>{return this.http.get<Page<Health>>(`${this.url}/devices/${encodeURIComponent(id)}/health`)}
- alerts(cursor?:string,status?:string):Observable<Page<Alert>>{const params:Record<string,string>={limit:'30'};if(cursor)params['cursor']=cursor;if(status)params['status']=status;return this.http.get<Page<Alert>>(`${this.url}/alerts`,{params})}
+ alerts(cursor?:string,status?:string,fresh=false):Observable<Page<Alert>>{const params:Record<string,string>={limit:'30'};if(cursor)params['cursor']=cursor;if(status)params['status']=status;return this.http.get<Page<Alert>>(`${this.url}/alerts`,{params,headers:this.freshHeaders(fresh)})}
  alert(id:string):Observable<Alert>{return this.http.get<Alert>(`${this.url}/alerts/${encodeURIComponent(id)}`)}
  markAllRead():Observable<{readAt:string;deviceCount:number}>{return this.http.post<{readAt:string;deviceCount:number}>(`${this.url}/notifications/read-all`,{})}
  markRead(id:string):Observable<{alertId:string;unread:boolean}>{return this.http.post<{alertId:string;unread:boolean}>(`${this.url}/alerts/${encodeURIComponent(id)}/read`,{})}
