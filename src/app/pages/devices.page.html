@@ -5,7 +5,8 @@
 <ion-content><ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher><div class="page">
   <div class="classification-filter"><ion-select label="Classification" label-placement="stacked" fill="outline" interface="alert" [interfaceOptions]="{ header: 'Classification' }" [(ngModel)]="filter"><ion-select-option value="ALL">All</ion-select-option><ion-select-option value="NORMAL">Normal</ion-select-option><ion-select-option value="PETROLEUM">Petroleum</ion-select-option><ion-select-option value="INTERFERENCE">Interference</ion-select-option><ion-select-option value="INCONCLUSIVE">Inconclusive</ion-select-option></ion-select></div>
   <p *ngIf="loading&&!loadedOnce">Loading your buoys...</p>
-  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Refreshing your buoys…</p>
+  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Syncing your buoys…</p>
+  <p *ngIf="stale&&!loading" class="hint" role="status">Buoy information may have changed. Pull down to refresh.</p>
   <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button fill="outline" expand="block" (click)="load()">Retry loading</ion-button></div>
   <section *ngIf="(!loading||loadedOnce)&&transfers.length"><h3>Ownership transfers</h3>
    <div *ngFor="let transfer of transfers" class="card">
