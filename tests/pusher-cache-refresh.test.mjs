@@ -26,3 +26,19 @@ test('Buoys and notifications subscribe only while active and handle user-scoped
   assert.match(src,/ionViewWillLeave\(\)/);
  }
 });
+
+test('Realtime and manual refresh bypass stale Vercel warm-instance cache only when requested',()=>{
+ const api=file('core/api.service.ts');
+ assert.match(api,/X-BlueGuard-Cache-Refresh/);
+ assert.match(api,/devices\(fresh=false\)/);
+ assert.match(api,/alerts\(cursor\?:string,status\?:string,fresh=false\)/);
+ const overview=file('pages/dashboard.page.ts');
+ assert.match(overview,/this\.api\.devices\(true\)/);
+ assert.match(overview,/this\.api\.alerts\(undefined,undefined,true\)/);
+ const inbox=file('pages/alerts.page.ts');
+ const buoys=file('pages/devices.page.ts');
+ assert.match(inbox,/this\.load\(undefined,true\)/);
+ assert.match(buoys,/this\.load\(undefined,true\)/);
+ assert.match(inbox,/forceFresh\|\|Boolean\(e\)/);
+ assert.match(buoys,/forceFresh\|\|Boolean\(event\)/);
+});
