@@ -11,12 +11,14 @@ import {AuthService} from '../core/auth.service';
 import {parseProtectedQr} from '../core/pairing-code';
 import {uiError} from '../core/ui-error';
 import {AddDeviceModalService} from '../core/add-device-modal.service';
+import {ScreenCacheService} from '../core/screen-cache.service';
 import {addIcons} from 'ionicons';
 import {closeOutline} from 'ionicons/icons';
 
 @Component({selector:'app-add-device',standalone:true,imports:[CommonModule,FormsModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonInput,IonItem,IonButtons,IonIcon],templateUrl:'./add-device.page.html',styleUrls:['./add-device.page.scss']})
 export class AddDevicePage implements OnDestroy{
  readonly modal=inject(AddDeviceModalService);
+ private cache=inject(ScreenCacheService);
  private readonly modalController=inject(ModalController);
  constructor(){addIcons({closeOutline});}
  async close():Promise<void>{
@@ -68,7 +70,12 @@ export class AddDevicePage implements OnDestroy{
    if(this.auth.currentUser()?.uid!==this.claimantUid)return;
    this.state=result.state;
    if(result.state==='CONFIRMED'){
-    try{await this.auth.bootstrap();await this.modal.close();await this.router.navigate(['/tabs/buoys',id])}
+    try{
+      await this.auth.bootstrap();
+      this.cache.markStale(['devices','alerts','invitations','transfers']);
+      await this.cache.fetch('devices',async()=>await firstValueFrom(this.api.devices(true)),true);
+      await this.modal.close();await this.router.navigate(['/tabs/buoys',id]);
+     }
     catch{this.error='Device claimed. Refresh My Buoys to load your new access.'}
     return;
    }
