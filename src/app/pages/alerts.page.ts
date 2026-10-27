@@ -26,20 +26,20 @@ export class AlertsPage{
   this.active=true;
   await this.load();
   if(this.active)this.realtime.connect(Object.keys(this.deviceNames),()=>{
-   if(this.active&&!this.loading&&!this.marking)void this.load();
+   if(this.active&&!this.loading&&!this.marking)void this.load(undefined,true);
   });
  }
  ionViewWillLeave(){this.active=false;this.generation++;this.realtime.disconnect()}
- async load(e?:any){
+ async load(e?:any,forceFresh=false){
   const gen=++this.generation,uid=this.auth.profile()?.uid;
   this.items=[];this.cursor=null;this.openCount=0;this.unreadCount=0;this.deviceNames={};this.loading=true;
   try{
-   const page=await firstValueFrom(this.api.alerts());
+   const page=await firstValueFrom(this.api.alerts(undefined,undefined,forceFresh||Boolean(e)));
    if(gen!==this.generation||uid!==this.auth.profile()?.uid)return;
    this.items=page.items;this.cursor=page.nextCursor;this.openCount=page.openCount??0;
    this.unreadCount=page.unreadCount??0;this.error='';
    try{
-    const d=await firstValueFrom(this.api.devices());
+    const d=await firstValueFrom(this.api.devices(forceFresh||Boolean(e)));
     if(gen===this.generation&&uid===this.auth.profile()?.uid)
      this.deviceNames=Object.fromEntries(d.items.map(x=>[x.id,x.name]));
    }catch{/* Inbox works without device names */}
