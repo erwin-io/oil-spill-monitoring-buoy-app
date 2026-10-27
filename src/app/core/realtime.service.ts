@@ -10,13 +10,22 @@ export class RealtimeService {
  private auth=inject(AuthService);
  private client?:Pusher;
  private fallbackTimer?:ReturnType<typeof setInterval>;
+ private refreshTimer?:ReturnType<typeof setTimeout>;
  private generation=0;
  readonly connected=signal(false);
 
  connect(deviceIds:string[],onRefresh:()=>void):void {
   this.disconnect();
   const generation=this.generation;
-  const refresh=()=>{if(generation===this.generation)onRefresh();};
+  // Burst of Pusher events should trigger one REST fetch, not one fetch per
+  // event. The screens still bypass the warm cache on genuine refreshes.
+  const refresh=()=>{
+   if(generation!==this.generation||this.refreshTimer)return;
+   this.refreshTimer=setTimeout(()=>{
+    this.refreshTimer=undefined;
+    if(generation===this.generation)onRefresh();
+   },300);
+  };
   const beginFallback=()=>{
    if(generation!==this.generation)return;
    this.connected.set(false);
@@ -67,11 +76,15 @@ export class RealtimeService {
      }
     }
    });
+   let previouslyConnected=false;
    this.client.connection.bind('connected',()=>{
     if(generation!==this.generation)return;
     stopFallback();
     this.connected.set(true);
-    refresh(); // reconcile missed events after every reconnect
+    // The caller has JUST completed the initial REST load. Refetching it
+    // here always bypasses the Node cache and duplicates all API requests.
+    if(previouslyConnected)refresh();
+    previouslyConnected=true;
    });
    for(const event of ['disconnected','unavailable','failed','error']){
     this.client.connection.bind(event,beginFallback);
@@ -98,6 +111,7 @@ export class RealtimeService {
 
  disconnect():void {
   ++this.generation;
+  if(this.refreshTimer){clearTimeout(this.refreshTimer);this.refreshTimer=undefined;}
   if(this.fallbackTimer){clearInterval(this.fallbackTimer);this.fallbackTimer=undefined;}
   this.client?.disconnect();
   this.client=undefined;
