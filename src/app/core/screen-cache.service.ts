@@ -49,8 +49,11 @@ export class ScreenCacheService{
   if(typeof window!=='undefined'){
    window.addEventListener('blueguard:session-ended',()=>{
     const uid=this.auth.profile()?.uid??this.currentUid;
-    this.clearMemory();
-    if(uid)void this.purge(uid);
+    this.clearMemory();this.currentUid=null;
+    // Wait for any already-started IndexedDB write before purging, otherwise
+    // an out-of-order write could recreate an offline snapshot after logout.
+    const pending=[...this.writes];
+    if(uid)void Promise.allSettled(pending).then(()=>this.purge(uid));
    });
   }
  }
