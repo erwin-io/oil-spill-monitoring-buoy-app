@@ -23,10 +23,10 @@ test('screens keep previous snapshots visible while refreshing and never issue s
  assert.match(devices,/if\(this\.renderedUid!==uid\)/,'Keep snapshots on same-user reentry');
  assert.match(alerts,/Promise\.all\(\[/);
  assert.match(alerts,/if\(this\.renderedUid!==\(uid\?\?null\)\)/,'Clear only when user identity changes');
- assert.match(detail,/Promise\.all\(\[/);
+ assert.match(detail,/this\.cache\.ensure<Alert>/);
  for(const name of ['dashboard','devices','alerts']){
   const html=read('pages/'+name+'.page.html');
-  assert.match(html,/Refreshing/);
+  assert.match(html,/Syncing/);
  }
 });
 
