@@ -5,13 +5,32 @@ import vm from 'node:vm';
 import ts from 'typescript';
 
 function mount(pageName,{api={},role='VIEWER'}={}){
- class ApiService{} class RealtimeService{} class PushService{} class AuthService{} class ActivatedRoute{} class AddDeviceModalService{} class EmptyStateComponent{}
+ class ApiService{} class RealtimeService{} class PushService{} class AuthService{} class ActivatedRoute{} class AddDeviceModalService{} class EmptyStateComponent{} class ScreenCacheService{}
  const realtime={connect:()=>{},disconnect:()=>{},connected:()=>false};
  const push={start:async()=>{}};
+ const cached=new Map(),loaded=new Set();
+ const cache={
+  peek:key=>cached.get(key),hasSnapshot:key=>cached.has(key),
+  needsNetwork:key=>!loaded.has(key),isStale:()=>false,
+  lastUpdated:()=>Date.now(),markStale:()=>{},
+  connectRealtime:()=>{realtime.connect((cached.get('devices')?.items??[]).map(x=>x.id),()=>{})},
+  ensure:async(key,loader,onData,force=false)=>{
+   if(cached.has(key))onData(cached.get(key),true);
+   if(force||!loaded.has(key)){
+    const result=await loader();cached.set(key,result);loaded.add(key);onData(result,false);
+   }
+  },
+  fetch:async(key,loader,force=false)=>{
+   if(!force&&loaded.has(key))return cached.get(key);
+   const value=await loader();cached.set(key,value);loaded.add(key);return value;
+  },
+  update:async(key,data)=>{cached.set(key,data);loaded.add(key)},
+  clearOnLogout:async()=>{cached.clear();loaded.clear()}
+ };
  const auth={profile:()=>({uid:'test-user',role}),bootstrap:async()=>({uid:'test-user',role})};
  const route={snapshot:{paramMap:{get:()=> 'THESIS_TEST_01'}}};
  const dependencies=new Map([[ApiService,api],[RealtimeService,realtime],[PushService,push],
-  [AuthService,auth],[ActivatedRoute,route],[AddDeviceModalService,{open:()=>{},close:()=>{}}]]);
+  [AuthService,auth],[ActivatedRoute,route],[AddDeviceModalService,{open:()=>{},close:()=>{}}],[ScreenCacheService,cache]]);
  const ions=Object.fromEntries([
   'IonContent','IonHeader','IonToolbar','IonTitle','IonButton','IonButtons','IonBackButton',
   'IonSearchbar','IonSelect','IonSelectOption','IonRefresher','IonRefresherContent',
@@ -32,6 +51,7 @@ function mount(pageName,{api={},role='VIEWER'}={}){
   '../core/realtime.service':{RealtimeService},
   '../core/push.service':{PushService},
   '../core/auth.service':{AuthService},
+  '../core/screen-cache.service':{ScreenCacheService},
   '../core/ui-error':{uiError: e=>e?.message??'Test error'},
  };
  const exports={};

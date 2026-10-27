@@ -7,75 +7,78 @@ import {firstValueFrom} from 'rxjs';
 import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonButtons,IonIcon} from '@ionic/angular/standalone';
 import {ApiService} from '../core/api.service';
 import {AuthService} from '../core/auth.service';
-import {RealtimeService} from '../core/realtime.service';
-import {Alert} from '../core/models';
+import {ScreenCacheService} from '../core/screen-cache.service';
+import {Device,Alert,Page} from '../core/models';
 import {addIcons} from 'ionicons';
 import {checkmarkDoneOutline} from 'ionicons/icons';
-@Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonButtons,IonIcon,EmptyStateComponent],
+
+@Component({standalone:true,
+ imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonButtons,IonIcon,EmptyStateComponent],
  templateUrl:'./alerts.page.html',styleUrls:['./alerts.page.scss']})
 export class AlertsPage{
  constructor(){addIcons({checkmarkDoneOutline});}
  private api=inject(ApiService);private auth=inject(AuthService);
- private realtime=inject(RealtimeService);
- private active=false;
+ readonly cache=inject(ScreenCacheService);
  private renderedUid:string|null=null;
- items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;loading=true;loadedOnce=false;marking=false;error='';
+ private loadingPromise?:Promise<void>;
+ items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;
+ loading=true;loadedOnce=false;marking=false;error='';
  deviceNames:Record<string,string>={};
- private generation=0;
+ get stale(){return this.cache.isStale('alerts')||this.cache.isStale('devices');}
  nameOf(a:Alert){return a.deviceName||this.deviceNames[a.deviceId]||a.deviceId}
- async ionViewWillEnter(){
-  this.active=true;
-  await this.load();
-  if(this.active)this.realtime.connect(Object.keys(this.deviceNames),()=>{
-   if(this.active&&!this.loading&&!this.marking)void this.load(undefined,true);
-  });
- }
- ionViewWillLeave(){this.active=false;this.generation++;this.realtime.disconnect()}
- async load(e?:any,forceFresh=false){
-  const gen=++this.generation,uid=this.auth.profile()?.uid;
-  if(this.renderedUid!==(uid??null)){
-   this.renderedUid=uid??null;this.items=[];this.cursor=null;this.openCount=0;
+ async ionViewWillEnter(){await this.load();}
+ ionViewWillLeave():void{}
+ async load(event?:any,forceFresh=false){
+  const uid=this.auth.profile()?.uid??null;
+  if(this.renderedUid!==uid){
+   this.renderedUid=uid;this.items=[];this.cursor=null;this.openCount=0;
    this.unreadCount=0;this.deviceNames={};this.loadedOnce=false;
   }
-  this.loading=true;
-  try{
-   const fresh=forceFresh||Boolean(e);
-   // Alerts and buoy names do not depend on each other. Fetch both
-   // concurrently and keep the previous notification list visible.
-   const [page,devices]=await Promise.all([
-    firstValueFrom(this.api.alerts(undefined,undefined,fresh)),
-    firstValueFrom(this.api.devices(fresh)).catch(()=>null)
-   ]);
-   if(gen!==this.generation||uid!==this.auth.profile()?.uid)return;
-   this.items=page.items;this.cursor=page.nextCursor;
-   this.openCount=page.openCount??0;this.unreadCount=page.unreadCount??0;
-   if(devices)this.deviceNames=Object.fromEntries(devices.items.map(x=>[x.id,x.name]));
-   this.error='';
-  }catch(x){if(gen===this.generation&&uid===this.auth.profile()?.uid)this.error=uiError(x);}
-  finally{
-   if(gen===this.generation){this.loading=false;this.loadedOnce=true;}
-   e?.target?.complete();
-  }
+  if(this.loadingPromise){await this.loadingPromise;event?.target?.complete();return;}
+  const force=forceFresh||Boolean(event);
+  const snapshot=this.cache.hasSnapshot('alerts');
+  this.loading=!snapshot&&!this.loadedOnce;this.error='';
+  const task=(async()=>{
+   try{
+    await Promise.all([
+     this.cache.ensure<Page<Alert>>('alerts',()=>firstValueFrom(this.api.alerts(undefined,undefined,force)),page=>{
+      if(uid!==this.auth.profile()?.uid)return;
+      this.items=page.items;this.cursor=page.nextCursor;this.openCount=page.openCount??0;
+      this.unreadCount=page.unreadCount??0;this.loadedOnce=true;this.loading=false;
+     },force),
+     this.cache.ensure<{items:Device[]}>('devices',()=>firstValueFrom(this.api.devices(force)),data=>{
+      if(uid===this.auth.profile()?.uid){
+       this.deviceNames=Object.fromEntries(data.items.map(x=>[x.id,x.name]));
+      }
+     },force)
+    ]);
+    this.cache.connectRealtime();
+   }catch(e){if(uid===this.auth.profile()?.uid)this.error=uiError(e);}
+   finally{this.loading=false;this.loadingPromise=undefined;event?.target?.complete();}
+  })();
+  this.loadingPromise=task;await task;
  }
  async more(){
   if(!this.cursor||this.loading)return;
-  const gen=this.generation,uid=this.auth.profile()?.uid;this.loading=true;
+  const uid=this.auth.profile()?.uid;this.loading=true;
   try{
    const page=await firstValueFrom(this.api.alerts(this.cursor));
-   if(gen!==this.generation||uid!==this.auth.profile()?.uid)return;
+   if(uid!==this.auth.profile()?.uid)return;
    const ids=new Set(this.items.map(x=>x.id));
-   this.items.push(...page.items.filter(x=>!ids.has(x.id)));
+   this.items=[...this.items,...page.items.filter(x=>!ids.has(x.id))];
    this.cursor=page.nextCursor;this.error='';
-  }catch(x){if(gen===this.generation&&uid===this.auth.profile()?.uid)this.error=uiError(x)}
-  finally{if(gen===this.generation)this.loading=false}
+   await this.cache.update<Page<Alert>>('alerts',{items:this.items,nextCursor:this.cursor,
+    unreadCount:this.unreadCount,openCount:this.openCount});
+  }catch(e){if(uid===this.auth.profile()?.uid)this.error=uiError(e);}
+  finally{this.loading=false;}
  }
  async markAll(){
   if(this.marking||this.loading)return;
   const uid=this.auth.profile()?.uid;this.marking=true;this.error='';
   try{
    await firstValueFrom(this.api.markAllRead());
-   if(uid===this.auth.profile()?.uid)await this.load();
-  }catch(e){if(uid===this.auth.profile()?.uid)this.error=uiError(e)}
-  finally{this.marking=false}
+   if(uid===this.auth.profile()?.uid){this.cache.markStale(['alerts']);await this.load(undefined,true);}
+  }catch(e){if(uid===this.auth.profile()?.uid)this.error=uiError(e);}
+  finally{this.marking=false;}
  }
 }

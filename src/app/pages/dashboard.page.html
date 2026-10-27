@@ -3,7 +3,8 @@
   <h2 class="top-title">Your buoy monitoring</h2>
   <p class="hint">Raw-seawater fluorescence classification is advisory, not a laboratory oil concentration.</p>
   <p *ngIf="busy">Loading your buoys...</p>
-  <p class="hint" *ngIf="refreshing&&!busy" role="status">Refreshing monitoring data…</p>
+  <p class="hint" *ngIf="refreshing&&!busy" role="status">Syncing monitoring data…</p>
+  <p class="hint" *ngIf="stale&&!refreshing" role="status">New monitoring data available. Pull down to refresh.</p>
   <div *ngIf="error" role="alert" class="card"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" [disabled]="busy" (click)="reload()">Retry loading</ion-button></div>
   <div *ngIf="!busy&&!error&&!devices.length" class="blueguard-empty-layout" role="status">
     <app-empty-state kind="overview" title="Your buoy network starts here"
@@ -14,7 +15,7 @@
   </div>
   <ng-container *ngIf="devices.length">
     <div class="metric-grid"><div class="metric"><strong>{{devices.length}}</strong><span>My buoys</span></div><div class="metric"><strong>{{online}}</strong><span>Seen in last {{offlineMinutes}} min</span></div><div class="metric"><strong>{{devices.length-online}}</strong><span>Offline / not yet seen</span></div><div class="metric"><strong>{{oil}}</strong><span>Petroleum classifications</span></div><div class="metric"><strong>{{suspicious}}</strong><span>Interference / inconclusive</span></div><div class="metric"><strong>{{alerts.length}}</strong><span>Recent alerts</span></div><div class="metric"><strong>{{maintenance}}</strong><span>Maintenance required</span></div><div class="metric"><strong>{{lowBattery}}</strong><span>Low battery</span></div></div>
-    <p class="hint">Last refresh: {{updated?(updated|date:'medium'):'—'}} · Realtime: {{realtime.connected()?'connected':'REST fallback'}}</p>
+    <p class="hint">Last synced: {{updated?(updated|date:'medium'):'—'}} (saved view; readings may be outdated) · Realtime: {{realtime.connected()?'connected':'REST fallback'}}</p>
     <h3>Recent measurements</h3><div *ngFor="let d of recentMeasurements" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p>{{d.lastMeasurementAt|date:'medium'}} · {{d.confidence===undefined?'Confidence unavailable':(d.confidence|percent:'1.0-1')+' confidence'}} · Raw seawater</p></div><div *ngIf="!recentMeasurements.length" class="empty">No measurements from your buoys yet.</div>
     <h3>Recent alerts</h3><div *ngFor="let a of alerts.slice(0,4)" class="card tap" [routerLink]="['/tabs/alerts',a.id]"><div class="row"><strong>{{a.type}}</strong><span class="badge">{{a.severity}}</span></div><p>{{a.deviceId}} · {{a.createdAt|date:'medium'}}</p></div><div *ngIf="!alerts.length" class="empty">No alerts for your buoys.</div>
   </ng-container>

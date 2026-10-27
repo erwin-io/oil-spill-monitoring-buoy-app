@@ -118,7 +118,7 @@ test('Sign out uses a nondismissable app-wide Ionic progress modal before revoki
  const events=[];
  let releaseRevocation;
  const revocation=new Promise(resolve=>{releaseRevocation=resolve});
- class AuthService{}class RealtimeService{}class PushService{}class Router{}class ModalController{}
+ class AuthService{}class RealtimeService{}class PushService{}class Router{}class ModalController{}class ScreenCacheService{}
  const auth={logout:async()=>events.push('auth:logout'),profile:()=>null};
  const realtime={disconnect:()=>events.push('realtime:disconnect')};
  const push={stop:async flag=>{assert.equal(flag,true);events.push('push:start');await revocation;events.push('push:done')}};
@@ -132,7 +132,8 @@ test('Sign out uses a nondismissable app-wide Ionic progress modal before revoki
   assert.equal(await options.canDismiss(null,'complete'),true);
   return overlay;
  }};
- const dep=new Map([[AuthService,auth],[RealtimeService,realtime],[PushService,push],[Router,router],[ModalController,modals]]);
+ const cache={clearOnLogout:async()=>{events.push('cache:clear')}};
+ const dep=new Map([[AuthService,auth],[RealtimeService,realtime],[PushService,push],[Router,router],[ModalController,modals],[ScreenCacheService,cache]]);
  const stub=class{};
  const modules={
   '@angular/common':{CommonModule:stub},
@@ -143,6 +144,7 @@ test('Sign out uses a nondismissable app-wide Ionic progress modal before revoki
   'ionicons':{addIcons:()=>{}},
   'ionicons/icons':{},
   '../core/auth.service':{AuthService},
+  '../core/screen-cache.service':{ScreenCacheService},
   '../core/realtime.service':{RealtimeService},
   '../core/push.service':{PushService},
   './auth-busy-overlay.component':{AuthBusyOverlayComponent:stub}
@@ -159,7 +161,7 @@ test('Sign out uses a nondismissable app-wide Ionic progress modal before revoki
  assert.equal(page.signingOut,true);
  assert.equal(events.includes('auth:logout'),false);
  releaseRevocation();await pending;
- assert.deepEqual(events,['create','present','push:start','push:done','realtime:disconnect','auth:logout','route:/login','dismiss:complete']);
+ assert.deepEqual(events,['create','present','push:start','push:done','realtime:disconnect','cache:clear','auth:logout','route:/login','dismiss:complete']);
  assert.equal(page.signingOut,false);
  assert.equal(read('profile.page.html').includes('app-auth-busy-overlay *ngIf="signingOut"'),false);
 });

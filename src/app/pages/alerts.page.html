@@ -6,7 +6,8 @@
  <div class="page">
   <p class="hint">Unread: {{unreadCount}} · Open incidents: {{openCount}}</p>
   <p *ngIf="loading&&!loadedOnce">Loading notifications...</p>
-  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Refreshing notifications…</p>
+  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Syncing notifications…</p>
+  <p *ngIf="stale&&!loading" class="hint" role="status">New notification data available. Pull down to refresh.</p>
   <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" (click)="load()">Retry loading</ion-button></div>
   <div *ngFor="let a of items" class="card tap" [routerLink]="['/tabs/alerts',a.id]">
    <div class="row"><strong>{{a.type}}</strong><span class="badge">{{a.severity}}</span></div>

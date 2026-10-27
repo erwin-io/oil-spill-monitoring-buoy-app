@@ -18,15 +18,15 @@ test('screens keep previous snapshots visible while refreshing and never issue s
  const detail=read('pages/alert-detail.page.ts');
  assert.match(overview,/Promise\.all\(\[/);
  assert.match(overview,/if\(this\.renderedUid!==uid\)/,'Old-account data is cleared only when identity changes');
- assert.match(overview,/if\(this\.refreshing\|\|this\.busy\)return/);
+ assert.match(overview,/if\(this\.loadingPromise\)/);
  assert.match(devices,/Promise\.all\(\[/);
  assert.match(devices,/if\(this\.renderedUid!==uid\)/,'Keep snapshots on same-user reentry');
  assert.match(alerts,/Promise\.all\(\[/);
- assert.match(alerts,/if\(this\.renderedUid!==\(uid\?\?null\)\)/,'Clear only when user identity changes');
- assert.match(detail,/Promise\.all\(\[/);
+ assert.match(alerts,/if\(this\.renderedUid!==uid\)/,'Clear only when user identity changes');
+ assert.match(detail,/this\.cache\.ensure<Alert>/);
  for(const name of ['dashboard','devices','alerts']){
   const html=read('pages/'+name+'.page.html');
-  assert.match(html,/Refreshing/);
+  assert.match(html,/Syncing/);
  }
 });
 
