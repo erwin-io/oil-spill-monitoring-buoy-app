@@ -7,13 +7,13 @@ import ts from 'typescript';
 const read=path=>readFileSync('src/app/'+path,'utf8');
 function deferred(){let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject};}
 function harness(){
- let uid='alice',connections=0,disconnects=0;
+ let uid='alice',connections=0,disconnects=0,rendering=false;
  const handlers={};
  class AuthService{} class RealtimeService{};
  const auth={profile:()=>uid?{uid}:null};
  const realtime={
   connect:(ids,cb)=>{connections++;handlers.change=cb;handlers.ids=ids},
-  disconnect:()=>{disconnects++}
+  disconnect:()=>{if(rendering)throw new Error('Angular NG0600: Pusher disconnect during template');disconnects++}
  };
  const injected=new Map([[AuthService,auth],[RealtimeService,realtime]]);
  const transpiled=ts.transpileModule(read('core/screen-cache.service.ts'),{compilerOptions:{
@@ -23,7 +23,7 @@ function harness(){
  vm.runInNewContext(transpiled,{
   exports,require:name=>{
    if(name==='@angular/core')return {Injectable:()=>x=>x,inject:key=>injected.get(key),signal:initial=>{
-    let value=initial;const f=()=>value;f.update=fn=>{value=fn(value)};return f;
+    let value=initial;const f=()=>value;f.update=fn=>{if(rendering)throw new Error('Angular NG0600: signal update during template');value=fn(value)};return f;
    }};
    if(name==='./auth.service')return {AuthService};
    if(name==='./realtime.service')return {RealtimeService};
@@ -31,6 +31,7 @@ function harness(){
   },console,Date,Promise,Map,Set
  });
  return {cache:new exports.ScreenCacheService(),setUid:value=>{uid=value},
+  render:fn=>{rendering=true;try{return fn()}finally{rendering=false}},
   stats:()=>({connections,disconnects}),handlers};
 }
 test('first session load fetches once and zero additional GET on tab reentry, including empty data',async()=>{
@@ -107,4 +108,39 @@ test('screen navigation never disconnects or forces the API; mutations remain re
   assert.doesNotMatch(source,/ionViewWillLeave\(\)\{this\.realtime\.disconnect\(\)/);
   assert.match(source,/const force=(?:forceFresh\|\|)?Boolean\(event\)/);
  }
+});
+
+test('NG0600 regression: template stale and snapshot getters never write signals or disconnect Pusher',async()=>{
+ const h=harness();
+ // Before Ionic ever loads a tab, Firebase profile exists but cache has not
+ // initialized its UID. Angular may evaluate the stale banner first.
+ h.render(()=>{
+  assert.equal(h.cache.isStale('devices'),false);
+  assert.equal(h.cache.hasSnapshot('devices'),false);
+  assert.equal(h.cache.peek('devices'),undefined);
+  assert.equal(h.cache.lastUpdated('devices'),undefined);
+  assert.equal(h.cache.needsNetwork('devices'),true);
+ });
+ assert.equal(h.stats().disconnects,0,'A template read cannot tear down realtime');
+ await h.cache.fetch('devices',async()=>({items:[{id:'private-alice'}]}));
+ h.handlers.change();
+ h.render(()=>{
+  assert.equal(h.cache.isStale('devices'),true,'Render can safely observe Pusher invalidation');
+  assert.equal(h.cache.hasSnapshot('devices'),true);
+  assert.equal(h.cache.peek('devices').items[0].id,'private-alice');
+  assert.equal(h.cache.needsNetwork('devices'),false);
+ });
+ const before=h.stats().disconnects;
+ h.setUid('bob');
+ h.render(()=>{
+  assert.equal(h.cache.isStale('devices'),false,'A different account never sees old stale state');
+  assert.equal(h.cache.hasSnapshot('devices'),false);
+  assert.equal(h.cache.peek('devices'),undefined,'Never expose another UID snapshot');
+  assert.equal(h.cache.lastUpdated('devices'),undefined);
+  assert.equal(h.cache.needsNetwork('devices'),true);
+ });
+ assert.equal(h.stats().disconnects,before,'Account reconciliation must not run from a getter');
+ await h.cache.fetch('devices',async()=>({items:[{id:'bob-buoy'}]}));
+ assert.ok(h.stats().disconnects>before,'Imperative API load reconciles session and disconnects safely');
+ assert.equal(h.cache.peek('devices').items[0].id,'bob-buoy');
 });
