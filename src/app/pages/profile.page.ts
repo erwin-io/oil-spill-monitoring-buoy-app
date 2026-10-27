@@ -6,6 +6,7 @@ import {IonAlert,IonAvatar,IonBadge,IonButton,IonContent,IonHeader,IonFooter,Ion
 import {addIcons} from 'ionicons';
 import {alertCircleOutline,checkmarkCircleOutline,informationCircleOutline,logOutOutline,mailOutline,createOutline,lockClosedOutline,chevronForwardOutline,cameraOutline,imagesOutline,trashOutline,closeOutline} from 'ionicons/icons';
 import {AuthService} from '../core/auth.service';
+import {ScreenCacheService} from '../core/screen-cache.service';
 import {RealtimeService} from '../core/realtime.service';
 import {PushService} from '../core/push.service';
 import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
@@ -14,6 +15,7 @@ import {AuthBusyOverlayComponent} from './auth-busy-overlay.component';
  templateUrl:'./profile.page.html',styleUrls:['./profile.page.scss']})
 export class ProfilePage implements OnDestroy {
  readonly auth=inject(AuthService);
+ private readonly cache=inject(ScreenCacheService);
  private readonly realtime=inject(RealtimeService);
  private readonly push=inject(PushService);
  private readonly router=inject(Router);
@@ -137,6 +139,7 @@ export class ProfilePage implements OnDestroy {
    });
    await progress.present();
    await this.push.stop(true);this.realtime.disconnect();
+   await this.cache.clearOnLogout();
    await this.auth.logout();
    await this.router.navigateByUrl('/login',{replaceUrl:true});
   }catch(error){this.error=(error as Error).message||'Unable to sign out. Please try again.';}
