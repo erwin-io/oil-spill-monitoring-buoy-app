@@ -58,15 +58,24 @@ export class ScreenCacheService{
   }
  }
  private emit(){this.version.update(v=>v+1);}
+ // Call only from imperative lifecycle/event/network methods, never from
+ // template getters. Synchronizing identity clears the cache, disconnects
+ // Pusher and writes Angular signals; doing that during template evaluation
+ // raises NG0600 and can leave the screen stuck in its loading state.
  private identity():string|null{
   const uid=this.auth.profile()?.uid??null;
   if(uid!==this.currentUid){
-   // An Ionic tab page can survive sign-out or an account switch.
-   // No record from another UID is ever returned.
    this.clearMemory();
    this.currentUid=uid;
   }
   return uid;
+ }
+ // Pure read guard for Angular templates. A stale snapshot from a previous
+ // user is neither returned nor used to authorize/skip network requests.
+ // The next imperative ensure()/fetch()/connectRealtime() reconciles identity.
+ private readableUid():string|null{
+  const uid=this.auth.profile()?.uid??null;
+  return uid&&uid===this.currentUid?uid:null;
  }
  private clearMemory(){
   this.entries.clear();this.loaded.clear();this.pending.clear();
@@ -149,22 +158,28 @@ export class ScreenCacheService{
   }catch{/* Storage absence never prevents logout. */}
  }
  peek<T>(key:ScreenKey):T|undefined{
-  const uid=this.identity();
+  const uid=this.readableUid();
   if(!uid)return;
   const entry=this.entries.get(key);
   return entry?.uid===uid?entry.data as T:undefined;
  }
  hasSnapshot(key:ScreenKey):boolean{
-  this.identity();return this.entries.has(key);
+  const uid=this.readableUid();
+  return Boolean(uid&&this.entries.get(key)?.uid===uid);
  }
  isStale(key:ScreenKey):boolean{
-  this.identity();this.version();return this.stale.has(key);
+  // Reading a signal is safe inside a template; writing one is not.
+  this.version();
+  return this.readableUid()!==null&&this.stale.has(key);
  }
  lastUpdated(key:ScreenKey):number|undefined{
-  this.identity();return this.entries.get(key)?.storedAt;
+  const uid=this.readableUid();
+  const entry=this.entries.get(key);
+  return uid&&entry?.uid===uid?entry.storedAt:undefined;
  }
  needsNetwork(key:ScreenKey):boolean{
-  this.identity();return !this.loaded.has(key);
+  // Template/lifecycle callers can inspect this without triggering a reset.
+  return !this.readableUid()||!this.loaded.has(key);
  }
  async hydrate<T>(key:ScreenKey):Promise<T|undefined>{
   const uid=this.identity();
