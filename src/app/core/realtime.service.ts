@@ -78,7 +78,7 @@ export class RealtimeService {
    }
    for(const id of new Set(deviceIds)){
     const channel=this.client.subscribe(`private-device-${id}`);
-    for(const event of ['measurement.created','health.updated','device.online','device.offline','alert.created','alert.acknowledged']){
+    for(const event of ['measurement.created','health.updated','device.online','device.offline','alert.created','alert.acknowledged','data.changed']){
      channel.bind(event,refresh);
     }
    }
@@ -86,6 +86,7 @@ export class RealtimeService {
    if(uid){
     const userChannel=this.client.subscribe(`private-user-${uid}`);
     userChannel.bind('alert.acknowledged',refresh);
+    userChannel.bind('data.changed',refresh);
    }
   }catch(error){
    console.warn('Realtime unavailable; continuing REST refresh:',error);
