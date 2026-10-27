@@ -18,7 +18,8 @@ export class AlertsPage{
  private api=inject(ApiService);private auth=inject(AuthService);
  private realtime=inject(RealtimeService);
  private active=false;
- items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;loading=true;marking=false;error='';
+ private renderedUid:string|null=null;
+ items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;loading=true;loadedOnce=false;marking=false;error='';
  deviceNames:Record<string,string>={};
  private generation=0;
  nameOf(a:Alert){return a.deviceName||this.deviceNames[a.deviceId]||a.deviceId}
@@ -32,19 +33,29 @@ export class AlertsPage{
  ionViewWillLeave(){this.active=false;this.generation++;this.realtime.disconnect()}
  async load(e?:any,forceFresh=false){
   const gen=++this.generation,uid=this.auth.profile()?.uid;
-  this.items=[];this.cursor=null;this.openCount=0;this.unreadCount=0;this.deviceNames={};this.loading=true;
+  if(this.renderedUid!==(uid??null)){
+   this.renderedUid=uid??null;this.items=[];this.cursor=null;this.openCount=0;
+   this.unreadCount=0;this.deviceNames={};this.loadedOnce=false;
+  }
+  this.loading=true;
   try{
-   const page=await firstValueFrom(this.api.alerts(undefined,undefined,forceFresh||Boolean(e)));
+   const fresh=forceFresh||Boolean(e);
+   // Alerts and buoy names do not depend on each other. Fetch both
+   // concurrently and keep the previous notification list visible.
+   const [page,devices]=await Promise.all([
+    firstValueFrom(this.api.alerts(undefined,undefined,fresh)),
+    firstValueFrom(this.api.devices(fresh)).catch(()=>null)
+   ]);
    if(gen!==this.generation||uid!==this.auth.profile()?.uid)return;
-   this.items=page.items;this.cursor=page.nextCursor;this.openCount=page.openCount??0;
-   this.unreadCount=page.unreadCount??0;this.error='';
-   try{
-    const d=await firstValueFrom(this.api.devices(forceFresh||Boolean(e)));
-    if(gen===this.generation&&uid===this.auth.profile()?.uid)
-     this.deviceNames=Object.fromEntries(d.items.map(x=>[x.id,x.name]));
-   }catch{/* Inbox works without device names */}
-  }catch(x){if(gen===this.generation&&uid===this.auth.profile()?.uid)this.error=uiError(x)}
-  finally{if(gen===this.generation)this.loading=false;e?.target?.complete()}
+   this.items=page.items;this.cursor=page.nextCursor;
+   this.openCount=page.openCount??0;this.unreadCount=page.unreadCount??0;
+   if(devices)this.deviceNames=Object.fromEntries(devices.items.map(x=>[x.id,x.name]));
+   this.error='';
+  }catch(x){if(gen===this.generation&&uid===this.auth.profile()?.uid)this.error=uiError(x);}
+  finally{
+   if(gen===this.generation){this.loading=false;this.loadedOnce=true;}
+   e?.target?.complete();
+  }
  }
  async more(){
   if(!this.cursor||this.loading)return;

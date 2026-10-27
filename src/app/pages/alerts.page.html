@@ -5,14 +5,15 @@
  <ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher>
  <div class="page">
   <p class="hint">Unread: {{unreadCount}} · Open incidents: {{openCount}}</p>
-  <p *ngIf="loading">Loading notifications...</p>
+  <p *ngIf="loading&&!loadedOnce">Loading notifications...</p>
+  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Refreshing notifications…</p>
   <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button expand="block" fill="outline" (click)="load()">Retry loading</ion-button></div>
   <div *ngFor="let a of items" class="card tap" [routerLink]="['/tabs/alerts',a.id]">
    <div class="row"><strong>{{a.type}}</strong><span class="badge">{{a.severity}}</span></div>
    <p>{{nameOf(a)}} ({{a.deviceId}}) · {{a.createdAt|date:'medium'}}</p>
    <p class="hint">{{a.unread===true?'Unread · ':''}}{{a.status}}</p>
   </div>
-  <div class="blueguard-empty-layout" *ngIf="!loading&&!items.length&&!error" role="status">
+  <div class="blueguard-empty-layout" *ngIf="(!loading||loadedOnce)&&!items.length&&!error" role="status">
     <app-empty-state kind="alerts" title="You're all caught up"
       description="Oil spill alerts and important buoy notifications will appear here."></app-empty-state>
   </div>

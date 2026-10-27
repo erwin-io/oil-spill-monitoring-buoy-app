@@ -20,7 +20,9 @@ export class DevicesPage{
  private api=inject(ApiService);private auth=inject(AuthService);
  private realtime=inject(RealtimeService);
  private active=false;
- items:Device[]=[];invitations:{deviceId:string;invitedAt:string}[]=[];transfers:{deviceId:string;requestId:string;expiresAt:string}[]=[];term='';filter='ALL';loading=true;error='';accepting='';
+ private renderedUid:string|null=null;
+ items:Device[]=[];invitations:{deviceId:string;invitedAt:string}[]=[];transfers:{deviceId:string;requestId:string;expiresAt:string}[]=[];term='';filter='ALL';loading=true;loadedOnce=false;error='';accepting='';
+ private inFlight=false;
  onSearch(value: string | null | undefined):void{this.term=value??''}
  onlineLabel(d:Device):string{if(d.status==='DISABLED')return 'Disabled';if(!d.lastSeenAt)return 'Not yet online';const age=Date.now()-Date.parse(d.lastSeenAt);return Number.isFinite(age)&&age>=0&&age<60*60*1000?'Online':'Offline'}
  get shown(){return this.items.filter(d=>(d.name+' '+d.id).toLowerCase().includes(this.term.toLowerCase())&&(this.filter==='ALL'||d.latestClassification===this.filter))}
@@ -35,12 +37,29 @@ export class DevicesPage{
   });
  }
  ionViewWillLeave(){this.active=false;this.realtime.disconnect()}
- async load(event?:any,forceFresh=false){this.loading=true;this.error='';this.items=[];this.invitations=[];this.transfers=[];try{
-  const fresh=forceFresh||Boolean(event);
-  this.items=(await firstValueFrom(this.api.devices(fresh))).items;
-  try{this.invitations=(await firstValueFrom(this.api.invitations(fresh))).items}catch{this.invitations=[]}
-  try{this.transfers=(await firstValueFrom(this.api.incomingTransfers(fresh))).items}catch{this.transfers=[]}
- }catch(e){this.error=uiError(e)}finally{this.loading=false;event?.target?.complete()}}
+ async load(event?:any,forceFresh=false){
+  const uid=this.auth.profile()?.uid??null;
+  if(this.renderedUid!==uid){
+   this.renderedUid=uid;this.items=[];this.invitations=[];this.transfers=[];this.loadedOnce=false;
+  }
+  if(this.inFlight){event?.target?.complete();return;}
+  this.inFlight=true;this.loading=true;this.error='';
+  try{
+   const fresh=forceFresh||Boolean(event);
+   // The three endpoints are independent: do not pay their network latency
+   // serially. Keep previously rendered results visible until replacement.
+   const [devices,invitations,transfers]=await Promise.all([
+    firstValueFrom(this.api.devices(fresh)),
+    Promise.resolve().then(()=>firstValueFrom(this.api.invitations(fresh))).catch(()=>({items:[]})),
+    Promise.resolve().then(()=>firstValueFrom(this.api.incomingTransfers(fresh))).catch(()=>({items:[]}))
+   ]);
+   if(uid!==this.auth.profile()?.uid)return;
+   this.items=devices.items;
+   this.invitations=invitations.items;
+   this.transfers=transfers.items;
+  }catch(e){this.error=uiError(e);}
+  finally{this.loading=false;this.loadedOnce=true;this.inFlight=false;event?.target?.complete();}
+ }
  async acceptOwnership(transfer:{deviceId:string;requestId:string}){
   if(this.accepting)return;this.accepting=transfer.deviceId;this.error='';
   try{
