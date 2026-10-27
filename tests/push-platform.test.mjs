@@ -107,6 +107,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
   const router = { navigateByUrl: async () => { calls.redirect++; return true; } };
   class AuthService {}
   class RealtimeService {}
+  class ScreenCacheService {}
   class PushService {}
   class ModalController {}
   class Router {}
@@ -125,6 +126,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
       inject: (token) => {
         if (token === AuthService) return auth;
         if (token === RealtimeService) return realtime;
+        if (token === ScreenCacheService) return {clearOnLogout:async()=>{}};
         if (token === PushService) return push;
         if (token === Router) return router;
         if (token === ModalController) return {create:async()=>({present:async()=>{},onDidDismiss:async()=>{}})};
@@ -145,6 +147,7 @@ test('ProfilePage blocks sign-out when server push revocation rejects', async ()
     },
     '../core/auth.service': { AuthService },
     '../core/realtime.service': { RealtimeService },
+    '../core/screen-cache.service': { ScreenCacheService },
     '../core/push.service': { PushService },
     './auth-busy-overlay.component': { AuthBusyOverlayComponent: class {} },
   };
