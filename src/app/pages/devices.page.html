@@ -4,9 +4,10 @@
 </ion-header>
 <ion-content><ion-refresher slot="fixed" (ionRefresh)="load($event)"><ion-refresher-content></ion-refresher-content></ion-refresher><div class="page">
   <div class="classification-filter"><ion-select label="Classification" label-placement="stacked" fill="outline" interface="alert" [interfaceOptions]="{ header: 'Classification' }" [(ngModel)]="filter"><ion-select-option value="ALL">All</ion-select-option><ion-select-option value="NORMAL">Normal</ion-select-option><ion-select-option value="PETROLEUM">Petroleum</ion-select-option><ion-select-option value="INTERFERENCE">Interference</ion-select-option><ion-select-option value="INCONCLUSIVE">Inconclusive</ion-select-option></ion-select></div>
-  <p *ngIf="loading">Loading your buoys...</p>
+  <p *ngIf="loading&&!loadedOnce">Loading your buoys...</p>
+  <p *ngIf="loading&&loadedOnce" class="hint" role="status">Refreshing your buoys…</p>
   <div *ngIf="error" role="alert"><p class="error">{{error}}</p><ion-button fill="outline" expand="block" (click)="load()">Retry loading</ion-button></div>
-  <section *ngIf="!loading&&transfers.length"><h3>Ownership transfers</h3>
+  <section *ngIf="(!loading||loadedOnce)&&transfers.length"><h3>Ownership transfers</h3>
    <div *ngFor="let transfer of transfers" class="card">
     <strong>{{transfer.deviceId}}</strong>
     <p class="hint">The current Owner has requested a transfer to your verified account. Accepting makes you the new sole Owner and revokes the previous Owner's access.</p>
@@ -14,13 +15,13 @@
     <ion-button fill="outline" [disabled]="!!accepting" (click)="acceptOwnership(transfer)">Accept ownership</ion-button>
    </div>
   </section>
-  <section *ngIf="!loading&&invitations.length"><h3>Invitations</h3><div *ngFor="let invitation of invitations" class="card"><strong>{{invitation.deviceId}}</strong><p class="hint">Shared with your verified account.</p><ion-button fill="outline" [disabled]="!!accepting" (click)="accept(invitation.deviceId)">{{accepting===invitation.deviceId?'Accepting…':'Accept invitation'}}</ion-button></div></section>
-  <section *ngIf="!loading&&owned.length"><h3>Owned</h3><div *ngFor="let d of owned" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Battery {{d.batteryPercent??'—'}}% · GSM {{d.signalStrengthDbm??'—'}} dBm</p><p class="hint">Status: <strong>{{onlineLabel(d)}}</strong> · Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p></div></section>
-  <section *ngIf="!loading&&shared.length"><h3>Shared with me</h3><div *ngFor="let d of shared" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Status: <strong>{{onlineLabel(d)}}</strong> · Read-only access</p></div></section>
-  <section *ngIf="!loading&&legacy.length"><h3>Available during setup</h3><div *ngFor="let d of legacy" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><strong>{{d.name}}</strong><p class="hint">{{d.id}} · {{onlineLabel(d)}}</p></div></section>
-  <div *ngIf="!loading&&!items.length&&!invitations.length&&!transfers.length&&!error" class="blueguard-empty-layout" role="status">
+  <section *ngIf="(!loading||loadedOnce)&&invitations.length"><h3>Invitations</h3><div *ngFor="let invitation of invitations" class="card"><strong>{{invitation.deviceId}}</strong><p class="hint">Shared with your verified account.</p><ion-button fill="outline" [disabled]="!!accepting" (click)="accept(invitation.deviceId)">{{accepting===invitation.deviceId?'Accepting…':'Accept invitation'}}</ion-button></div></section>
+  <section *ngIf="(!loading||loadedOnce)&&owned.length"><h3>Owned</h3><div *ngFor="let d of owned" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Battery {{d.batteryPercent??'—'}}% · GSM {{d.signalStrengthDbm??'—'}} dBm</p><p class="hint">Status: <strong>{{onlineLabel(d)}}</strong> · Last seen: {{d.lastSeenAt?(d.lastSeenAt|date:'medium'):'Never'}}</p></div></section>
+  <section *ngIf="(!loading||loadedOnce)&&shared.length"><h3>Shared with me</h3><div *ngFor="let d of shared" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><div class="row"><strong>{{d.name}}</strong><span class="badge">{{d.latestClassification||'No reading'}}</span></div><p class="hint">{{d.id}} · Status: <strong>{{onlineLabel(d)}}</strong> · Read-only access</p></div></section>
+  <section *ngIf="(!loading||loadedOnce)&&legacy.length"><h3>Available during setup</h3><div *ngFor="let d of legacy" class="card tap" [routerLink]="['/tabs/buoys',d.id]"><strong>{{d.name}}</strong><p class="hint">{{d.id}} · {{onlineLabel(d)}}</p></div></section>
+  <div *ngIf="(!loading||loadedOnce)&&!items.length&&!invitations.length&&!transfers.length&&!error" class="blueguard-empty-layout" role="status">
     <app-empty-state kind="buoys" title="No buoys yet"
       description="Your connected and shared buoys appear here. Tap + to pair your device."></app-empty-state>
   </div>
-  <div *ngIf="!loading&&items.length&&!shown.length" class="empty">No matching buoys.</div>
+  <div *ngIf="(!loading||loadedOnce)&&items.length&&!shown.length" class="empty">No matching buoys.</div>
 </div><ion-fab slot="fixed" vertical="bottom" horizontal="end"><ion-fab-button aria-label="Add buoy" (click)="addDeviceModal.open()"><ion-icon name="add-outline"></ion-icon></ion-fab-button></ion-fab></ion-content>
