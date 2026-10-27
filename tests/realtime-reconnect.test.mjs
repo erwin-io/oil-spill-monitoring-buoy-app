@@ -52,13 +52,20 @@ function harness(key='public-key',remoteConfig={enabled:false}){
    if(!(name in modules))throw new Error('Unknown module: '+name);
    return modules[name];
   },
-  setInterval:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms});return id;},
+  setInterval:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms,kind:'interval'});return id;},
   clearInterval:(id)=>{timers.delete(id);},
+  setTimeout:(fn,ms)=>{const id=++timerId;timers.set(id,{fn,ms,kind:'timeout'});return id;},
+  clearTimeout:(id)=>{timers.delete(id);},
   console,
   fetch:async()=>({ok:true,json:async()=>remoteConfig}),
  });
  const service=new exports.RealtimeService();
- return {service,instances,timers,tick:()=>{for(const {fn} of [...timers.values()])fn();}};
+ return {service,instances,timers,tick:()=>{
+  for(const [id,item] of [...timers.entries()]){
+   if(item.kind==='timeout')timers.delete(id);
+   item.fn();
+  }
+ }};
 }
 
 test('empty Pusher key uses REST fallback timer; disconnect stops it',()=>{
@@ -67,7 +74,8 @@ test('empty Pusher key uses REST fallback timer; disconnect stops it',()=>{
  service.connect([],()=>{refetches++;});
  assert.equal(instances.length,0);
  assert.equal(timers.size,1);
- tick();
+ tick(); // interval triggers a debounced refresh
+ tick(); // the debounce timer executes
  assert.equal(refetches,1);
  service.disconnect();
  assert.equal(timers.size,0);
@@ -75,37 +83,40 @@ test('empty Pusher key uses REST fallback timer; disconnect stops it',()=>{
  assert.equal(refetches,1);
 });
 
-test('connection, disconnect, reconnect and stale callbacks reconcile exactly while active',()=>{
+test('initial connection is not a duplicate read; burst updates and reconnect coalesce correctly',()=>{
  const {service,instances,timers,tick}=harness();
  let updates=0;
- service.connect(['B1','B1'],()=>{updates++;});
+ service.connect(['B1','B1'],()=>{updates++});
  assert.equal(instances.length,1);
- assert.equal(instances[0].channels.size,2,'device dedup plus private-user channel');
+ assert.equal(instances[0].channels.size,2,'Device dedup plus private-user channel');
  assert.equal(timers.size,1,'REST fallback active before socket connection');
  const socket=instances[0];
  socket.connection.emit('connected');
  assert.equal(service.connected(),true);
  assert.equal(timers.size,0);
- assert.equal(updates,1,'reconcile on connection');
+ assert.equal(updates,0,'The initial REST read already completed before socket connection');
  socket.channels.get('private-device-B1').emit('measurement.created');
- assert.equal(updates,2);
  socket.channels.get('private-device-B1').emit('health.updated');
  socket.channels.get('private-device-B1').emit('device.offline');
  socket.channels.get('private-device-B1').emit('device.online');
- assert.equal(updates,5,'health and both presence events require authoritative API refresh');
+ assert.equal(timers.size,1,'Four events share one debounced refresh');
+ tick();
+ assert.equal(updates,1);
  socket.connection.emit('disconnected');
  assert.equal(service.connected(),false);
  assert.equal(timers.size,1);
- tick();
- assert.equal(updates,6,'REST refresh during socket outage');
+ tick();tick();
+ assert.equal(updates,2,'REST fallback refreshes during socket outage');
  socket.connection.emit('connected');
- assert.equal(updates,7,'reconcile after socket recovery');
+ tick();
+ assert.equal(updates,3,'Reconnect reconciles missed events');
  service.disconnect();
  assert.equal(timers.size,0);
  const before=updates;
  socket.channels.get('private-device-B1').emit('alert.created');
  socket.connection.emit('connected');
- assert.equal(updates,before,'old subscription must not update after logout/leave');
+ tick();
+ assert.equal(updates,before,'Old subscription cannot refresh after logout/leave');
 });
 
 test('reconnect with newly assigned device IDs replaces old subscriptions',()=>{
