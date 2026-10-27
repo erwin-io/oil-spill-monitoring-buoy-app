@@ -4,7 +4,7 @@ import {RealtimeService} from './realtime.service';
 
 // Only these read-only screen snapshots are persisted, never JWTs, passwords,
 // device upload keys, claim codes, or Firebase email action credentials.
-export type ScreenKey='devices'|'alerts'|'invitations'|'transfers'|`alert:${string}`;
+export type ScreenKey='devices'|'alerts'|'invitations'|'transfers'|`alert:${string}`|`alert-access:${string}`;
 interface Snapshot<T=unknown>{
  key:string;
  uid:string;
