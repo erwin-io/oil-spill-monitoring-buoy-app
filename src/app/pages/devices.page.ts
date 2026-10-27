@@ -30,7 +30,7 @@ export class DevicesPage{
  items:Device[]=[];invitations:Invitation[]=[];transfers:IncomingTransfer[]=[];
  term='';filter='ALL';loading=true;loadedOnce=false;error='';accepting='';
  get stale(){return this.cache.isStale('devices')||this.cache.isStale('invitations')||this.cache.isStale('transfers');}
- onSearch(value:string|null|undefined){this.term=value??''}
+ onSearch(value: string | null | undefined){this.term=value??''}
  onlineLabel(d:Device):string{
   if(d.status==='DISABLED')return 'Disabled';
   if(!d.lastSeenAt)return 'Not yet online';
