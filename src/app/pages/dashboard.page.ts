@@ -4,11 +4,12 @@ import {EmptyStateComponent} from './empty-state.component';
 import {addIcons} from 'ionicons';
 import {addOutline,arrowForwardOutline} from 'ionicons/icons';
 import {Component,inject} from '@angular/core';import {CommonModule} from '@angular/common';import {RouterLink} from '@angular/router';import {firstValueFrom} from 'rxjs';import {IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon} from '@ionic/angular/standalone';
-import {ApiService} from '../core/api.service';import {Device,Alert} from '../core/models';import {RealtimeService} from '../core/realtime.service';import {PushService} from '../core/push.service';
+import {ApiService} from '../core/api.service';import {AuthService} from '../core/auth.service';import {Device,Alert} from '../core/models';import {RealtimeService} from '../core/realtime.service';import {PushService} from '../core/push.service';
 @Component({standalone:true,imports:[CommonModule,RouterLink,IonContent,IonHeader,IonToolbar,IonTitle,IonButton,IonRefresher,IonRefresherContent,IonFab,IonFabButton,IonIcon,EmptyStateComponent],templateUrl:'./dashboard.page.html',styleUrls:['./dashboard.page.scss']})export class DashboardPage {
  readonly addDeviceModal=inject(AddDeviceModalService);
  constructor(){addIcons({addOutline,arrowForwardOutline});}
- private api=inject(ApiService);readonly realtime=inject(RealtimeService);private push=inject(PushService);
+ private api=inject(ApiService);private auth=inject(AuthService);readonly realtime=inject(RealtimeService);private push=inject(PushService);
+ private renderedUid:string|null=null;
  devices:Device[]=[];alerts:Alert[]=[];busy=true;error='';updated='';offlineMinutes=60;
  loadedOnce=false;refreshing=false;
  private loadingPromise?:Promise<void>;
@@ -21,6 +22,12 @@ import {ApiService} from '../core/api.service';import {Device,Alert} from '../co
  async ionViewWillEnter(){await this.reload();await this.push.start()}
  ionViewWillLeave(){this.realtime.disconnect()}
  async reload(event?:any){
+  const uid=this.auth.profile()?.uid??null;
+  if(this.renderedUid!==uid){
+   // Old account data must never remain visible during a different user's
+   // first request, even if Ionic cached this page in its tab stack.
+   this.renderedUid=uid;this.devices=[];this.alerts=[];this.loadedOnce=false;this.updated='';
+  }
   if(this.loadingPromise){await this.loadingPromise;event?.target?.complete();return;}
   // Retain an already loaded dashboard while refreshing, even for zero buoys.
   // Never blank the screen just because a network round trip is ongoing.
@@ -32,6 +39,7 @@ import {ApiService} from '../core/api.service';import {Device,Alert} from '../co
      firstValueFrom(this.api.devices(fresh)),
      firstValueFrom(this.api.alerts(undefined,undefined,fresh))
     ]);
+    if(uid!==this.auth.profile()?.uid)return;
     this.devices=devices.items;this.alerts=alerts.items;
     this.realtime.connect(devices.items.map(v=>v.id),()=>{void this.refreshSilent()});
     this.updated=new Date().toISOString();
