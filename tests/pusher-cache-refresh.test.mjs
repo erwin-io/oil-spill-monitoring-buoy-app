@@ -13,7 +13,7 @@ test('Pusher accepts private-user and private-device data.changed and preserves 
 });
 test('Overview listens even when user has no buoys yet',()=>{
  const src=file('pages/dashboard.page.ts');
- assert.match(src,/this\.realtime\.connect\(d\.items\.map\(v=>v\.id\)/);
+ assert.match(src,/this\.realtime\.connect\(devices\.items\.map\(v=>v\.id\)/);
  assert.doesNotMatch(src,/if\(d\.items\.length\)\{[^}]*this\.realtime\.connect/);
 });
 test('Buoys and notifications subscribe only while active and handle user-scoped refresh',()=>{
