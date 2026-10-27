@@ -18,7 +18,7 @@ import {ApiService} from '../core/api.service';import {Device,Alert} from '../co
  get recentMeasurements(){return this.devices.filter(d=>d.lastMeasurementAt).sort((a,b)=>Date.parse(b.lastMeasurementAt??'')-Date.parse(a.lastMeasurementAt??'')).slice(0,5)}
  async ionViewWillEnter(){await this.reload();await this.push.start()}
  ionViewWillLeave(){this.realtime.disconnect()}
- async reload(event?:any){this.busy=!event;this.error='';this.devices=[];this.alerts=[];this.realtime.disconnect();try{const d=await firstValueFrom(this.api.devices());this.devices=d.items;if(d.items.length){this.alerts=(await firstValueFrom(this.api.alerts())).items;this.realtime.connect(d.items.map(v=>v.id),()=>{void this.refreshSilent()})}this.updated=new Date().toISOString()}catch(e){this.devices=[];this.alerts=[];this.error=uiError(e)}finally{this.busy=false;event?.target?.complete()}}
+ async reload(event?:any){this.busy=!event;this.error='';this.devices=[];this.alerts=[];this.realtime.disconnect();try{const d=await firstValueFrom(this.api.devices());this.devices=d.items;if(d.items.length){this.alerts=(await firstValueFrom(this.api.alerts())).items;}this.realtime.connect(d.items.map(v=>v.id),()=>{void this.refreshSilent()});this.updated=new Date().toISOString()}catch(e){this.devices=[];this.alerts=[];this.error=uiError(e)}finally{this.busy=false;event?.target?.complete()}}
  async refreshSilent(){try{
   const previousIds=this.devices.map(x=>x.id).sort().join('|');
   const [d,a]=await Promise.all([firstValueFrom(this.api.devices()),firstValueFrom(this.api.alerts())]);
