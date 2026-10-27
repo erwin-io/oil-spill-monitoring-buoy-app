@@ -45,6 +45,10 @@ export class AuthService {
     onAuthStateChanged(this.auth, (user) => {
       if (this.currentUser()?.uid !== user?.uid) {
         ++this.sessionGeneration;
+        // Unexpected Firebase sign-out/account change must also erase the
+        // former account's offline snapshots, not only explicit Profile logout.
+        if(this.currentUser()&&typeof window!=='undefined')
+          window.dispatchEvent(new Event('blueguard:session-ended'));
         // Invalidate the old profile before pages calculate role-dependent UI.
         this.profile.set(null);
       }
