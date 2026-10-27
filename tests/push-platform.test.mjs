@@ -256,3 +256,15 @@ test('Background notification tap navigates to buoy; stale callback blocked afte
  onTap({notification:{data:{alertId:'old'}}});
  assert.equal(calls.navigations.length,1);
 });
+
+test('repeat Overview tab entry never renews a still-valid push session',async()=>{
+ const {service,calls}=pushHarness({native:true});
+ await service.start();
+ assert.equal(calls.sessionStart,1);
+ assert.equal(calls.sessionRefresh,0);
+ await service.start();
+ await service.start();
+ assert.equal(calls.sessionStart,1);
+ assert.equal(calls.sessionRefresh,0,'Valid push session should not cause network requests on tab switches');
+ await service.stop();
+});
