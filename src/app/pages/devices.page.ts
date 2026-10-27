@@ -31,14 +31,15 @@ export class DevicesPage{
   this.active=true;
   await this.load();
   if(this.active)this.realtime.connect(this.items.map(item=>item.id),()=>{
-   if(this.active&&!this.loading&&!this.accepting)void this.load();
+   if(this.active&&!this.loading&&!this.accepting)void this.load(undefined,true);
   });
  }
  ionViewWillLeave(){this.active=false;this.realtime.disconnect()}
- async load(event?:any){this.loading=true;this.error='';this.items=[];this.invitations=[];this.transfers=[];try{
-  this.items=(await firstValueFrom(this.api.devices())).items;
-  try{this.invitations=(await firstValueFrom(this.api.invitations())).items}catch{this.invitations=[]}
-  try{this.transfers=(await firstValueFrom(this.api.incomingTransfers())).items}catch{this.transfers=[]}
+ async load(event?:any,forceFresh=false){this.loading=true;this.error='';this.items=[];this.invitations=[];this.transfers=[];try{
+  const fresh=forceFresh||Boolean(event);
+  this.items=(await firstValueFrom(this.api.devices(fresh))).items;
+  try{this.invitations=(await firstValueFrom(this.api.invitations(fresh))).items}catch{this.invitations=[]}
+  try{this.transfers=(await firstValueFrom(this.api.incomingTransfers(fresh))).items}catch{this.transfers=[]}
  }catch(e){this.error=uiError(e)}finally{this.loading=false;event?.target?.complete()}}
  async acceptOwnership(transfer:{deviceId:string;requestId:string}){
   if(this.accepting)return;this.accepting=transfer.deviceId;this.error='';
