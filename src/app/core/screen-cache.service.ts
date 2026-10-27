@@ -48,7 +48,7 @@ export class ScreenCacheService{
  constructor(){
   if(typeof window!=='undefined'){
    window.addEventListener('blueguard:session-ended',()=>{
-    const uid=this.currentUid;
+    const uid=this.auth.profile()?.uid??this.currentUid;
     this.clearMemory();
     if(uid)void this.purge(uid);
    });
@@ -247,7 +247,7 @@ export class ScreenCacheService{
   });
  }
  async clearOnLogout():Promise<void>{
-  const uid=this.identity();
+  const uid=this.auth.profile()?.uid??this.currentUid;
   this.clearMemory();
   this.currentUid=null;
   // A pending persistence write must not recreate a just-cleared snapshot.
