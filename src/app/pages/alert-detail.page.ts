@@ -28,9 +28,12 @@ import {Component,inject} from '@angular/core';import {CommonModule} from '@angu
     this.access=deviceList?.items.find(x=>x.id===data.deviceId)?.access??'';
    },force);
    if(uid!==this.auth.profile()?.uid)return;
-   if(this.alert&&!this.access){
-    // Authorization stays server-side; this only controls the button UI.
-    this.access=(await firstValueFrom(this.api.device(this.alert.deviceId))).access??'';
+   if(this.alert){
+    // Display permissions are stored only for button presentation; the API
+    // always rechecks real ownership before acknowledging the alert.
+    await this.cache.ensure<string>(`alert-access:${this.id}`,
+     async()=> (await firstValueFrom(this.api.device(this.alert!.deviceId))).access??'',
+     access=>{if(uid===this.auth.profile()?.uid)this.access=access;});
    }
    // Read receipt is only sent on the first authenticated detail open in
    // a session; returning to the page never repeats the request.
