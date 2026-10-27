@@ -306,6 +306,8 @@ export class AuthService {
 
   async logout(): Promise<void> {
     ++this.sessionGeneration;
+    // Wipe snapshots before credentials and access to the old UID disappear.
+    if(typeof window!=='undefined')window.dispatchEvent(new Event('blueguard:session-ended'));
     this.profile.set(null);
     await signOut(this.auth);
   }
