@@ -1,0 +1,43 @@
+name: One-time stale branch cleanup (mobile)
+on:
+  push:
+    branches: [main]
+    paths: [.github/workflows/one-time-branch-cleanup.yml]
+permissions:
+  contents: write
+jobs:
+  delete-verified-branches:
+    if: github.repository == 'erwin-io/oil-spill-monitoring-buoy-app' && github.event.head_commit.message == 'maintenance: prune obsolete non-main branches (mobile)'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify branch SHAs, open PRs, and delete only named refs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REF" = "refs/heads/main"
+          actual="$(gh api "repos/$GITHUB_REPOSITORY/branches/main" --jq ".commit.sha")"
+          test "$actual" = "$GITHUB_SHA" || { echo "Main changed during maintenance; aborting."; exit 1; }
+          open_count="$(gh api "repos/$GITHUB_REPOSITORY/pulls?state=open&per_page=100" --jq "length")"
+          test "$open_count" = "0" || { echo "Open pull requests detected; aborting."; exit 1; }
+          while IFS="|" read -r branch expected; do
+            test -n "$branch" || continue
+            current="$(gh api "repos/$GITHUB_REPOSITORY/branches/$branch" --jq '.commit.sha + "|" + (.protected|tostring)')"
+            test "$current" = "$expected|false" || { echo "Changed/protected: $branch; aborting."; exit 1; }
+            gh api --method DELETE "repos/$GITHUB_REPOSITORY/git/refs/heads/$branch" >/dev/null
+            echo "Deleted verified branch: $branch"
+          done <<'EXPECTED_REFS'
+          feat/email-provider-router-20261025|3a971684732b6037db248764db4b3d5d82b9fc57
+          feat/p2-add-device-overview|c8f5a2adaf0751bcb8b1837a799b273de5b50974
+          feat/p2-firebase-email-action-app-return|be0b742c6366e613c105abf71dc891201510495e
+          feat/p2-smtp-email-capability|d3d733566430b00c1f06ef342b39773bf2c11af8
+          fix/blueguard-email-actions-and-modal-20261027|376be735cb4846e6dd6fac566a1de2247f02e787
+          fix/ci-google-signin-assertion|86956b5f29a62ec87a208c264f64dbb78617a4cc
+          fix/p2-auth-action-screen-design-back|fff27e14d3ac033b15e8fb784797a93e3e8760be
+          fix/p2-email-waiting-native-back-provider|e8131d0b452967f577c2e657a878cf294e21c45a
+          fix/p2-firebase-action-handler-web-return|ce4314ffb8c03aae71cbcc7718654a8ba9be92b5
+          fix/p2-native-firebase-email-actions|7b5eb7d4ac2752b0ca81003c5a83970d611927d9
+          perf/pusher-screen-refresh-20261027|f3426e415a5d03c8ac8c1829544598d0760eeb3e
+          EXPECTED_REFS
+          echo "All specified mobile branches were processed."
