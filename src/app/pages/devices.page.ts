@@ -45,8 +45,8 @@ export class DevicesPage{
    // serially. Keep previously rendered results visible until replacement.
    const [devices,invitations,transfers]=await Promise.all([
     firstValueFrom(this.api.devices(fresh)),
-    firstValueFrom(this.api.invitations(fresh)).catch(()=>({items:[]})),
-    firstValueFrom(this.api.incomingTransfers(fresh)).catch(()=>({items:[]}))
+    Promise.resolve().then(()=>firstValueFrom(this.api.invitations(fresh))).catch(()=>({items:[]})),
+    Promise.resolve().then(()=>firstValueFrom(this.api.incomingTransfers(fresh))).catch(()=>({items:[]}))
    ]);
    this.items=devices.items;
    this.invitations=invitations.items;
