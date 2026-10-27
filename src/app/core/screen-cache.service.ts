@@ -42,6 +42,7 @@ export class ScreenCacheService{
  private stale=new Set<ScreenKey>();
  private subscribedIds='';
  private subscribedUid:string|null=null;
+ private writes=new Set<Promise<void>>();
  readonly version=signal(0);
 
  constructor(){
@@ -172,6 +173,7 @@ export class ScreenCacheService{
    const row=await this.read<T>(uid,key);
    if(uid===this.identity()&&row&&!this.entries.has(key)){
     this.entries.set(key,row);this.emit();
+    if(key==='devices')this.connectRealtime();
    }
    return uid===this.identity()?this.peek<T>(key):undefined;
   })();
@@ -200,7 +202,9 @@ export class ScreenCacheService{
    this.loaded.add(key);
    this.stale.delete(key);
    this.emit();
-   void this.save(row);
+   const write=this.save(row);
+   this.writes.add(write);
+   void write.finally(()=>this.writes.delete(write));
    if(key==='devices')this.connectRealtime();
    return value;
   })();
@@ -246,6 +250,16 @@ export class ScreenCacheService{
   const uid=this.identity();
   this.clearMemory();
   this.currentUid=null;
+  // A pending persistence write must not recreate a just-cleared snapshot.
+  await Promise.allSettled([...this.writes]);
   if(uid)await this.purge(uid);
+ }
+ async update<T>(key:ScreenKey,data:T):Promise<void>{
+  const uid=this.identity();if(!uid)return;
+  const row:Snapshot<T>={key:this.storageKey(uid,key),uid,
+   schema:SCHEMA,storedAt:Date.now(),data};
+  this.entries.set(key,row);this.loaded.add(key);this.emit();
+  const write=this.save(row);this.writes.add(write);
+  try{await write;}finally{this.writes.delete(write);}
  }
 }
