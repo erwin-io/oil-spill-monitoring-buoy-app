@@ -16,7 +16,7 @@ import {Component,inject} from '@angular/core';import {CommonModule} from '@angu
  async load(force=false){
   const uid=this.auth.profile()?.uid??null;
   if(this.renderedUid!==uid){
-   this.renderedUid=uid;this.alert=undefined;this.access='';this.loadedDetailOnce=false;
+   this.renderedUid=uid;this.alert=undefined;this.access='';this.loadedDetailOnce=false;this.readMarked=false;
   }
   this.error='';
   const key=`alert:${this.id}` as const;
