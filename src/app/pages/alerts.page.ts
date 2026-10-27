@@ -18,6 +18,7 @@ export class AlertsPage{
  private api=inject(ApiService);private auth=inject(AuthService);
  private realtime=inject(RealtimeService);
  private active=false;
+ private renderedUid:string|null=null;
  items:Alert[]=[];cursor:string|null=null;openCount=0;unreadCount=0;loading=true;loadedOnce=false;marking=false;error='';
  deviceNames:Record<string,string>={};
  private generation=0;
@@ -32,6 +33,10 @@ export class AlertsPage{
  ionViewWillLeave(){this.active=false;this.generation++;this.realtime.disconnect()}
  async load(e?:any,forceFresh=false){
   const gen=++this.generation,uid=this.auth.profile()?.uid;
+  if(this.renderedUid!==(uid??null)){
+   this.renderedUid=uid??null;this.items=[];this.cursor=null;this.openCount=0;
+   this.unreadCount=0;this.deviceNames={};this.loadedOnce=false;
+  }
   this.loading=true;
   try{
    const fresh=forceFresh||Boolean(e);
