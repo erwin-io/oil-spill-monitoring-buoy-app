@@ -68,14 +68,14 @@ test('dashboard counters read actual fixture classifications, battery and curren
  assert.deepEqual(Array.from(page.recentMeasurements,x=>x.id),['THESIS_TEST_01','THESIS_TEST_02']);
  assert.deepEqual(Array.from(subscribed),['THESIS_TEST_01','THESIS_TEST_02']);
 });
-test('no-device Overview clears prior-account data and does not request alerts',async()=>{
+test('no-device Overview clears prior-account data while concurrent API loads complete',async()=>{
  let alertCalls=0;
  const {page}=mount('dashboard',{api:{devices:()=>Promise.resolve({items:[]}),alerts:()=>{alertCalls++;return Promise.resolve({items:[]})}}});
  page.devices=[{id:'previous-account',name:'Private'}];page.alerts=[{id:'private-alert'}];
  await page.reload();
  assert.equal(page.devices.length,0);
  assert.equal(page.alerts.length,0);
- assert.equal(alertCalls,0);
+ assert.equal(alertCalls,1,'Overview requests alerts concurrently to avoid a device-first network waterfall');
 });
 test('buoy page searches and classification filters authoritative API items',async()=>{
  const {page}=mount('devices',{api:{devices:()=>Promise.resolve({items:[
