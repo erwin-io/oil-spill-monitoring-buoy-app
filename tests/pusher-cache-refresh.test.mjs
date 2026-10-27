@@ -11,18 +11,16 @@ test('Pusher accepts private-user and private-device data.changed and preserves 
  assert.match(src,/private-user-/);
  assert.match(src,/FALLBACK_POLL_MS = 60_000/);
 });
-test('Overview listens even when user has no buoys yet',()=>{
+test('Overview relies on shared session-level realtime even with no buoys',()=>{
  const src=file('pages/dashboard.page.ts');
- assert.match(src,/this\.realtime\.connect\(devices\.items\.map\(v=>v\.id\)/);
+ assert.match(src,/this\.cache\.connectRealtime\(\)/);
  assert.doesNotMatch(src,/if\(d\.items\.length\)\{[^}]*this\.realtime\.connect/);
 });
-test('Buoys and notifications subscribe only while active and handle user-scoped refresh',()=>{
+test('Buoys and notifications retain one authenticated realtime session across tabs',()=>{
  for(const page of ['devices.page.ts','alerts.page.ts']){
   const src=file('pages/'+page);
-  assert.match(src,/this\.active=true/);
-  assert.match(src,/this\.realtime\.connect/);
-  assert.match(src,/this\.active&&!this\.loading/);
-  assert.match(src,/this\.realtime\.disconnect\(\)/);
+  assert.match(src,/this\.cache\.connectRealtime\(\)/);
+  assert.doesNotMatch(src,/this\.realtime\.disconnect\(\)/);
   assert.match(src,/ionViewWillLeave\(\)/);
  }
 });
@@ -33,12 +31,12 @@ test('Realtime and manual refresh bypass stale Vercel warm-instance cache only w
  assert.match(api,/devices\(fresh=false\)/);
  assert.match(api,/alerts\(cursor\?:string,status\?:string,fresh=false\)/);
  const overview=file('pages/dashboard.page.ts');
- assert.match(overview,/this\.api\.devices\(true\)/);
- assert.match(overview,/this\.api\.alerts\(undefined,undefined,true\)/);
+ assert.match(overview,/this\.api\.devices\(force\)/);
+ assert.match(overview,/this\.api\.alerts\(undefined,undefined,force\)/);
  const inbox=file('pages/alerts.page.ts');
  const buoys=file('pages/devices.page.ts');
- assert.match(inbox,/this\.load\(undefined,true\)/);
- assert.match(buoys,/this\.load\(undefined,true\)/);
- assert.match(inbox,/forceFresh\|\|Boolean\(e\)/);
- assert.match(buoys,/forceFresh\|\|Boolean\(event\)/);
+ assert.match(inbox,/const force=forceFresh\|\|Boolean\(event\)/);
+ assert.match(buoys,/const force=forceFresh\|\|Boolean\(event\)/);
+ assert.match(inbox,/this\.cache\.ensure/);
+ assert.match(buoys,/this\.cache\.ensure/);
 });
