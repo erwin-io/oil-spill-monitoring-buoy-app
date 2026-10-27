@@ -25,8 +25,11 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="oil-spill-monitoring-buoy.firebaseapp.com"
-                    android:pathPrefix="/open/" />
+                <data
+                    android:scheme="https"
+                    android:host="oil-spill-monitoring-buoy.firebaseapp.com"
+                    android:pathPrefix="/open/"
+                />
             </intent-filter>
             <!-- The Firebase default template URL must also open inside BlueGuard.
                  Firebase verifies its one-time action code, not the deep link itself. -->
@@ -34,18 +37,22 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https"
+                <data
+                    android:scheme="https"
                     android:host="oil-spill-monitoring-buoy.firebaseapp.com"
-                    android:path="/__/auth/action" />
+                    android:path="/__/auth/action"
+                />
             </intent-filter>
             <!-- Firebase action links generated with handleCodeInApp=true. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https"
+                <data
+                    android:scheme="https"
                     android:host="oil-spill-monitoring-buoy.firebaseapp.com"
-                    android:pathPrefix="/__/auth/links" />
+                    android:pathPrefix="/__/auth/links"
+                />
             </intent-filter>
         </activity>
 
