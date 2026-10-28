@@ -13,6 +13,7 @@ function apiHarness() {
   post:(url,body)=>{requests.push({method:'POST',url,body});return {registered:true};},
   put:(url,body)=>{requests.push({method:'PUT',url,body});return {configVersion:2};},
   patch:(url,body)=>{requests.push({method:'PATCH',url,body});return {status:'ACKNOWLEDGED'};},
+  delete:(url)=>{requests.push({method:'DELETE',url});return {state:'CANCELLED'};},
   request:(method,url,options)=>{requests.push({method,url,options});return {unregistered:true};},
  };
  class HttpClient {}
@@ -77,6 +78,6 @@ test('QR v2 intent, poll and cancellation use identical Firebase-scoped API endp
  assert.equal(requests[0].url,'https://example.test/api/v1/devices/BG-000124/pair-intents');
  assert.equal(requests[1].url,'https://example.test/api/v1/devices/BG-000124/pair-intents/opaque-id');
  assert.equal(requests[2].url,requests[1].url);
- assert.deepEqual(requests[0].body,{});
+ assert.equal(JSON.stringify(requests[0].body),'{}');
  assert.equal(JSON.stringify(requests).includes('claimCode'),false);
 });
