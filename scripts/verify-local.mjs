@@ -14,8 +14,9 @@
 import { spawnSync } from 'node:child_process';
 import { selectAndroidDevice } from './android-device-selection.mjs';
 import {activityLaunchAccepted,isPngScreenshot,waitForAndroidForeground} from './android-launch.mjs';
+import {waitForRenderedScreenshot} from './android-render-readiness.mjs';
 import {useJava21,gradleVersionForJavaCheck} from './android-java-preflight.mjs';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -40,6 +41,7 @@ const dryRun=flags.has('--dry-run');
 let selectedDevice=null;
 let androidBuildAttempted=false;
 let deviceLaunchAttempted=false;
+let renderedScreenConfirmed=false;
 
 function run(name,cmd,args=[],cwd=root){
  console.log(`\n=== ${name} ===`);
@@ -131,30 +133,44 @@ try{
       'BlueGuard is not the resumed Android activity; inspect device screen or Logcat');
     console.log('Verified Android foreground app PID: '+running.pid);
     if(flags.has('--screenshot')){
-     const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{
-      encoding:null,maxBuffer:12*1024*1024,timeout:15000
-     });
-     let png=!screenshot.error&&screenshot.status===0&&isPngScreenshot(screenshot.stdout)
-       ? screenshot.stdout : null;
      const localScreenshot=join(outputDir,'android-launch.png');
-     if(!png){
-      // Mirrors the proven Samsung shell screencap + adb pull commands.
-      // Use a unique remote filename and clean it up after the pull.
-      const remoteScreenshot='/sdcard/Download/blueguard-acceptance-'+Date.now()+'.png';
-      mkdirSync(outputDir,{recursive:true});
-      try{
-       output('adb',['-s',serial,'shell','screencap','-p',remoteScreenshot]);
-       output('adb',['-s',serial,'pull',remoteScreenshot,localScreenshot]);
-       png=readFileSync(localScreenshot);
-      }finally{
-       try{output('adb',['-s',serial,'shell','rm',remoteScreenshot]);}catch{}
+     const tempScreenshot=join(outputDir,'android-capture-attempt.png');
+     const capture=()=>{
+      const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{
+       encoding:null,maxBuffer:12*1024*1024,timeout:15000
+      });
+      let png=!screenshot.error&&screenshot.status===0&&isPngScreenshot(screenshot.stdout)
+        ? screenshot.stdout : null;
+      if(!png){
+       // Use the confirmed Samsung screencap + pull fallback.
+       const remoteScreenshot='/sdcard/Download/blueguard-acceptance-'+Date.now()+'.png';
+       mkdirSync(outputDir,{recursive:true});
+       try{
+        output('adb',['-s',serial,'shell','screencap','-p',remoteScreenshot]);
+        output('adb',['-s',serial,'pull',remoteScreenshot,tempScreenshot]);
+        png=readFileSync(tempScreenshot);
+       }finally{
+        rmSync(tempScreenshot,{force:true});
+        try{output('adb',['-s',serial,'shell','rm',remoteScreenshot]);}catch{}
+       }
       }
-     }
-     check('ADB screenshot captured',isPngScreenshot(png),
+      if(!isPngScreenshot(png))throw new Error('ADB did not return a PNG screenshot');
+      return png;
+     };
+     const rendered=await waitForRenderedScreenshot({capture,log:line=>console.log(line)});
+     renderedScreenConfirmed=!!rendered.evidence?.rendered;
+     check('BlueGuard visible UI rendered (not a blank launch screen)',renderedScreenConfirmed,
+      'BlueGuard opened but its UI has not visibly rendered');
+     const finalForeground=await waitForAndroidForeground({
+      serial,packageId,activity,execute:args=>output('adb',args)
+     });
+     check('BlueGuard foreground at screenshot acceptance',finalForeground.foreground,
+      'App left the foreground while waiting for its WebView to render');
+     check('ADB screenshot captured',isPngScreenshot(rendered.png),
       'Unable to capture a valid Android PNG screenshot');
      mkdirSync(outputDir,{recursive:true});
-     writeFileSync(localScreenshot,png);
-     console.log('Private screenshot saved to .test-output/android-launch.png (not committed).');
+     writeFileSync(localScreenshot,rendered.png);
+     console.log('Rendered UI screenshot saved to .test-output/android-launch.png (not committed).');
     }
    }
   }
@@ -169,6 +185,7 @@ finally{
    result:failure?'FAIL':'PASS',
    androidBuildAttempted,
    deviceLaunchAttempted,
+   renderedScreenConfirmed,
    selectedAndroidSerial:selectedDevice?.serial??null,
    selectedAndroidSource:selectedDevice?.source??null,
    liveFirestoreMutated:false,
