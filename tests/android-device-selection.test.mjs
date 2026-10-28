@@ -85,8 +85,11 @@ test('runner chooses device before npm tasks and targets ALL ADB operations',()=
  assert.ok(runner.includes('Android activity launch accepted'));
  assert.ok(runner.includes('BlueGuard MainActivity is foreground'));
  assert.ok(runner.includes("['-s',serial,'shell','screencap','-p',remoteScreenshot]"));
- assert.ok(runner.includes("['-s',serial,'pull',remoteScreenshot,localScreenshot]"));
- assert.ok(runner.includes('isPngScreenshot(png)'));
+ assert.ok(runner.includes("['-s',serial,'pull',remoteScreenshot,tempScreenshot]"));
+ assert.ok(runner.includes('waitForRenderedScreenshot({capture'));
+ assert.ok(runner.includes('BlueGuard visible UI rendered (not a blank launch screen)'));
+ assert.ok(runner.includes('BlueGuard foreground at screenshot acceptance'));
+ assert.ok(runner.includes('renderedScreenConfirmed,'));
  assert.ok(!runner.includes("['-s',serial,'shell','monkey'"),'Monkey is not a reliable launch acceptance method');
 });
 import {readFileSync} from 'node:fs';
