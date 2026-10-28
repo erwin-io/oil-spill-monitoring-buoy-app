@@ -77,10 +77,13 @@ test('runner chooses device before npm tasks and targets ALL ADB operations',()=
    runner.indexOf("run('Locked dependencies'"));
  for(const part of [
   "['-s',serial,'install','-r',apk]",
-  "['-s',serial,'shell','monkey'",
   "['-s',serial,'shell','pidof',packageId]",
   "['-s',serial,'exec-out','screencap','-p']"
  ])assert.ok(runner.includes(part),part);
+ // Support the original launcher while replacing it with validated am start -W.
+ assert.ok(runner.includes("['-s',serial,'shell','monkey'") ||
+   runner.includes("['-s',serial,'shell','am','start','-W','-n',activity]"),
+   'The selected ADB serial must be used for Android launch');
 });
 import {readFileSync} from 'node:fs';
 function requireRead(){return readFileSync('scripts/verify-local.mjs','utf8');}
