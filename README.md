@@ -83,3 +83,27 @@ debug APK and does not install your locally configured Firebase app.
 `npm run verify:android` selects a verified local JDK 21 for its **own process** before running npm, Capacitor or Gradle. It checks `JAVA_HOME`, `JDK21_HOME`, `JAVA21_HOME` and installed JDKs under the Windows Program Files Java, Eclipse Adoptium and Microsoft directories. It prints the selected JDK and Gradle JVM. JDK selection is temporary: it never modifies the system-wide Java configuration, local signing keys, Gradle properties, Firebase settings or the installed APK.
 
 If Gradle still reports Java 17, inspect `android/gradle.properties` and `$env:USERPROFILE\.gradle\gradle.properties` for an `org.gradle.java.home` override or a Gradle Java toolchain override. Use `--stacktrace --info` on the failing Gradle Java task to identify its compiler if the Gradle runtime is Java 21.
+
+## One-command BlueGuard automated testing (Windows)
+
+Keep the **API** (`oil-spill-monitoring-buoy-api`) and **Mobile** (`oil-spill-monitoring-buoy-app`) repositories as sibling folders in the same parent directory. After pulling the current `main` in both, open PowerShell **inside either repository** and run exactly:
+
+```powershell
+.\test-blueguard.cmd
+```
+
+The checked-in launcher automatically checks both repositories, uses existing dependencies when both `node_modules` folders are present (otherwise runs locked `npm ci`), and executes the same shared API `scripts/verify-thesis.ps1` coordinator. Default acceptance includes API syntax and unit tests, isolated Firebase Auth/Firestore emulator **HTTP pairing v2 + legacy regression** tests, Mobile QR/authorization/navigation tests, and Angular production builds. No production Firebase write, Vercel deployment, or physical ESP32 pairing is performed.
+
+The command returns **exit code 0** only when both suites report PASS; failures return **exit code 1**. Results are saved under the API `.test-output/blueguard-one-command-report.json`, `.test-output/api-local-validation.json`, and Mobile `.test-output/mobile-local-validation.json`. Old report files are removed at start to prevent misleading stale PASS output.
+
+Optional *still one-command* variants:
+
+```powershell
+.\test-blueguard.cmd -FreshDependencies
+.\test-blueguard.cmd -Android
+.\test-blueguard.cmd -Android -InstallOnDevice -Screenshot
+```
+
+Android options require Android SDK, JDK 21 and the existing Firebase Android configuration, and device installation requires a running emulator or authorized Android phone. **Without -Android, neither hardware nor a Firebase service account is needed.** A real PAIR GPIO + A7670C LTE test requires separately updated device firmware and physical hardware; software emulators do not prove it.
+
+Equivalent npm command from either repository: `npm run verify:all`. Windows GitHub Actions also checks the real one-command launch path via `Verify BlueGuard one-command runner` in the API repository. The script never runs `git reset`, `git clean`, force-pushes, or modifies your local signing configuration.
