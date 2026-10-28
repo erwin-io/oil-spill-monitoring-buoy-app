@@ -67,3 +67,16 @@ test('mobile FCM register and unregister send the same token and provider tuple'
  assert.equal(requests[1].options.body.token,requests[0].body.token);
  assert.equal(requests[1].options.body.platform,'android');
 });
+
+test('QR v2 intent, poll and cancellation use identical Firebase-scoped API endpoints without claim secrets',()=>{
+ const {api,requests}=apiHarness();
+ api.createPairIntent('BG-000124');
+ api.pairIntentStatus('BG-000124','opaque-id');
+ api.cancelPairIntent('BG-000124','opaque-id');
+ assert.deepEqual(requests.map(x=>x.method),['POST','GET','DELETE']);
+ assert.equal(requests[0].url,'https://example.test/api/v1/devices/BG-000124/pair-intents');
+ assert.equal(requests[1].url,'https://example.test/api/v1/devices/BG-000124/pair-intents/opaque-id');
+ assert.equal(requests[2].url,requests[1].url);
+ assert.deepEqual(requests[0].body,{});
+ assert.equal(JSON.stringify(requests).includes('claimCode'),false);
+});
