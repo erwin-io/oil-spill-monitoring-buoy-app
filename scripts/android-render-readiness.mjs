@@ -102,7 +102,7 @@ export function inspectAndroidScreenshot(png) {
 }
 
 export async function waitForRenderedScreenshot({
-  capture,attempts=45,delayMs=2000,pause=sleep,log=()=>{}
+  capture,attempts=60,delayMs=2000,pause=sleep,log=()=>{}
 }={}) {
   if(typeof capture!=='function'||!Number.isSafeInteger(attempts)||attempts<2)
     throw new TypeError('Screen capture function and at least two attempts are required');
