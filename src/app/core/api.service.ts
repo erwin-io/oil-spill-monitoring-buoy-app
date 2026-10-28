@@ -1,5 +1,7 @@
 import {inject,Injectable} from '@angular/core';import {HttpClient} from '@angular/common/http';import {Observable,from,firstValueFrom} from 'rxjs';
 import {environment} from '../../environments/environment';import {Device,Alert,Health,Measurement,Config,Page,Profile} from './models';
+export type PairState='WAITING_FOR_PAIR'|'PENDING'|'CONFIRMED'|'EXPIRED'|'CONFLICT'|'CANCELLED'|'ALREADY_OWNED';
+export interface PairIntent {deviceId:string;intentId:string;state:PairState;expiresAt:string}
 @Injectable({providedIn:'root'})export class ApiService{
  private http=inject(HttpClient);private url=environment.api;
  // Cache remains server-side; use this only for a Pusher event or manual refresh.
@@ -27,8 +29,16 @@ import {environment} from '../../environments/environment';import {Device,Alert,
   })());
  }
  device(id:string):Observable<Device>{return this.http.get<Device>(`${this.url}/devices/${encodeURIComponent(id)}`)}
- requestClaim(id:string,claimCode:string):Observable<{deviceId:string;challengeId:string;state:'PENDING'}>{return this.http.post<{deviceId:string;challengeId:string;state:'PENDING'}>(`${this.url}/devices/${encodeURIComponent(id)}/claims`,{claimCode})}
- claimStatus(id:string,challengeId:string):Observable<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>{return this.http.get<{state:'PENDING'|'CONFIRMED'|'EXPIRED';expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/claims/${encodeURIComponent(challengeId)}`)}
+ // QR v2: the phone never receives a device key, claim credential or nonce.
+ createPairIntent(id:string):Observable<PairIntent>{
+  return this.http.post<PairIntent>(`${this.url}/devices/${encodeURIComponent(id)}/pair-intents`,{});
+ }
+ pairIntentStatus(id:string,intentId:string):Observable<PairIntent>{
+  return this.http.get<PairIntent>(`${this.url}/devices/${encodeURIComponent(id)}/pair-intents/${encodeURIComponent(intentId)}`);
+ }
+ cancelPairIntent(id:string,intentId:string):Observable<PairIntent>{
+  return this.http.delete<PairIntent>(`${this.url}/devices/${encodeURIComponent(id)}/pair-intents/${encodeURIComponent(intentId)}`);
+ }
  incomingTransfers(fresh=false):Observable<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>{return this.http.get<{items:{deviceId:string;requestId:string;expiresAt:string}[]}>(`${this.url}/transfers/incoming`,{headers:this.freshHeaders(fresh)})}
  startTransfer(id:string,email:string):Observable<{deviceId:string;requestId:string;state:string;expiresAt:string}>{return this.http.post<{deviceId:string;requestId:string;state:string;expiresAt:string}>(`${this.url}/devices/${encodeURIComponent(id)}/transfer`,{email})}
  cancelTransfer(id:string):Observable<unknown>{return this.http.delete(`${this.url}/devices/${encodeURIComponent(id)}/transfer`)}
