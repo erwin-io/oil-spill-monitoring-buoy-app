@@ -62,7 +62,7 @@ export class AddDevicePage implements OnDestroy {
   this.error='';this.networkInterrupted=false;
   if(this.busy||this.intentId)return;
   if(!Capacitor.isNativePlatform()||!Capacitor.isPluginAvailable('BarcodeScanner')){
-   this.error='QR scanning requires the installed Android app. No device key or claim code is needed.';return;
+   this.error='QR scanning is available in the installed Android app.';return;
   }
   const epoch=this.generation;let found='';
   this.busy=true;
