@@ -11,7 +11,8 @@
     "android:sync": "npx cap sync android",
     "check": "ng build app --configuration production",
     "verify:local": "node scripts/verify-local.mjs",
-    "verify:android": "node scripts/verify-local.mjs --android --install"
+    "verify:android": "node scripts/verify-local.mjs --android --install",
+    "verify:all": "powershell -NoProfile -ExecutionPolicy Bypass -File test-blueguard.ps1"
   },
   "engines": {
     "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
