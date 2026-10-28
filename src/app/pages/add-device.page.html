@@ -7,20 +7,41 @@
 <ion-content class="pairing-content">
  <div class="page pairing-form">
   <h2 class="top-title">Connect your BlueGuard Buoy</h2>
-  <p class="hint">Open the protected QR label inside your buoy. Press its separate PAIR button while the buoy and phone are online. The pairing window lasts five minutes.</p>
-  <ion-button expand="block" class="regular pairing-action" (click)="scan()" [disabled]="busy || state==='PENDING'">Scan protected QR</ion-button>
-  <p class="hint manual-hint">If scanning is unavailable, enter the device ID and protected claim code from the label. Never enter the buoy's upload key.</p>
-  <div class="fieldset">
-   <ion-input label="Device ID" labelPlacement="stacked" fill="outline" placeholder="Enter device ID" autocomplete="off"
-    [(ngModel)]="deviceId" [disabled]="busy || state==='PENDING'"></ion-input>
-   <ion-input label="Protected claim code" labelPlacement="stacked" fill="outline" type="password"
-    placeholder="Enter protected claim code" autocomplete="off" [(ngModel)]="claimCode" [disabled]="busy || state==='PENDING'"></ion-input>
-   <ion-button class="regular pairing-action" expand="block" fill="outline" (click)="claim()" [disabled]="busy || state==='PENDING'">{{busy?'Connecting…':'Claim device'}}</ion-button>
+  <p class="hint">Scan the QR label showing your buoy's Device ID. The QR does not contain any passwords or secret keys. Your buoy must have Smart LTE service to connect.</p>
+  <ion-button expand="block" class="regular pairing-action" (click)="scan()" [disabled]="busy || !!intentId">
+   {{busy?'Preparing connection…':'Scan QR Code'}}
+  </ion-button>
+  <div *ngIf="deviceId" class="card device-card" role="status">
+   <span class="device-caption">Selected BlueGuard Buoy</span>
+   <strong>{{deviceId}}</strong>
   </div>
-  <div *ngIf="state==='PENDING'" class="card" role="status"><strong>Waiting for your buoy</strong><p>Keep PAIR mode active. Your buoy must confirm the request before the five-minute window closes.</p></div>
-  <div *ngIf="state==='EXPIRED'" class="card" role="status"><strong>Pairing expired</strong><p>Press PAIR again, then scan the protected label or enter the claim code to retry.</p></div>
-  <div *ngIf="state==='CONFIRMED'" class="card" role="status"><strong>Device claimed</strong><p>Your buoy is now linked to this account.</p></div>
+  <div *ngIf="state==='WAITING_FOR_PAIR'" class="card status-card" role="status">
+   <strong>Press PAIR on your BlueGuard Buoy</strong>
+   <p>The app is waiting for a secure device confirmation over Smart LTE. The pairing request expires after five minutes.</p>
+  </div>
+  <div *ngIf="state==='PENDING'" class="card status-card" role="status">
+   <strong>Connecting and confirming…</strong>
+   <p>Your buoy contacted BlueGuard over LTE. Waiting for its authenticated confirmation.</p>
+  </div>
+  <div *ngIf="networkInterrupted" class="card status-card" role="status">
+   <strong>Waiting for connection</strong>
+   <p>Your phone temporarily lost contact with the server. We will retry while this pairing window is valid.</p>
+  </div>
+  <div *ngIf="state==='EXPIRED'" class="card status-card" role="status">
+   <strong>Pairing expired</strong><p>Press PAIR again after starting a new pairing attempt.</p>
+  </div>
+  <div *ngIf="state==='CONFLICT'" class="card status-card" role="status">
+   <strong>Pairing conflict</strong><p>Multiple pairing attempts or another protocol are active. No account was selected. Cancel the old attempt and retry.</p>
+  </div>
+  <div *ngIf="state==='ALREADY_OWNED'" class="card status-card" role="status">
+   <strong>Buoy already owned</strong><p>Only the current owner can initiate a secure transfer.</p>
+  </div>
+  <div *ngIf="state==='CONFIRMED'" class="card status-card" role="status">
+   <strong>Device Connected Successfully</strong><p>Your buoy is linked to this account.</p>
+  </div>
   <p *ngIf="error" role="alert" class="error">{{error}}</p>
-  <ion-button fill="clear" class="pairing-cancel" (click)="close()">Cancel</ion-button>
+  <ion-button *ngIf="deviceId && !busy && state!=='WAITING_FOR_PAIR' && state!=='PENDING' && state!=='CONFIRMED'"
+     class="regular pairing-action" expand="block" fill="outline" (click)="retry()">Retry pairing</ion-button>
+  <ion-button fill="clear" class="pairing-cancel" (click)="close()">{{intentId?'Cancel pairing':'Close'}}</ion-button>
  </div>
 </ion-content>
