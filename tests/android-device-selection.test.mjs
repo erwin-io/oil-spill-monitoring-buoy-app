@@ -79,13 +79,12 @@ test('runner chooses device before npm tasks and targets ALL ADB operations',()=
   "['-s',serial,'install','-r',apk]",
   "['-s',serial,'exec-out','screencap','-p']"
  ])assert.ok(runner.includes(part),part);
- // Support the original launcher while replacing it with validated am start -W.
- assert.ok(runner.includes("['-s',serial,'shell','pidof',packageId]") ||
-   runner.includes('waitForAndroidForeground'),
-   'Selected Android process must be verified');
- assert.ok(runner.includes("['-s',serial,'shell','monkey'") ||
-   runner.includes("['-s',serial,'shell','am','start','-W','-n',activity]"),
-   'The selected ADB serial must be used for Android launch');
+ // Require explicit activity, PID, foreground and screenshot checks on the selected device.
+ assert.ok(runner.includes("['-s',serial,'shell','am','start','-W','-n',activity]"));
+ assert.ok(runner.includes('waitForAndroidForeground'));
+ assert.ok(runner.includes('Android activity launch accepted'));
+ assert.ok(runner.includes('BlueGuard MainActivity is foreground'));
+ assert.ok(!runner.includes("['-s',serial,'shell','monkey'"),'Monkey is not a reliable launch acceptance method');
 });
 import {readFileSync} from 'node:fs';
 function requireRead(){return readFileSync('scripts/verify-local.mjs','utf8');}
