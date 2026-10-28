@@ -1,18 +1,25 @@
-# BlueGuard Buoy Phase 2 mobile onboarding slice
+# BlueGuard Buoy — current mobile Add Device onboarding
 
-This draft depends on API draft PRs #5 (pairing) and #6 (owner/Viewer authorization). It is not a production migration or Android acceptance certificate.
+> **Updated QR version 2.** The original 2026-10-25 QR v1 claim-code draft is superseded for new Android builds. The API retains v1 only for previously installed clients during a non-destructive cutover. See [the complete live mobile pairing contract](QR_V2_MOBILE_PAIRING_HANDOFF.md).
 
-## Protected QR and PAIR
+## Customer onboarding
+- Open **My Buoys → Add Device → Scan QR Code** in the existing full-screen Ionic modal.
+- Scan a QR containing **only public identity**: `{"v":2,"deviceId":"BG-000124"}`.
+- App sends a Firebase-authenticated `POST /api/v1/devices/:deviceId/pair-intents` and displays **Press PAIR on your BlueGuard Buoy**.
+- Trusted firmware must detect a genuine physical PAIR input, independently authenticate over Smart LTE HTTPS and confirm a server challenge/nonce; the customer never sees a claim code, device upload key, AP setup portal or modem credential.
+- The app polls the exact user/device/intent until `CONFIRMED`; only then refreshes My Buoys and navigates to its device details.
+- Active intents expire after five minutes, cannot grant ownership after cancellation or conflict, and do not bypass the existing one-owner and Viewer sharing policies.
 
-The protected internal label contains JSON with exactly `v:1`, `deviceId` and `claimCode`. It never contains the device HTTPS upload key. The Android QR scanner uses the Capacitor 7 compatible `@capacitor-mlkit/barcode-scanning` plugin. Its ready-to-use interface needs the Google Barcode Scanner module; the screen requests setup if missing and offers protected manual entry. Actual camera and module behavior on the target handset still require installed-device tests.
+## Native scanner and access boundaries
+The `@capacitor-mlkit/barcode-scanning` QR scanner is available on installed Android devices. A browser-only Ionic development session displays a scanner-unavailable message rather than offering an insecure production manual Device ID bypass. Camera and barcode-module setup remain OS-dependent.
 
-After the physical buoy enters PAIR mode, the signed-in phone submits the claim code. The server chooses the current five-minute device-authenticated challenge and returns a challenge ID; the phone polls only that challenge. The buoy must confirm it. On confirmation, the app refreshes its Firebase-backed profile before navigating to the device. The code is cleared from the screen after submission or on leave. Cancel/retry and account-switch behavior need real Android checks; mobile code is not proof that firmware has a separate PAIR button.
+No mobile user gets device credentials; pairing status is Firebase account scoped. Absent LTE or unmodified v1 firmware, physical-device confirmation cannot complete. Real-device acceptance remains distinct from backend emulator and Angular CI results.
 
-## Consumer navigation
+## Implementation references
+- `src/app/pages/add-device.page.ts`, `.html`, `.scss`
+- `src/app/core/pairing-code.ts`
+- `src/app/core/api.service.ts`
+- `tests/pairing-code.test.mjs`, `tests/api-contract.test.mjs`, `tests/add-device-pairing.test.mjs`
+- [Backend authoritative contract](https://github.com/erwin-io/oil-spill-monitoring-buoy-api/blob/main/docs/QR_V2_DEVICE_PAIRING_CONTRACT.md)
 
-- A zero-access Overview explains Add Device and invitations, and does not fetch alerts or show prior-account readings.
-- My Buoys groups API-reported `OWNER` and accepted `VIEWER` access; invitations require explicit acceptance. Existing legacy entries are visibly transitional until authorized clean re-provisioning.
-- Owner can invite a verified account from buoy detail. Viewer can read data but the configuration and acknowledgment controls use per-buoy access, not the old global role.
-- Product-facing BlueGuard Buoy label changed. Android package `com.oilspillmonitoringbuoy.app`, Firebase project and repository names remain stable.
-
-This slice has Node tests and an Angular production build; installed Android QR scanning, live backend contract, physical PAIR confirmation, FCM, Pusher, profile changes, app-first action links, ownership transfer and full notifications UX remain separate acceptance items. Do not mark P2-08–10 complete from this branch alone.
+**Security caveat:** Public QR identity plus PAIR cannot cryptographically prove the waiting phone is nearby. The server fails closed on observed competing intents, but a sole remote pre-intent remains a risk. See the backend contract before claiming secure physical possession.
