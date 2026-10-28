@@ -60,7 +60,7 @@ test('Empty illustrations and FAB/pairing modal preserve existing authorized dev
  assert.match(modalService,/await modal\.present\(\)/);
  assert.match(modalService,/await modal\.onDidDismiss\(\)/);
  assert.doesNotMatch(tabTs,/enterAnimation|leaveAnimation/);
- assert.match(add,/parseProtectedQr/);
+ assert.match(add,/parseDeviceQr/);
  assert.match(add,/this\.api\.requestClaim/);
  const routes=readFileSync('src/app/app.routes.ts','utf8');
  assert.match(routes,/path: "add-device"/);
