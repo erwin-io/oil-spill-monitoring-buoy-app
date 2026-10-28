@@ -134,10 +134,26 @@ try{
      const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{
       encoding:null,maxBuffer:12*1024*1024,timeout:15000
      });
-     check('ADB screenshot captured',!screenshot.error&&screenshot.status===0&&isPngScreenshot(screenshot.stdout),
+     let png=!screenshot.error&&screenshot.status===0&&isPngScreenshot(screenshot.stdout)
+       ? screenshot.stdout : null;
+     const localScreenshot=join(outputDir,'android-launch.png');
+     if(!png){
+      // Mirrors the proven Samsung shell screencap + adb pull commands.
+      // Use a unique remote filename and clean it up after the pull.
+      const remoteScreenshot='/sdcard/Download/blueguard-acceptance-'+Date.now()+'.png';
+      mkdirSync(outputDir,{recursive:true});
+      try{
+       output('adb',['-s',serial,'shell','screencap','-p',remoteScreenshot]);
+       output('adb',['-s',serial,'pull',remoteScreenshot,localScreenshot]);
+       png=readFileSync(localScreenshot);
+      }finally{
+       try{output('adb',['-s',serial,'shell','rm',remoteScreenshot]);}catch{}
+      }
+     }
+     check('ADB screenshot captured',isPngScreenshot(png),
       'Unable to capture a valid Android PNG screenshot');
      mkdirSync(outputDir,{recursive:true});
-     writeFileSync(join(outputDir,'android-launch.png'),screenshot.stdout);
+     writeFileSync(localScreenshot,png);
      console.log('Private screenshot saved to .test-output/android-launch.png (not committed).');
     }
    }
