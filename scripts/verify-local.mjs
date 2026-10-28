@@ -13,6 +13,7 @@
  */
 import { spawnSync } from 'node:child_process';
 import { selectAndroidDevice } from './android-device-selection.mjs';
+import {activityLaunchAccepted,isPngScreenshot,waitForAndroidForeground} from './android-launch.mjs';
 import {useJava21,gradleVersionForJavaCheck} from './android-java-preflight.mjs';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -116,14 +117,25 @@ try{
       'The selected device disconnected before installation. No APK installed.');
     run('Install debug APK','adb',['-s',serial,'install','-r',apk]);
     deviceLaunchAttempted=true;
-    run('Launch Android app','adb',['-s',serial,'shell','monkey','-p',packageId,'-c','android.intent.category.LAUNCHER','1']);
-    const pid=output('adb',['-s',serial,'shell','pidof',packageId]).trim();
-    check('Android app process alive after launch',/^\d+(\s+\d+)*$/.test(pid),
-      'App exited on launch; inspect Android Studio Logcat manually');
+    const activity=packageId+'/.MainActivity';
+    const launched=output('adb',['-s',serial,'shell','am','start','-W','-n',activity]);
+    console.log(launched.trim());
+    check('Android activity launch accepted',activityLaunchAccepted(launched,activity),
+      'Android did not confirm a successful BlueGuard MainActivity launch');
+    const running=await waitForAndroidForeground({
+      serial,packageId,activity,execute:args=>output('adb',args)
+    });
+    check('Android app process alive after launch',!!running.pid,
+      'App process was not found after launch; inspect Android Studio Logcat');
+    check('BlueGuard MainActivity is foreground',running.foreground,
+      'BlueGuard is not the resumed Android activity; inspect device screen or Logcat');
+    console.log('Verified Android foreground app PID: '+running.pid);
     if(flags.has('--screenshot')){
-     const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{encoding:null,maxBuffer:12*1024*1024});
-     check('ADB screenshot captured',screenshot.status===0&&screenshot.stdout?.length>500,
-      'Unable to capture Android screenshot');
+     const screenshot=spawnSync('adb',['-s',serial,'exec-out','screencap','-p'],{
+      encoding:null,maxBuffer:12*1024*1024,timeout:15000
+     });
+     check('ADB screenshot captured',!screenshot.error&&screenshot.status===0&&isPngScreenshot(screenshot.stdout),
+      'Unable to capture a valid Android PNG screenshot');
      mkdirSync(outputDir,{recursive:true});
      writeFileSync(join(outputDir,'android-launch.png'),screenshot.stdout);
      console.log('Private screenshot saved to .test-output/android-launch.png (not committed).');
